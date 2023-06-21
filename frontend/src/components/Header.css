@@ -1,0 +1,31 @@
+.header__logo {
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  letter-spacing: -1px;
+}
+
+.header__logo strong {
+  margin-left: 1px;
+  font-size: 1.8rem;
+  letter-spacing: normal;
+}
+
+.navbar {
+  opacity: 0.95;
+}
+
+@media (max-width: 1200px) {
+  .header__responsive-text {
+    display: none;
+  }
+  .header__responsive-icon {
+    display: inline !important;
+  }
+}
+
+@media (max-width: 990px) {
+  .header__responsive-text {
+    display: inline-block;
+  }
+}

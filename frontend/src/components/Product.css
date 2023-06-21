@@ -1,0 +1,23 @@
+.nwt {
+  position: absolute;
+  right: 25px;
+  top: 25px;
+}
+
+.size__font {
+  font-size: 10px;
+}
+
+.name__font {
+  line-height: 1.2rem;
+}
+
+.product__image {
+  opacity: 0.85;
+  transition: all 0.3s;
+}
+
+.product__image:hover {
+  opacity: 1;
+  transition: all 0.3s;
+}

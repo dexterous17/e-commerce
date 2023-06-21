@@ -1,0 +1,239 @@
+make master folder
+npx create-react-app frontend
+move .gitignore from front to root
+change '/node_modules' to:
+  node_modules
+  node_modules/
+  ^this will make it so all node_modules folders will be ignored, since it will be in root and in back
+downloaded the 'Minty' theme from bootswatch
+installed react-bootstrap to front dependencies 
+
+create backend directory
+npm init in the root folder, install express
+
+server.js
+node js uses common js require syntax eg (const express = require('express'))
+module.exports = products;
+
+the import syntax is ES modules (import react from 'react')
+export is (export default imports)
+add {"type": "module} in root package.json /// you must have .js
+
+proxy makes it so a front end axios call will look at localhost 5000 instead of 3000
+proxy gets added to front package, restart server
+
+the -D installs as dev
+npm i -D nodemon concurrently
+after installing nodemon make the scripts
+    "server": "nodemon backend/server",
+    "client": "npm start --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+you have to escape the quotes in dev
+
+we use bcrypts, not bcrypt
+
+instead of putting a try catch in every call to the database, we use middleware called express-async-handler
+
+middleware is a wrapped that can have access to all of the request response info.
+it is defined in app.use((req, res, next) => {
+  middleware
+  next()
+})
+you call next to go to the next middleware
+
+creating a new state
+1. create constants
+2. create reducer
+3. update store
+4. create action creator
+5. useDispatch
+6. useSelector
+7. finish logic
+
+to get into from the body, add bodyParser // app.use(express.json()) at server.js
+
+jsonwebtoken is what we use to generate the tokens
+
+when you create a paypal account, put the client ID in the .env folder and make a special route right in server.js to access it
+we also need to include a specific JSscript to get paypal to work - we will create it dynamically in our useEffect
+
+multer is a tool to allow us to handle multipart file uploads, we will create an endpoint at api/upload
+
+morgan is a tool that logs when routes are hit on the server side
+
+custom page titles and meta tabs with helmet
+
+to deploy, run npm run build in front directory
+under server.js add:
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "/frontend/build")));
+
+  app.get("*", (req, res) =>
+    res.sendFile(path.resolve(__dirname, "frontend", "build", "index.html"))
+  );
+} else {
+  app.get("/", (req, res) => {
+    res.send("API IS RUNNING......");
+  });
+}
+ in the front json
+  "homepage": "http://MB13534.github.io/taylor-ecommerce",
+
+
+
+fill in meta trailing
+
+TODO
+
+
+
+
+1. NUMBER OF SUBTOTAL ITEMS IS STILL INCORRECT
+
+2. have user set pagination number
+
+3. change name to title
+
+4. sort by nwt
+
+5. sort by price
+
+6. add subcolor and subcategory to search results
+
+7 email should not be case sensitive
+
+8 apply a search through results feature, it is super fast
+
+9. when you hit enter after the navbar the form should go away
+
+
+6. When you delete user, you should delete his orders also... its not makes sense to leave it.. besides you cant enter/view any of the deleted user orders...
+
+7. When you keep the product details in the order tabe (details like image), if the product get updated, its not appears in the orders.. you can still see the old product details.. I think it should be populated with the product table and get the updated details from that table.
+
+8. Maybe you can add stripe in addition to paypal.
+
+9. Save cart to DB so when you logout and local storage gets cleard, you still have it
+
+10. Save address to profile, if you create an address
+
+
+
+12. center some of the screens, login, shipping, payment, place order
+
+13. add home screens
+
+14. some additional components 
+  seasonal selections, winter clearance, recomendations based on last selection (size, category)
+  consignment features, complete wardrobe feature
+
+15. consignment form that emails info to admins
+
+16. old warning messages dont go Anyway
+
+17. add state to address
+
+18. search bar
+
+19. finish footer
+
+20. logo (bunny?)
+
+21. redu bunny loaders
+
+22. partners
+
+23. reduce count in stock in DB when order goes through
+
+24. add payment method to local storage so it remebers
+
+25. change the product id back to _id to avoid confusion
+
+
+27. figure out shipping, maybe each DB item has a weight and you can calculate shipping from that? or maybe just add it into the price and do free shipping
+
+28. tax needs a system
+
+29. email that goes out to admins when an order comes in
+
+30. easy to change local storage item prices
+  for(const item in order.orderItems) {
+  const product = await Product.findById(item.product);
+  item.price = product.price;
+
+}
+
+31. check to make sure the owner of the order is the person that is logged in and placed the order, cant just check on an order if you have the order number
+
+32. google, apple, facebook log-in options
+
+
+
+35 more personal information? size, first/last name
+
+36. change from deleting users and products, to retiring them. Never actually remove from the DB
+
+37. the name in navbar doesnt change if you update the user you are currently logged in as
+
+
+
+39 double lines on place order screen above place order
+
+
+41. list new products first?
+
+42 add a dropdown for brand/size instead of text
+
+43 host images on a server instead of heroku
+
+
+
+46 add filters
+
+47 if price changes, add red slash ect
+
+48 show number of products in the header
+
+49 forgot password functionality
+
+50 fix the cama thing with the pictrure seeder, trailing camas
+
+51 dates dont match because of timezones
+
+52 discount codes for free shipping or discount off
+
+53 when you click a button to edit it, rerender just that item and not every item
+
+
+
+
+Use the JavaScript Internationalization API.
+
+const formatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2
+})
+ 
+formatter.format(1000) // $1,000.00
+
+
+
+<div class="element">Front-end Developer</div>
+              <div class="element">Sommelier</div>
+              <div class="element">Athlete</div>
+              <div class="element">ReactJS Coder</div>
+              <div class="element">Accomplished Restaurant GM</div>
+              <div class="element">Outdoors Enthusiast</div>
+
+              () => mb
+              <i class="fas fa-home"></i>
+              <i class="far fa-user"></i>
+              <i class="fas fa-briefcase"></i>
+              <i class="far fa-envelope"></i>
+      https://github.com/MB13534
+      <i class="fab fa-github"></i>
+      https://www.linkedin.com/in/barrymj/
+      <i class="fab fa-linkedin-in"></i>
+
+      <i class="far fa-file"></i>
