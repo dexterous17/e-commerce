@@ -1,3 +1,5 @@
+import { syncAwsS3EnvFromBackendFile } from "../config/loadEnv.js";
+
 function trimSlashes(value) {
   return String(value || "").replace(/^\/+|\/+$/g, "");
 }
@@ -25,12 +27,20 @@ function encodeObjectKey(key) {
 }
 
 export function isImageProxyEnabled() {
+  syncAwsS3EnvFromBackendFile();
+
   if (process.env.AWS_S3_IMAGE_PROXY === "false") {
     return false;
   }
 
-  const bucket = getBucketName();
-  const region = process.env.AWS_REGION?.trim();
+  let bucket = getBucketName();
+  let region = process.env.AWS_REGION?.trim();
+  if (!bucket || !region) {
+    syncAwsS3EnvFromBackendFile({ force: true });
+    bucket = getBucketName();
+    region = process.env.AWS_REGION?.trim();
+  }
+
   return Boolean(bucket && region);
 }
 

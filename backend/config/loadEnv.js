@@ -48,8 +48,41 @@ if (dotenvResult.error?.code === "ENOENT") {
  * stays authoritative. In Docker the file is usually absent (.dockerignore); use
  * compose defaults or env_file for region/bucket there.
  */
-function applyAwsS3EnvFallbacksFromBackendFile() {
+export const AWS_S3_ENV_KEYS_FROM_BACKEND_FILE = [
+  "AWS_REGION",
+  "AWS_S3_BUCKET_NAME",
+  "AWS_BUCKET_NAME",
+  "AWS_S3_PUBLIC_BASE_URL",
+  "AWS_S3_PREFIX",
+  "AWS_S3_IMAGE_PROXY",
+];
+
+let backendEnvFileLastMtimeMs = null;
+
+/**
+ * Re-applies S3-related vars from backend/.env when the file is new or changed (mtime).
+ * Cheap when unchanged (one stat). Also invoked from isImageProxyEnabled() so a long-lived
+ * process still picks up correct values if startup env was wrong.
+ *
+ * @param {{ force?: boolean }} [options]  If force is true, re-read the file even when mtime
+ *   matches (e.g. process.env was cleared after the last sync).
+ */
+export function syncAwsS3EnvFromBackendFile(options = {}) {
+  const force = Boolean(options.force);
+
   if (!fs.existsSync(envPath)) {
+    backendEnvFileLastMtimeMs = null;
+    return;
+  }
+
+  let mtimeMs;
+  try {
+    mtimeMs = fs.statSync(envPath).mtimeMs;
+  } catch {
+    return;
+  }
+
+  if (!force && backendEnvFileLastMtimeMs === mtimeMs) {
     return;
   }
 
@@ -60,16 +93,9 @@ function applyAwsS3EnvFallbacksFromBackendFile() {
     return;
   }
 
-  const keys = [
-    "AWS_REGION",
-    "AWS_S3_BUCKET_NAME",
-    "AWS_BUCKET_NAME",
-    "AWS_S3_PUBLIC_BASE_URL",
-    "AWS_S3_PREFIX",
-    "AWS_S3_IMAGE_PROXY",
-  ];
+  backendEnvFileLastMtimeMs = mtimeMs;
 
-  for (const key of keys) {
+  for (const key of AWS_S3_ENV_KEYS_FROM_BACKEND_FILE) {
     const fromFile = parsed[key];
     if (fromFile !== undefined && String(fromFile).trim() !== "") {
       process.env[key] = fromFile;
@@ -77,7 +103,7 @@ function applyAwsS3EnvFallbacksFromBackendFile() {
   }
 }
 
-applyAwsS3EnvFallbacksFromBackendFile();
+syncAwsS3EnvFromBackendFile();
 
 /** Only these env vars may be populated via a sibling `NAME_FILE` path (Docker/k8s secrets). */
 const ALLOWED_SECRET_FILE_TARGETS = new Set([
