@@ -1,0 +1,108 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Frontend: dev server",
+      "type": "npm",
+      "script": "start",
+      "path": "frontend",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": ":5173/"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "dev",
+        "clear": true,
+        "showReuseMessage": false
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Frontend: build",
+      "type": "npm",
+      "script": "build",
+      "path": "frontend",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "group": "build"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Backend: start API",
+      "type": "npm",
+      "script": "start",
+      "path": "backend",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "ecommerce-api",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Server running in .* on port \\d+"
+        }
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "group": "dev"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Frontend: open embedded browser",
+      "type": "shell",
+      "command": "echo ${input:openViteInEmbeddedBrowser}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never",
+        "echo": false,
+        "focus": false,
+        "panel": "shared",
+        "close": true
+      }
+    },
+    {
+      "label": "Frontend: dev server + open embedded browser",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Frontend: dev server",
+        "Frontend: open embedded browser"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "group": "dev"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "openViteInEmbeddedBrowser",
+      "type": "command",
+      "command": "simpleBrowser.api.open",
+      "args": ["http://localhost:5173"]
+    }
+  ]
+}

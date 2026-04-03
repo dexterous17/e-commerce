@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Frontend: Chrome — start Vite + debug",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Frontend: dev server",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/src/*",
+        "vite:///*": "${webRoot}/*"
+      },
+      "presentation": { "group": "frontend", "order": 1 }
+    },
+    {
+      "name": "Frontend: Chrome — Vite already running",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/src/*",
+        "vite:///*": "${webRoot}/*"
+      },
+      "presentation": { "group": "frontend", "order": 2 }
+    },
+    {
+      "name": "Frontend: Chrome — attach (port 9222)",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/frontend",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/src/*",
+        "vite:///*": "${webRoot}/*"
+      },
+      "presentation": { "group": "frontend", "order": 3 }
+    },
+    {
+      "name": "Backend API (server.js)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/backend",
+      "program": "${workspaceFolder}/backend/server.js",
+      "console": "internalConsole",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "presentation": { "group": "backend", "order": 1 }
+    },
+    {
+      "name": "Backend API + debug logs (DEBUG=ecom:*)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/backend",
+      "program": "${workspaceFolder}/backend/server.js",
+      "console": "internalConsole",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "env": { "DEBUG": "ecom:*" },
+      "presentation": { "group": "backend", "order": 2 }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full stack: Backend (debug) + Chrome + Vite",
+      "configurations": [
+        "Backend API (server.js)",
+        "Frontend: Chrome — start Vite + debug"
+      ],
+      "stopAll": true,
+      "presentation": { "group": "fullstack", "order": 1 }
+    }
+  ]
+}
