@@ -13,7 +13,7 @@
     "server": "node scripts/assert-listen-port-free.mjs && node scripts/check-env.mjs && nodemon server.js",
     "server:inspect": "node scripts/assert-listen-port-free.mjs && node scripts/check-env.mjs && nodemon --inspect=9230 server.js",
     "server:debug": "node scripts/assert-listen-port-free.mjs && node scripts/check-env.mjs && cross-env DEBUG=ecom:* nodemon server.js",
-    "client": "npm start --prefix ../frontend",
+    "client": "npm run start:vite-only --prefix ../frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "images:download": "node scripts/downloadProductImages.js",
     "images:upload:s3-manifest": "node scripts/uploadProductsToS3Manifest.js",
