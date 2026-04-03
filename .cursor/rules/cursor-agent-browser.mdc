@@ -1,0 +1,42 @@
+---
+description: Use Cursor’s native Agent Browser for this repo (Vite + proxied API)
+alwaysApply: true
+---
+
+# Cursor Agent Browser (this project)
+
+Reference: [Cursor — Browser tools](https://cursor.com/docs/agent/tools/browser). Native browser control needs no extra MCP; enable **Chat tools** via workspace settings (`workbench.browser.enableChatTools`).
+
+## Local app URL
+
+### Docker Compose (`docker compose up` from repo root)
+
+Published ports come from **`docker-compose.yml`**; host values can be overridden in repo-root **`.env`** (see **`.env.example`**).
+
+| Service    | Host URL (defaults)              | Compose mapping |
+| ---------- | -------------------------------- | --------------- |
+| **Frontend** (nginx static build) | **`http://localhost:3000`** | `${FRONTEND_PORT:-3000}` → container **80** |
+| **Backend** (Node API) | **`http://localhost:5000`** | `${BACKEND_PORT:-5000}` → container **5000** |
+| **Postgres** | **`127.0.0.1:5432`** (not HTTP) | `127.0.0.1:5432` → **5432** |
+
+- Use **`browser_navigate`** to **`http://localhost:3000`** when the stack is running under Compose (not 5173). **`/api`** and **`/uploads`** are proxied by nginx to the **`backend`** service on port 5000 inside the network; you usually do not need to open the backend host port for normal UI tests.
+- Health: backend `GET http://localhost:5000/` (same path the compose healthcheck uses) when you need to hit the API directly on the host.
+
+### Vite dev (local `npm run dev` in `frontend/`)
+
+- Frontend (Vite): **`http://localhost:5173`** — project root is `frontend/`.
+- API/uploads are proxied by Vite to **`DEV_PROXY_TARGET`** in `frontend/.env` (see `frontend/.env.example`; often `http://localhost:5001`). Start backend separately when testing full flows.
+
+### Which stack is running?
+
+- **5173** → Vite dev. **3000** with static SPA → usually Docker **frontend**. If unsure, try the URL that responds; compose logs or `docker compose ps` confirm.
+
+## Agent behavior
+
+- Prefer **one running dev server**: check whether Vite is already up before starting another. If unsure, **`browser_navigate`** to `http://localhost:5173` and verify; only ask the user to start **`npm run dev`** / **`npm start`** in `frontend/` if the page does not load.
+- For UI verification, accessibility passes, form flows, and console/network debugging, invite **@browser** in prompts (see doc examples).
+- Use **Manual approval** (or your team’s allow list) for browser actions in **Cursor Settings → Chat → Auto-Run**; avoid auto-run on untrusted pages.
+
+## Security
+
+Follow [Cursor — Browser](https://cursor.com/docs/agent/tools/browser) guardrails: tool approval, allow/block lists, and (for teams) dashboard MCP/browser controls as applicable.
