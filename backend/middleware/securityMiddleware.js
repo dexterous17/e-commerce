@@ -55,11 +55,11 @@ const maxGeneral = Number.parseInt(
 );
 
 function isPublicMediaGet(req) {
-  return (
-    req.method === "GET" &&
-    typeof req.path === "string" &&
-    req.path.startsWith("/api/media")
-  );
+  if (req.method !== "GET") {
+    return false;
+  }
+  const p = String(req.originalUrl || req.url || "").split("?")[0];
+  return p.startsWith("/api/media");
 }
 
 /** Skips S3/image proxy traffic so product grids do not hit 429 under normal browsing. */
