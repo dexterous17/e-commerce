@@ -1,10 +1,12 @@
-import express from 'express';
-import dotenv from "dotenv";
+import express from "express";
+import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 //allows you to change colors of output to terminal
 import colors from "colors";
 import morgan from "morgan";
 
+import "./config/loadEnv.js";
 //routes
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -12,12 +14,13 @@ import orderRoutes from "./routes/orderRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 
 import connectDB from "./config/db.js";
+import { dbgServer } from "./utils/debugLog.js";
 
 //middleware
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
-dotenv.config();
-connectDB();
+const __backendDir = path.dirname(fileURLToPath(import.meta.url));
+
 const app = express();
 
 //only run morgan in development
@@ -44,20 +47,22 @@ app.get("/api/config/paypal", (req, res) =>
   res.send(process.env.PAYPAL_CLIENT_ID)
 );
 
-//we need to make the uploads folder static so the files are accessible on deploy
-//use path module to point to current directory (__dirname is only available with common JS modules, not ES6)
-//we can mimic this syntax by using path.resolve()
-//it just takes us to the folder and makes it static
-const __dirname = path.resolve();
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__backendDir, "uploads")));
 
-console.log(__dirname)
+const frontendDistRoot = path.join(__backendDir, "../frontend", "dist");
+const shouldServeFrontend =
+  process.env.SERVE_FRONTEND === "true" ||
+  (process.env.NODE_ENV === "production" && fs.existsSync(frontendDistRoot));
 
-const root = path.join(__dirname, "frontend", "build");
-//added /Harshil-ecommerce/ because of the < bug
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(root));
-  app.get("*", (req, res) => res.sendFile("index.html", { root }));
+if (shouldServeFrontend) {
+  app.use(express.static(frontendDistRoot));
+  app.get("*", (req, res, next) => {
+    if (req.originalUrl.startsWith("/api")) {
+      next();
+      return;
+    }
+    res.sendFile("index.html", { root: frontendDistRoot });
+  });
 } else {
   app.get("/", (req, res) => {
     res.send("API IS RUNNING......");
@@ -70,10 +75,40 @@ app.use(notFound);
 //overwriting the default error handler
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-app.listen(
-  PORT,
-  console.log(
-    `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
-  )
-);
+const PORT = process.env.PORT || 5001;
+
+const startServer = async () => {
+  const jwtSecret = process.env.JWT_SECRET?.trim();
+  if (!jwtSecret) {
+    console.error(
+      "JWT_SECRET is missing or empty. Add it to backend/.env (see .env.example), or set JWT_SECRET_FILE."
+        .red.bold
+    );
+    console.error(`Expected env file: ${path.join(__backendDir, ".env")}`.yellow);
+    process.exit(1);
+  }
+  process.env.JWT_SECRET = jwtSecret;
+
+  await connectDB();
+
+  const server = app.listen(PORT, () => {
+    console.log(
+      `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
+    );
+    dbgServer("listening on %s (NODE_ENV=%s)", PORT, process.env.NODE_ENV);
+  });
+
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      const alt = Number(PORT) + 1 || 5002;
+      console.error(
+        `Port ${PORT} is already in use. Stop the other listener (e.g. duplicate \`npm start\`, or \`docker compose stop backend\` if the stack maps this host port), check with \`lsof -iTCP:${PORT} -sTCP:LISTEN\`, or use another port: PORT=${alt} npm start`
+          .red.bold
+      );
+      process.exit(1);
+    }
+    throw err;
+  });
+};
+
+startServer();
