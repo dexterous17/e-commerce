@@ -13,7 +13,7 @@ docker compose up --build
 ```
 
 The app is available at `http://localhost:3000` by default.
-The API is available at `http://localhost:5000`.
+The API is published on the host at `http://127.0.0.1:${BACKEND_PORT}` (default **5004**; see `.env.example`).
 
 ## Secrets
 
@@ -27,6 +27,10 @@ Optional non-secret configuration lives in `.env`. A template is provided at `.e
 The backend also supports Docker's standard `*_FILE` pattern, so additional values such as `PAYPAL_CLIENT_ID_FILE`, `AWS_ACCESS_KEY_ID_FILE`, or `AWS_SECRET_ACCESS_KEY_FILE` can be wired in the same way if needed.
 
 If you need a custom Postgres CA certificate, mount it into the backend container and point `PGSSLROOTCERT` or `PGSSLROOTCERT_PATH` at that file.
+
+## Local dev (API + Vite, no Docker for Node)
+
+From the **repo root**, **`npm start`** runs **`npm run dev` in `backend/`**, which starts the **Express API** (default port **5002**) and **Vite** (**5173**) together. Use **`npm run start:frontend`** if you only need the Vite dev server (you must run the API separately with **`cd backend && npm start`**).
 
 ## Backend on your machine (Postgres in Docker)
 
