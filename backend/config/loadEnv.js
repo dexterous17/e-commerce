@@ -1,52 +1,58 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
 import dotenv from "dotenv";
 
-const backendRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  ".."
-);
-const repoRoot = path.resolve(backendRoot, "..");
-const databaseEnvPath = path.join(repoRoot, "database", ".env");
-const awsEnvPath = path.join(repoRoot, "aws", ".env");
+import {
+  backendRoot,
+  preferredBackendEnvPath,
+  resolvedAwsEnvPath,
+  resolvedBackendEnvPath,
+  resolvedDatabaseEnvPath,
+} from "./repoEnvPaths.js";
 
-// Optional shared DB credentials (DATABASE_URL, PG*). backend/.env overrides.
-dotenv.config({ path: databaseEnvPath, quiet: true });
+// Load order: database → aws → backend (later files override earlier; same as before).
+if (resolvedDatabaseEnvPath) {
+  dotenv.config({ path: resolvedDatabaseEnvPath, quiet: true });
+}
 
-// Optional repo-root AWS credentials and bucket settings (same keys as backend/.env).
-dotenv.config({ path: awsEnvPath, quiet: true });
+if (resolvedAwsEnvPath) {
+  dotenv.config({ path: resolvedAwsEnvPath, quiet: true });
+}
 
-const envPath = path.join(backendRoot, ".env");
-const dotenvResult = dotenv.config({ path: envPath, quiet: true });
+const envPath = resolvedBackendEnvPath;
+const dotenvResult = envPath
+  ? dotenv.config({ path: envPath, quiet: true })
+  : { error: { code: "ENOENT" } };
 
 if (dotenvResult.error?.code === "ENOENT") {
   console.warn(
-    `[env] Missing file: ${envPath}\n` +
-      "      Create it from the backend folder:  cp .env.example .env\n" +
-      "      Or from the repo root:               cp backend/.env.example backend/.env\n" +
-      "      Postgres settings may live in database/.env (repo root); you still need backend/.env for JWT_SECRET and server options. " +
-      "You can run:  npm run env:init"
+    `[env] Missing backend env file. Expected one of:\n` +
+      `      ${preferredBackendEnvPath}\n` +
+      `      ${path.join(backendRoot, ".env")} (legacy)\n` +
+      "      Create from template:  cp env/backend/.env.example env/backend/.env\n" +
+      "      Or from backend/:       npm run env:init\n" +
+      "      Postgres: env/database/.env (or database/.env). AWS keys: env/aws/.env (or aws/.env)."
   );
 } else if (
+  envPath &&
   fs.existsSync(envPath) &&
   (!dotenvResult.parsed || Object.keys(dotenvResult.parsed).length === 0)
 ) {
   console.warn(
     `[env] No variables were loaded from ${envPath} (file may be empty). ` +
-      "Copy lines from .env.example or run: npm run env:init"
+      "Copy lines from env/backend/.env.example or run: npm run env:init"
   );
 }
 
 /**
  * Dotenv does not override existing keys. Shells, IDEs, and Docker Compose often inject
- * AWS_* as empty strings, which blocks backend/.env and disables the S3 image proxy
+ * AWS_* as empty strings, which blocks env files and disables the S3 image proxy
  * (API then returns direct S3 URLs → 403 for private buckets).
  *
- * When backend/.env exists, non-empty values for these keys always win so local config
- * stays authoritative. In Docker the file is usually absent (.dockerignore); use
- * compose defaults or env_file for region/bucket there.
+ * Non-empty values from env/aws/.env and env/backend/.env (merged; backend wins on overlap)
+ * always win so local config stays authoritative. In Docker the files may be absent
+ * (.dockerignore); use compose defaults or env_file for region/bucket there.
  */
 export const AWS_S3_ENV_KEYS_FROM_BACKEND_FILE = [
   "AWS_REGION",
@@ -57,46 +63,58 @@ export const AWS_S3_ENV_KEYS_FROM_BACKEND_FILE = [
   "AWS_S3_IMAGE_PROXY",
 ];
 
-let backendEnvFileLastMtimeMs = null;
+let s3EnvSourcesLastSignature = null;
+
+function parseDotEnvFile(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return {};
+  }
+  try {
+    return dotenv.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    return {};
+  }
+}
 
 /**
- * Re-applies S3-related vars from backend/.env when the file is new or changed (mtime).
- * Cheap when unchanged (one stat). Also invoked from isImageProxyEnabled() so a long-lived
+ * Re-applies S3-related vars from env/aws/.env and env/backend/.env when either file is new or changed (mtime).
+ * Cheap when unchanged (stat per path). Also invoked from isImageProxyEnabled() so a long-lived
  * process still picks up correct values if startup env was wrong.
  *
- * @param {{ force?: boolean }} [options]  If force is true, re-read the file even when mtime
+ * @param {{ force?: boolean }} [options]  If force is true, re-read the files even when mtime
  *   matches (e.g. process.env was cleared after the last sync).
  */
 export function syncAwsS3EnvFromBackendFile(options = {}) {
   const force = Boolean(options.force);
 
-  if (!fs.existsSync(envPath)) {
-    backendEnvFileLastMtimeMs = null;
+  const paths = [resolvedAwsEnvPath, resolvedBackendEnvPath].filter(Boolean);
+  if (paths.length === 0) {
+    s3EnvSourcesLastSignature = null;
     return;
   }
 
-  let mtimeMs;
-  try {
-    mtimeMs = fs.statSync(envPath).mtimeMs;
-  } catch {
+  let signature = "";
+  for (const p of paths) {
+    try {
+      signature += `${p}:${fs.statSync(p).mtimeMs};`;
+    } catch {
+      signature += `${p}:missing;`;
+    }
+  }
+
+  if (!force && s3EnvSourcesLastSignature === signature) {
     return;
   }
 
-  if (!force && backendEnvFileLastMtimeMs === mtimeMs) {
-    return;
-  }
+  s3EnvSourcesLastSignature = signature;
 
-  let parsed;
-  try {
-    parsed = dotenv.parse(fs.readFileSync(envPath, "utf8"));
-  } catch {
-    return;
+  let merged = {};
+  for (const p of paths) {
+    merged = { ...merged, ...parseDotEnvFile(p) };
   }
-
-  backendEnvFileLastMtimeMs = mtimeMs;
 
   for (const key of AWS_S3_ENV_KEYS_FROM_BACKEND_FILE) {
-    const fromFile = parsed[key];
+    const fromFile = merged[key];
     if (fromFile !== undefined && String(fromFile).trim() !== "") {
       process.env[key] = fromFile;
     }

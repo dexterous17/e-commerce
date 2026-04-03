@@ -31,7 +31,7 @@ await new Promise((resolve, reject) => {
         `  kill $(lsof -t -iTCP:${port} -sTCP:LISTEN)\n\n` +
         "Or use a free port and point Vite at it:\n" +
         `  PORT=5003 npm start\n` +
-        "  # frontend/.env → DEV_PROXY_TARGET=http://localhost:5003\n"
+        "  # env/frontend/.env → DEV_PROXY_TARGET=http://localhost:5003\n"
     );
     process.exit(1);
   }

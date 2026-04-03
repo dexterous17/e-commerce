@@ -1,11 +1,17 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Default API proxy: localhost:5002 (see backend/.env.example). macOS AirPlay often uses 5000 (403 for HTTP).
+const frontendDir = path.dirname(fileURLToPath(import.meta.url));
+const envDir = path.resolve(frontendDir, "../env/frontend");
+
+// Default API proxy: localhost:5002 (see env/backend/.env.example). macOS AirPlay often uses 5000 (403 for HTTP).
 // Use DEV_PROXY_TARGET (not VITE_*): only VITE_-prefixed vars are meant for browser code;
 // keeping the proxy URL out of that namespace avoids accidentally bundling it via import.meta.env.
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
+  const env = loadEnv(mode, envDir, "");
   const devProxyTarget =
     env.DEV_PROXY_TARGET ||
     env.VITE_DEV_PROXY_TARGET ||

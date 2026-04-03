@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import colors from "colors";
-import dotenv from "dotenv";
 import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 import "./config/loadEnv.js";
@@ -19,10 +18,7 @@ import { deleteAllUsers, insertUsers } from "./models/userModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..");
 const manifestPath = path.join(__dirname, "data", "products-s3-manifest.json");
-
-dotenv.config({ path: path.join(repoRoot, "aws", ".env"), quiet: true });
 
 const args = process.argv.slice(2);
 

@@ -7,6 +7,10 @@ import colors from "colors";
 import morgan from "morgan";
 
 import "./config/loadEnv.js";
+import {
+  preferredBackendEnvPath,
+  resolvedBackendEnvPath,
+} from "./config/repoEnvPaths.js";
 //routes
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -128,10 +132,12 @@ const startServer = async () => {
   const jwtSecret = process.env.JWT_SECRET?.trim();
   if (!jwtSecret) {
     console.error(
-      "JWT_SECRET is missing or empty. Add it to backend/.env (see .env.example), or set JWT_SECRET_FILE."
+      "JWT_SECRET is missing or empty. Add it to env/backend/.env (see env/backend/.env.example), or set JWT_SECRET_FILE."
         .red.bold
     );
-    console.error(`Expected env file: ${path.join(__backendDir, ".env")}`.yellow);
+    console.error(
+      `Expected env file: ${resolvedBackendEnvPath ?? preferredBackendEnvPath}`.yellow
+    );
     process.exit(1);
   }
   process.env.JWT_SECRET = jwtSecret;
@@ -151,7 +157,7 @@ const startServer = async () => {
       );
     } else {
       console.warn(
-        "[S3 media] Image proxy OFF — product APIs return raw S3 URLs; browsers often see 403 on private buckets. Set AWS_REGION and AWS_S3_BUCKET_NAME (see backend/.env.example), avoid AWS_S3_IMAGE_PROXY=false unless intentional, then restart. If curl still shows https://…amazonaws.com, another process may still be bound to this port."
+        "[S3 media] Image proxy OFF — product APIs return raw S3 URLs; browsers often see 403 on private buckets. Set AWS_REGION and AWS_S3_BUCKET_NAME (see env/aws/.env.example), avoid AWS_S3_IMAGE_PROXY=false unless intentional, then restart. If curl still shows https://…amazonaws.com, another process may still be bound to this port."
           .yellow
       );
     }

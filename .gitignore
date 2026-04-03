@@ -4,22 +4,22 @@
 # Environment files
 .env
 .env.*
+# Per-system env (templates committed as env/<system>/.env.example)
+/env/**/.env
+/env/**/.env.*
+!/env/**/.env.example
+!/env/**/.env.sample
+# Legacy paths (still supported by backend/config/loadEnv.js)
 aws/.env
 aws/.env.*
-!aws/.env.example
 database/.env
 database/.env.*
-!database/.env.example
 backend/.env
 backend/.env.*
 frontend/.env
 frontend/.env.*
 !.env.example
 !.env.sample
-!backend/.env.example
-!backend/.env.sample
-!frontend/.env.example
-!frontend/.env.sample
 
 # Secrets and local certificates/keys
 *.pem

@@ -1,0 +1,14 @@
+.git
+.DS_Store
+**/node_modules
+frontend/build
+frontend/dist
+.env
+.env.*
+backend/.env
+backend/.env.*
+env/**/.env
+env/**/.env.*
+frontend/.env
+frontend/.env.*
+secrets/*.txt
