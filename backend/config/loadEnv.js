@@ -39,6 +39,46 @@ if (dotenvResult.error?.code === "ENOENT") {
   );
 }
 
+/**
+ * Dotenv does not override existing keys. Shells, IDEs, and Docker Compose often inject
+ * AWS_* as empty strings, which blocks backend/.env and disables the S3 image proxy
+ * (API then returns direct S3 URLs → 403 for private buckets).
+ *
+ * When backend/.env exists, non-empty values for these keys always win so local config
+ * stays authoritative. In Docker the file is usually absent (.dockerignore); use
+ * compose defaults or env_file for region/bucket there.
+ */
+function applyAwsS3EnvFallbacksFromBackendFile() {
+  if (!fs.existsSync(envPath)) {
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = dotenv.parse(fs.readFileSync(envPath, "utf8"));
+  } catch {
+    return;
+  }
+
+  const keys = [
+    "AWS_REGION",
+    "AWS_S3_BUCKET_NAME",
+    "AWS_BUCKET_NAME",
+    "AWS_S3_PUBLIC_BASE_URL",
+    "AWS_S3_PREFIX",
+    "AWS_S3_IMAGE_PROXY",
+  ];
+
+  for (const key of keys) {
+    const fromFile = parsed[key];
+    if (fromFile !== undefined && String(fromFile).trim() !== "") {
+      process.env[key] = fromFile;
+    }
+  }
+}
+
+applyAwsS3EnvFallbacksFromBackendFile();
+
 /** Only these env vars may be populated via a sibling `NAME_FILE` path (Docker/k8s secrets). */
 const ALLOWED_SECRET_FILE_TARGETS = new Set([
   "AWS_ACCESS_KEY_ID",
