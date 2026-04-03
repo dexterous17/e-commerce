@@ -1,0 +1,69 @@
+Nginx Proxy Manager (NPM) — route harshildex.com to this project
+================================================================
+
+Your browser hits NPM first. NPM must “Proxy Host” each domain to the
+Docker ports published by docker-compose.lightsail.yml (defaults:
+frontend 127.0.0.1:8080, API 127.0.0.1:5004).
+
+Important: NPM runs inside a container. 127.0.0.1 there is the NPM
+container, not your host. Use one of these as “Forward Hostname / IP”:
+
+  1) host.docker.internal   (best if your NPM stack defines it; common on Docker Desktop)
+  2) 172.17.0.1              (often the host on the default docker bridge — try if (1) fails)
+  3) Your server’s LAN/private IP (last resort)
+
+Forward scheme: HTTP (NPM terminates HTTPS; upstream stays HTTP on loopback).
+
+--------------------------------------------------------------------
+Proxy Host 1 — storefront (SPA + /api + /uploads via frontend nginx)
+--------------------------------------------------------------------
+
+  Domain names:     ecommerce.harshildex.com
+  Scheme:           http
+  Forward hostname: host.docker.internal   (or 172.17.0.1)
+  Forward port:     8080
+  (Optional) Block Common Exploits: ON
+  (Optional) Websockets Support: ON
+
+  SSL tab: Request a new certificate (Let’s Encrypt), force SSL, HTTP/2.
+
+  Advanced — paste “Snippet A” below (NPM → frontend container).
+
+--------------------------------------------------------------------
+Proxy Host 2 — API hostname (optional, for webhooks / direct API)
+--------------------------------------------------------------------
+
+  Domain names:     backend.ecommerce.harshildex.com
+  Scheme:           http
+  Forward hostname: host.docker.internal   (or 172.17.0.1)
+  Forward port:     5004
+
+  SSL: same as above.
+
+  Advanced — paste “Snippet B” below.
+
+================================================================
+Snippet A — ecommerce.harshildex.com only (forward port 8080)
+================================================================
+
+client_max_body_size 50m;
+proxy_read_timeout 300s;
+proxy_send_timeout 300s;
+
+================================================================
+Snippet B — backend.ecommerce.harshildex.com only (forward port 5004)
+================================================================
+
+proxy_buffering off;
+proxy_request_buffering off;
+client_max_body_size 50m;
+proxy_read_timeout 300s;
+
+================================================================
+Verify on the host
+================================================================
+
+  curl -sS http://127.0.0.1:8080/ | head
+  curl -sS http://127.0.0.1:5004/api/health
+
+If those work but NPM does not, the Forward hostname for NPM is wrong.

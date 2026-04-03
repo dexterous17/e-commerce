@@ -5,6 +5,8 @@
 #   - DNS A (and AAAA if using IPv6) for ecommerce.harshildex.com and
 #     backend.ecommerce.harshildex.com pointing at the instance public IP.
 #   - Lightsail firewall: TCP 22, 80, 443 open (restrict SSH source to your IP when possible).
+#   - If Nginx Proxy Manager terminates TLS on :443, add Proxy Hosts per
+#     deploy/lightsail/nginx-proxy-manager-setup.txt (do not forward to 127.0.0.1 from NPM).
 #   - On the server: env/database/.env, env/backend/.env, env/aws/.env (see repo templates).
 #
 # SSH security (client):
