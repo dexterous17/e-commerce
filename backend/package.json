@@ -5,29 +5,43 @@
   "description": "Harshil",
   "main": "server.js",
   "scripts": {
-    "start": "node backend/server",
-    "server": "nodemon backend/server",
-    "client": "npm start --prefix frontend",
+    "token:demo": "node scripts/demo-generate-token.mjs",
+    "env:init": "node scripts/init-env.mjs",
+    "env:debug": "node scripts/debug-env.mjs",
+    "check": "node scripts/check-env.mjs",
+    "start": "node scripts/check-env.mjs && node server.js",
+    "server": "node scripts/check-env.mjs && nodemon server.js",
+    "server:inspect": "node scripts/check-env.mjs && nodemon --inspect=9230 server.js",
+    "server:debug": "node scripts/check-env.mjs && cross-env DEBUG=ecom:* nodemon server.js",
+    "client": "npm start --prefix ../frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "data:import": "node backend/seeder",
-    "data:destroy": "node backend/seeder -d"
-    },
+    "images:download": "node scripts/downloadProductImages.js",
+    "images:upload:s3-manifest": "node scripts/uploadProductsToS3Manifest.js",
+    "data:import": "node seeder.js",
+    "data:import:s3": "node seederS3.js",
+    "data:import:s3:manifest": "node seederS3FromManifest.js",
+    "data:destroy": "node seeder.js -d",
+    "data:destroy:s3": "node seederS3.js -d"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "@aws-sdk/client-s3": "^3.1021.0",
+    "bcryptjs": "^3.0.3",
     "colors": "^1.4.0",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "express-async-handler": "^1.1.4",
-    "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.12.0",
-    "morgan": "^1.10.0",
-    "multer": "^1.4.2"
+    "debug": "^4.4.3",
+    "dotenv": "^17.3.1",
+    "express": "^4.22.1",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "concurrently": "^6.0.0",
-    "nodemon": "^2.0.7"
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.14"
   }
 }
