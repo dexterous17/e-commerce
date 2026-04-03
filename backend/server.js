@@ -16,6 +16,7 @@ import mediaRoutes from "./routes/mediaRoutes.js";
 
 import connectDB from "./config/db.js";
 import { dbgServer } from "./utils/debugLog.js";
+import { isImageProxyEnabled } from "./utils/mediaImageUrls.js";
 
 //middleware
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
@@ -99,6 +100,18 @@ const startServer = async () => {
       `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
     );
     dbgServer("listening on %s (NODE_ENV=%s)", PORT, process.env.NODE_ENV);
+
+    if (isImageProxyEnabled()) {
+      console.log(
+        "[S3 media] Image proxy ON — product APIs return /api/media/s3?key=… (not direct S3 URLs)."
+          .green
+      );
+    } else {
+      console.warn(
+        "[S3 media] Image proxy OFF — product APIs return raw S3 URLs; browsers often see 403 on private buckets. Set AWS_REGION and AWS_S3_BUCKET_NAME (see backend/.env.example), avoid AWS_S3_IMAGE_PROXY=false unless intentional, then restart. If curl still shows https://…amazonaws.com, another process may still be bound to this port."
+          .yellow
+      );
+    }
   });
 
   server.on("error", (err) => {
