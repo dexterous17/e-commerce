@@ -16,6 +16,7 @@ import { getOrderDetails, payOrder, shipOrder } from "../actions/orderActions";
 
 //constants // ACTIONS
 import { ORDER_PAY_RESET, ORDER_SHIP_RESET } from "../constants/orderConstants";
+import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
 
 const OrderScreen = () => {
   const { id: orderId } = useParams();
@@ -159,7 +160,7 @@ const OrderScreen = () => {
                       <Row className="d-flex align-items-center">
                         <Col md={2} className="pl-0 pr-0 order-screen__image">
                           <Image
-                            src={item.images[0]}
+                            src={rewriteDirectS3ImageUrlToProxy(item.images[0])}
                             alt={item.name}
                             fluid
                             rounded
