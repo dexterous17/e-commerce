@@ -12,6 +12,8 @@ This repository now runs with separate Docker containers for:
 docker compose up --build
 ```
 
+For **product images** from a **private** S3 bucket, the backend must call S3 with credentials. Create **`aws/.env`** from **`aws/.env.example`** with **`AWS_ACCESS_KEY_ID`** and **`AWS_SECRET_ACCESS_KEY`** (same as local `npm start`); Compose loads it into the **`backend`** service. Without it, APIs may return `/api/media/s3` URLs that respond **403/500**.
+
 The app is available at `http://localhost:3000` by default.
 The API is published on the host at **`http://127.0.0.1:<BACKEND_PORT>`** (Compose default **5004**; see `.env.example`).
 

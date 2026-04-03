@@ -4,6 +4,9 @@
 # Environment files
 .env
 .env.*
+aws/.env
+aws/.env.*
+!aws/.env.example
 database/.env
 database/.env.*
 !database/.env.example

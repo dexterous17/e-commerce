@@ -27,6 +27,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Same credential file as host loadEnv; avoids empty AWS_* from `environment:` wiping keys.
+    env_file:
+      - path: aws/.env
+        required: false
     environment:
       NODE_ENV: production
       # In-container 5000 matches EXPOSE, healthcheck; local host API default is 5002 (see backend/.env.example).
@@ -46,8 +50,8 @@ services:
       AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-bucket-7i9ax7}
       AWS_S3_PUBLIC_BASE_URL: ${AWS_S3_PUBLIC_BASE_URL:-https://bucket-7i9ax7.s3.us-east-1.amazonaws.com}
       AWS_S3_PREFIX: ${AWS_S3_PREFIX:-products}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: use repo-root aws/.env (env_file above) or export
+      # before `docker compose up` so the SDK can GetObject for /api/media/s3 (do not use VAR:- here).
     secrets:
       - postgres_password
       - jwt_secret
