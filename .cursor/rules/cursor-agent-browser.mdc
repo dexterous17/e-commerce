@@ -25,7 +25,7 @@ Published ports come from **`docker-compose.yml`**; host values can be overridde
 ### Vite dev (local `npm run dev` in `frontend/`)
 
 - Frontend (Vite): **`http://localhost:5173`** — project root is `frontend/`.
-- API/uploads are proxied by Vite to **`DEV_PROXY_TARGET`** in `frontend/.env` (see `frontend/.env.example`; often `http://localhost:5001`). Start backend separately when testing full flows.
+- API/uploads are proxied by Vite to **`DEV_PROXY_TARGET`** in `frontend/.env` (see `frontend/.env.example`; often `http://localhost:5002`). Start backend separately when testing full flows.
 
 ### Which stack is running?
 

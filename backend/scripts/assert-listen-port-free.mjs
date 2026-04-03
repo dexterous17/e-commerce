@@ -6,7 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 await import(path.resolve(__dirname, "../config/loadEnv.js"));
 
-const port = Number.parseInt(process.env.PORT || "5001", 10);
+const port = Number.parseInt(process.env.PORT || "5002", 10);
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   console.error(`Invalid PORT: ${process.env.PORT}`);
   process.exit(1);

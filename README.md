@@ -38,11 +38,11 @@ To run `npm start` inside `backend/` while Postgres runs in Compose:
 
 The `postgres` service publishes `127.0.0.1:5432` so the host can connect.
 
-On macOS, **AirPlay Receiver** commonly listens on **5000** and answers HTTP with **403**, so local **`npm start`** defaults to **5001** and Vite’s dev proxy targets **`http://localhost:5001`** unless you set **`DEV_PROXY_TARGET`**. If you run the API on another port (for example the Compose backend mapped to the host), set **`PORT`** in `backend/.env` and matching **`DEV_PROXY_TARGET`** in `frontend/.env`.
+On macOS, **AirPlay Receiver** commonly listens on **5000** and answers HTTP with **403**, so local **`npm start`** defaults to **5002** (see `backend/.env.example`) and Vite’s dev proxy targets **`http://localhost:5002`** unless you set **`DEV_PROXY_TARGET`**. If you run the API on another port, set **`PORT`** in `backend/.env` and the same URL in **`DEV_PROXY_TARGET`** in `frontend/.env`.
 
 ### Port already in use (`EADDRINUSE`)
 
-If **`npm start`** fails because the port is taken, another process is usually still bound there (often a previous **`npm start`**). Inspect listeners with `lsof -iTCP:5001 -sTCP:LISTEN` (replace `5001` with your `PORT`), stop that process, or run on a free port, for example `PORT=5002 npm start`, and point **`DEV_PROXY_TARGET`** in `frontend/.env` at the same URL. If you use full **`docker compose`** and set **`BACKEND_PORT`** in the root `.env` to the same host port as **`PORT`** in `backend/.env`, only one of host **`npm start`** or the Compose backend can bind that port—stop the Compose backend (`docker compose stop backend`) or use different ports.
+If **`npm start`** fails because the port is taken, another process is still bound there (often a previous **`node server.js`**). Inspect listeners with `lsof -iTCP:5002 -sTCP:LISTEN` (replace **`5002`** with your **`PORT`**), stop that process, or pick a free **`PORT`** and set matching **`DEV_PROXY_TARGET`** in `frontend/.env`. If you use **`docker compose`** for the API, align **`BACKEND_PORT`** with **`PORT`** in `backend/.env`, or stop one of the two listeners so only one process owns that host port.
 
 ## Docker MCP (Cursor)
 
