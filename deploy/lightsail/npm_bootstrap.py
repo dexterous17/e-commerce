@@ -28,14 +28,27 @@ proxy_read_timeout 300s;
 
 def storefront_advanced_config(forward_api_host: str, forward_api_port: int) -> str:
     """
-    NPM injects this before the default location / block. Routes storefront image/media
-    paths straight to the API container (same Node app as backend.ecommerce.harshildex.com).
+    NPM injects this before the default location / block. Routes storefront API, media,
+    and uploads to the API container (same Node app as backend.ecommerce.harshildex.com).
+    /api/media is listed first so it wins over the shorter /api prefix.
     """
     return f"""client_max_body_size 50m;
 proxy_read_timeout 300s;
 proxy_send_timeout 300s;
 
 location ^~ /api/media {{
+  proxy_pass http://{forward_api_host}:{forward_api_port};
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_buffering off;
+  proxy_request_buffering off;
+  proxy_read_timeout 300s;
+}}
+
+location ^~ /api {{
   proxy_pass http://{forward_api_host}:{forward_api_port};
   proxy_http_version 1.1;
   proxy_set_header Host $host;

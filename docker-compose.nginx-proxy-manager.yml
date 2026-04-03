@@ -6,10 +6,10 @@
 # Admin UI: http://<server-ip>:81  — default login is often admin@example.com / changeme (change immediately).
 #
 # Proxy hosts for ecommerce.harshildex.com and backend.ecommerce.harshildex.com are created
-# automatically by the one-shot `npm-bootstrap` service (deploy/lightsail/npm_bootstrap.py).
-# The storefront host’s advanced config routes /api/media and /uploads to the API container
-# (same app as backend.ecommerce.harshildex.com) before falling through to the SPA.
-# unless disabled. Set NPM_ADMIN_PASSWORD after you change the admin password, or use
+# automatically by the one-shot `npm-bootstrap` service (deploy/lightsail/npm_bootstrap.py),
+# unless disabled. The storefront host’s advanced config routes /api, /api/media, and /uploads
+# to the API container (same app as backend.ecommerce.harshildex.com); other paths go to the SPA.
+# Set NPM_ADMIN_PASSWORD after you change the admin password, or use
 # NPM_USE_DEFAULT_CREDENTIALS=1 only for the first boot (then rotate). See env/npm-bootstrap/.env.example.
 #
 # To disable auto bootstrap: NPM_DISABLE_BOOTSTRAP=1
