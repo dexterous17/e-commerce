@@ -22,11 +22,16 @@ await new Promise((resolve, reject) => {
 }).catch((err) => {
   if (err?.code === "EADDRINUSE") {
     console.error(
-      `\nPort ${port} is already in use. Another process is still listening (often an old \`node server.js\`).\n` +
-        "That listener keeps serving stale code — for example product APIs return direct S3 URLs while the bucket is private (images 403 in the browser).\n\n" +
-        "Free the port, then run npm start again:\n" +
+      `\nPort ${port} is already in use. Another process is still listening.\n` +
+        "Common cases:\n" +
+        "  • Old host API: stale node server → direct S3 image URLs and 403 in the browser.\n" +
+        "  • Docker: `docker compose up backend` publishes this host port — stop it (`docker compose stop backend`) or pick another PORT.\n\n" +
+        "Inspect and free the port, then run npm start again:\n" +
         `  lsof -iTCP:${port} -sTCP:LISTEN\n` +
-        `  kill $(lsof -t -iTCP:${port} -sTCP:LISTEN)\n`
+        `  kill $(lsof -t -iTCP:${port} -sTCP:LISTEN)\n\n` +
+        "Or use a free port and point Vite at it:\n" +
+        `  PORT=5003 npm start\n` +
+        "  # frontend/.env → DEV_PROXY_TARGET=http://localhost:5003\n"
     );
     process.exit(1);
   }
