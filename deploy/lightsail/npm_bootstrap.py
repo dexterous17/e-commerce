@@ -19,15 +19,43 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-ADVANCED_STOREFRONT = """client_max_body_size 50m;
-proxy_read_timeout 300s;
-proxy_send_timeout 300s;
-"""
-
 ADVANCED_API = """proxy_buffering off;
 proxy_request_buffering off;
 client_max_body_size 50m;
 proxy_read_timeout 300s;
+"""
+
+
+def storefront_advanced_config(forward_api_host: str, forward_api_port: int) -> str:
+    """
+    NPM injects this before the default location / block. Routes storefront image/media
+    paths straight to the API container (same Node app as backend.ecommerce.harshildex.com).
+    """
+    return f"""client_max_body_size 50m;
+proxy_read_timeout 300s;
+proxy_send_timeout 300s;
+
+location ^~ /api/media {{
+  proxy_pass http://{forward_api_host}:{forward_api_port};
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_buffering off;
+  proxy_request_buffering off;
+  proxy_read_timeout 300s;
+}}
+
+location ^~ /uploads {{
+  proxy_pass http://{forward_api_host}:{forward_api_port};
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_read_timeout 300s;
+}}
 """
 
 
@@ -317,7 +345,7 @@ def main() -> None:
         domain=store_domain,
         forward_host=fh_s,
         forward_port=fp_s,
-        advanced_config=ADVANCED_STOREFRONT,
+        advanced_config=storefront_advanced_config(fh_a, fp_a),
     )
     ensure_proxy_host(
         base,
