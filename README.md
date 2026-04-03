@@ -13,7 +13,7 @@ docker compose up --build
 ```
 
 The app is available at `http://localhost:3000` by default.
-The API is published on the host at `http://127.0.0.1:${BACKEND_PORT}` (default **5004**; see `.env.example`).
+The API is published on the host at **`http://127.0.0.1:<BACKEND_PORT>`** (Compose default **5004**; see `.env.example`).
 
 ## Secrets
 
