@@ -51,6 +51,16 @@ app.get("/api/config/paypal", (req, res) =>
   res.send(process.env.PAYPAL_CLIENT_ID)
 );
 
+/** Confirms this Node process is the API and whether S3 image URLs are rewritten for clients. */
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    s3ImageProxy: isImageProxyEnabled(),
+    listenPort: Number.parseInt(process.env.PORT || "5002", 10),
+    nodeEnv: process.env.NODE_ENV || null,
+  });
+});
+
 app.use("/uploads", express.static(path.join(__backendDir, "uploads")));
 
 const frontendDistRoot = path.join(__backendDir, "../frontend", "dist");

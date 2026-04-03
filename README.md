@@ -32,6 +32,8 @@ If you need a custom Postgres CA certificate, mount it into the backend containe
 
 From the **repo root**, **`npm start`** runs **`npm run dev` in `backend/`**, which starts the **Express API** (default port **5002**) and **Vite** (**5173**) together. Use **`npm run start:frontend`** if you only need the Vite dev server (you must run the API separately with **`cd backend && npm start`**).
 
+Sanity-check the API you are talking to: **`curl -s http://127.0.0.1:5002/api/health`** should return JSON with **`"ok":true`** and **`"s3ImageProxy":true`** when `backend/.env` has region and bucket set (private S3 buckets need the proxy or images 403).
+
 ## Backend on your machine (Postgres in Docker)
 
 To run `npm start` inside `backend/` while Postgres runs in Compose:
