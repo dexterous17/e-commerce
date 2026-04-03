@@ -13,6 +13,7 @@ import {
   canonicalizeImageUrlsForStorage,
   mapOrderImagesForApi,
 } from "../utils/mediaImageUrls.js";
+import { verifyPayPalCheckoutOrder } from "../utils/paypalVerify.js";
 
 function roundMoney(n) {
   const x = Number(n);
@@ -204,12 +205,33 @@ export const updateOrderPaidStatus = asyncHandler(async (req, res) => {
 
   assertOrderPaymentByOwner(existing, req);
 
-  const order = await markOrderPaid(req.params.id, {
+  if (existing.isPaid) {
+    res.json(mapOrderImagesForApi(existing));
+    return;
+  }
+
+  const paypalOrderId = req.body?.id;
+  if (!paypalOrderId || typeof paypalOrderId !== "string") {
+    res.status(400);
+    throw new Error("PayPal order id is required to confirm payment");
+  }
+
+  const verification = await verifyPayPalCheckoutOrder({
+    paypalOrderId,
+    shopOrderId: req.params.id,
+    expectedTotalUsd: existing.totalPrice,
+  });
+
+  const paymentResult = {
     id: req.body.id,
     status: req.body.status,
     update_time: req.body.update_time,
     email_address: req.body.payer?.email_address,
-  });
+    serverVerifiedAt: new Date().toISOString(),
+    payPalVerificationSkipped: Boolean(verification.skipped),
+  };
+
+  const order = await markOrderPaid(req.params.id, paymentResult);
 
   if (!order) {
     res.status(404);

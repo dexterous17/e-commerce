@@ -138,24 +138,98 @@ export const updateProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found");
   }
 
-  const imagesForStore = Array.isArray(req.body.images)
-    ? canonicalizeImageUrlsForStorage(req.body.images)
-    : req.body.images;
+  const b = req.body || {};
+
+  let name = existingProduct.name;
+  if (b.name !== undefined) {
+    const n = String(b.name).trim();
+    if (!n) {
+      res.status(400);
+      throw new Error("Product name cannot be empty");
+    }
+    name = n;
+  }
+
+  let price = existingProduct.price;
+  if (b.price !== undefined) {
+    const p = Number(b.price);
+    if (!Number.isFinite(p) || p < 0) {
+      res.status(400);
+      throw new Error("A valid non-negative price is required");
+    }
+    price = p;
+  }
+
+  const nwt = b.nwt !== undefined ? Boolean(b.nwt) : existingProduct.nwt;
+
+  const strOr = (v, fallback) =>
+    v !== undefined
+      ? v === null
+        ? null
+        : String(v).trim() || null
+      : fallback;
+
+  let description = existingProduct.description;
+  if (b.description !== undefined) {
+    const d = String(b.description).trim();
+    if (!d) {
+      res.status(400);
+      throw new Error("Description cannot be empty");
+    }
+    description = d;
+  }
+
+  let category = existingProduct.category;
+  if (b.category !== undefined) {
+    const c = String(b.category).trim();
+    if (!c) {
+      res.status(400);
+      throw new Error("Category cannot be empty");
+    }
+    category = c;
+  }
+
+  let color = existingProduct.color;
+  if (b.color !== undefined) {
+    const c = String(b.color).trim();
+    if (!c) {
+      res.status(400);
+      throw new Error("Color cannot be empty");
+    }
+    color = c;
+  }
+
+  let imagesForStore = existingProduct.images;
+  if (Array.isArray(b.images)) {
+    imagesForStore = canonicalizeImageUrlsForStorage(b.images);
+  } else if (Object.prototype.hasOwnProperty.call(b, "images")) {
+    imagesForStore = [];
+  }
+
+  let countInStock = existingProduct.countInStock;
+  if (b.countInStock !== undefined) {
+    const c = Number(b.countInStock);
+    if (!Number.isFinite(c) || c < 0 || !Number.isInteger(c)) {
+      res.status(400);
+      throw new Error("countInStock must be a non-negative integer");
+    }
+    countInStock = c;
+  }
 
   const updatedProduct = await updateProductById(req.params.id, {
     user: existingProduct.user,
-    name: req.body.name,
-    nwt: req.body.nwt,
-    brand: req.body.brand,
-    price: req.body.price,
-    size: req.body.size,
-    description: req.body.description,
-    sex: req.body.sex,
-    category: req.body.category,
-    subCategory: req.body.subCategory,
-    color: req.body.color,
-    subColor: req.body.subColor,
-    countInStock: req.body.countInStock,
+    name,
+    nwt,
+    brand: strOr(b.brand, existingProduct.brand),
+    price,
+    size: strOr(b.size, existingProduct.size),
+    description,
+    sex: strOr(b.sex, existingProduct.sex),
+    category,
+    subCategory: strOr(b.subCategory, existingProduct.subCategory),
+    color,
+    subColor: strOr(b.subColor, existingProduct.subColor),
+    countInStock,
     images: imagesForStore,
   });
 

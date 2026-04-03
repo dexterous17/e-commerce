@@ -13,6 +13,7 @@ import userRoutes from "./routes/userRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import mediaRoutes from "./routes/mediaRoutes.js";
+import { paypalWebhookHandler } from "./routes/paypalWebhookRoutes.js";
 
 import connectDB from "./config/db.js";
 import { dbgServer } from "./utils/debugLog.js";
@@ -20,18 +21,39 @@ import { isImageProxyEnabled } from "./utils/mediaImageUrls.js";
 
 //middleware
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+import {
+  applyCors,
+  applyHelmet,
+  applyRateLimits,
+  applyTrustProxy,
+} from "./middleware/securityMiddleware.js";
 
 const __backendDir = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+
+applyTrustProxy(app);
+applyHelmet(app);
+applyCors(app);
 
 //only run morgan in development
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+app.post(
+  "/api/webhooks/paypal",
+  express.raw({
+    type: (req) =>
+      String(req.headers["content-type"] || "").includes("application/json"),
+    limit: "512kb",
+  }),
+  paypalWebhookHandler
+);
+
 //this will allow us to accept json data in the body
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+applyRateLimits(app);
 
 //anything that comes to the route will be linked to productRoutes
 app.use("/api/products", productRoutes);

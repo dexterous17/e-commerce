@@ -72,16 +72,43 @@ export function isValidObjectKey(key) {
     return false;
   }
 
-  if (key.length > 1024 || key.startsWith("/") || key.includes("..")) {
+  const trimmed = key.trim();
+  if (trimmed !== key || trimmed.length === 0) {
     return false;
   }
 
-  if (/[\x00-\x1f\x7f]/.test(key)) {
+  if (trimmed.length > 1024 || trimmed.startsWith("/") || trimmed.includes("..")) {
+    return false;
+  }
+
+  if (
+    trimmed.includes("\\") ||
+    trimmed.includes("//") ||
+    trimmed.includes("?") ||
+    trimmed.includes("*") ||
+    trimmed.includes("[") ||
+    trimmed.includes("]")
+  ) {
+    return false;
+  }
+
+  if (/[\x00-\x1f\x7f]/.test(trimmed)) {
+    return false;
+  }
+
+  let decoded = trimmed;
+  try {
+    decoded = decodeURIComponent(trimmed);
+  } catch {
+    return false;
+  }
+
+  if (decoded.includes("..") || decoded.startsWith("/") || /[\x00-\x1f\x7f]/.test(decoded)) {
     return false;
   }
 
   const envPrefix = trimSlashes(process.env.AWS_S3_PREFIX);
-  if (envPrefix && key !== envPrefix && !key.startsWith(`${envPrefix}/`)) {
+  if (envPrefix && trimmed !== envPrefix && !trimmed.startsWith(`${envPrefix}/`)) {
     return false;
   }
 

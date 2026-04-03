@@ -244,6 +244,7 @@ const OrderScreen = () => {
                           actions.order.create({
                             purchase_units: [
                               {
+                                custom_id: orderId,
                                 amount: {
                                   currency_code: "USD",
                                   value: Number(order.totalPrice).toFixed(2),

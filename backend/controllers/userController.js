@@ -31,6 +31,8 @@ async function ensureEmailIsAvailable(email, currentUserId = null) {
   }
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // @desc      Auth user & get token
 // @route     POST /api/users/login
 // @access    public
@@ -57,8 +59,6 @@ export const authUser = asyncHandler(async (req, res) => {
 // @desc      register a new user
 // @route     POST /api/users
 // @access    public
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export const registerUser = asyncHandler(async (req, res) => {
   const name = String(req.body?.name ?? "").trim();
   const email = String(req.body?.email ?? "").trim().toLowerCase();
@@ -118,7 +118,25 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  const nextEmail = req.body.email || existingUser.email;
+  let nextName = existingUser.name;
+  if (req.body.name !== undefined) {
+    const n = String(req.body.name).trim();
+    if (!n) {
+      res.status(400);
+      throw new Error("Name cannot be empty");
+    }
+    nextName = n;
+  }
+
+  let nextEmail = existingUser.email;
+  if (req.body.email !== undefined) {
+    const e = String(req.body.email).trim().toLowerCase();
+    if (!e || !EMAIL_RE.test(e)) {
+      res.status(400);
+      throw new Error("A valid email is required");
+    }
+    nextEmail = e;
+  }
 
   try {
     await ensureEmailIsAvailable(nextEmail, existingUser._id);
@@ -127,11 +145,19 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const updatedUser = await updateUserById(existingUser._id, {
-    name: req.body.name || existingUser.name,
+  const patch = {
+    name: nextName,
     email: nextEmail,
-    ...(req.body.password ? { password: req.body.password } : {}),
-  });
+  };
+  if (req.body.password !== undefined && req.body.password !== "") {
+    if (String(req.body.password).length < 6) {
+      res.status(400);
+      throw new Error("Password must be at least 6 characters");
+    }
+    patch.password = req.body.password;
+  }
+
+  const updatedUser = await updateUserById(existingUser._id, patch);
 
   res.json(buildAuthResponse(updatedUser));
 });
@@ -182,7 +208,25 @@ export const updateUser = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  const nextEmail = req.body.email || existingUser.email;
+  let nextName = existingUser.name;
+  if (req.body.name !== undefined) {
+    const n = String(req.body.name).trim();
+    if (!n) {
+      res.status(400);
+      throw new Error("Name cannot be empty");
+    }
+    nextName = n;
+  }
+
+  let nextEmail = existingUser.email;
+  if (req.body.email !== undefined) {
+    const e = String(req.body.email).trim().toLowerCase();
+    if (!e || !EMAIL_RE.test(e)) {
+      res.status(400);
+      throw new Error("A valid email is required");
+    }
+    nextEmail = e;
+  }
 
   try {
     await ensureEmailIsAvailable(nextEmail, existingUser._id);
@@ -191,11 +235,15 @@ export const updateUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  const nextIsAdmin =
+    req.body.isAdmin !== undefined
+      ? Boolean(req.body.isAdmin)
+      : existingUser.isAdmin;
+
   const updatedUser = await updateUserById(existingUser._id, {
-    name: req.body.name || existingUser.name,
+    name: nextName,
     email: nextEmail,
-    isAdmin:
-      req.body.isAdmin === undefined ? existingUser.isAdmin : req.body.isAdmin,
+    isAdmin: nextIsAdmin,
   });
 
   res.json({
