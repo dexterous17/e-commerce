@@ -1,6 +1,33 @@
 Nginx Proxy Manager (NPM) — route harshildex.com to this project
 ================================================================
 
+OPTION A (recommended) — NPM in Docker next to this repo’s stack
+----------------------------------------------------------------
+From the repo root:
+
+  docker compose -f docker-compose.lightsail.yml -f docker-compose.nginx-proxy-manager.yml up -d --build
+
+Open the admin UI on port 81 (see docker-compose.nginx-proxy-manager.yml header).
+
+Add Proxy Hosts — use container hostnames (same Docker network as NPM):
+
+  ecommerce.harshildex.com
+    Scheme: http
+    Forward hostname: frontend
+    Forward port: 80
+
+  backend.ecommerce.harshildex.com
+    Scheme: http
+    Forward hostname: backend
+    Forward port: 5000
+
+SSL tab: Request Let’s Encrypt certificate; enable Force SSL if you want HTTPS everywhere.
+
+Advanced tab — paste Snippet A for the storefront host, Snippet B for the API host (below).
+
+--------------------------------------------------------------------
+OPTION B — NPM already runs elsewhere (separate Docker stack / VM)
+--------------------------------------------------------------------
 Your browser hits NPM first. NPM must “Proxy Host” each domain to the
 Docker ports published by docker-compose.lightsail.yml (defaults:
 frontend 127.0.0.1:8080, API 127.0.0.1:5004).
@@ -14,9 +41,7 @@ container, not your host. Use one of these as “Forward Hostname / IP”:
 
 Forward scheme: HTTP (NPM terminates HTTPS; upstream stays HTTP on loopback).
 
---------------------------------------------------------------------
 Proxy Host 1 — storefront (SPA + /api + /uploads via frontend nginx)
---------------------------------------------------------------------
 
   Domain names:     ecommerce.harshildex.com
   Scheme:           http
@@ -25,25 +50,15 @@ Proxy Host 1 — storefront (SPA + /api + /uploads via frontend nginx)
   (Optional) Block Common Exploits: ON
   (Optional) Websockets Support: ON
 
-  SSL tab: Request a new certificate (Let’s Encrypt), force SSL, HTTP/2.
-
-  Advanced — paste “Snippet A” below (NPM → frontend container).
-
---------------------------------------------------------------------
-Proxy Host 2 — API hostname (optional, for webhooks / direct API)
---------------------------------------------------------------------
+Proxy Host 2 — API hostname (optional)
 
   Domain names:     backend.ecommerce.harshildex.com
   Scheme:           http
   Forward hostname: host.docker.internal   (or 172.17.0.1)
   Forward port:     5004
 
-  SSL: same as above.
-
-  Advanced — paste “Snippet B” below.
-
 ================================================================
-Snippet A — ecommerce.harshildex.com only (forward port 8080)
+Snippet A — storefront proxy host
 ================================================================
 
 client_max_body_size 50m;
@@ -51,7 +66,7 @@ proxy_read_timeout 300s;
 proxy_send_timeout 300s;
 
 ================================================================
-Snippet B — backend.ecommerce.harshildex.com only (forward port 5004)
+Snippet B — API proxy host
 ================================================================
 
 proxy_buffering off;
@@ -60,10 +75,16 @@ client_max_body_size 50m;
 proxy_read_timeout 300s;
 
 ================================================================
-Verify on the host
+Verify on the host (Option B / published ports)
 ================================================================
 
   curl -sS http://127.0.0.1:8080/ | head
   curl -sS http://127.0.0.1:5004/api/health
 
 If those work but NPM does not, the Forward hostname for NPM is wrong.
+
+================================================================
+Verify inside Docker (Option A — from any container on network proxy)
+================================================================
+
+  docker compose -f docker-compose.lightsail.yml -f docker-compose.nginx-proxy-manager.yml exec nginx-proxy-manager wget -qO- http://frontend/ | head

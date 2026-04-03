@@ -25,6 +25,9 @@
 #   export LIGHTSAIL_USER=ubuntu   # optional
 #   ./scripts/deploy-lightsail.sh
 #
+# Optional: include Nginx Proxy Manager (merge compose file on the server):
+#   LIGHTSAIL_WITH_NPM=1 ./scripts/deploy-lightsail.sh
+#
 # Optional: install/update host nginx + TLS (needs sudo on server, CERTBOT_EMAIL set):
 #   INSTALL_HOST_NGINX=1 CERTBOT_EMAIL=you@example.com ./scripts/deploy-lightsail.sh
 #
@@ -126,9 +129,13 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 export FRONTEND_PORT=\"\${FRONTEND_PORT:-8080}\"
 export BACKEND_PORT=\"\${BACKEND_PORT:-5004}\"
-docker compose -f docker-compose.lightsail.yml build
-docker compose -f docker-compose.lightsail.yml up -d
-docker compose -f docker-compose.lightsail.yml ps
+COMPOSE_FILES=(-f docker-compose.lightsail.yml)
+if [[ \"\${LIGHTSAIL_WITH_NPM:-}\" == \"1\" ]]; then
+  COMPOSE_FILES+=(-f docker-compose.nginx-proxy-manager.yml)
+fi
+docker compose \"\${COMPOSE_FILES[@]}\" build
+docker compose \"\${COMPOSE_FILES[@]}\" up -d
+docker compose \"\${COMPOSE_FILES[@]}\" ps
 "
 
 echo "==> Building and starting containers (FRONTEND_PORT=\${FRONTEND_PORT:-8080}, BACKEND_PORT=\${BACKEND_PORT:-5004})"

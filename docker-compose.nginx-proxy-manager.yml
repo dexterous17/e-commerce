@@ -1,0 +1,47 @@
+# Optional: run Nginx Proxy Manager next to the Lightsail stack on a shared Docker network.
+# NPM can forward by container name (no host.docker.internal / 172.17.0.1).
+#
+#   docker compose -f docker-compose.lightsail.yml -f docker-compose.nginx-proxy-manager.yml up -d --build
+#
+# Admin UI: http://<server-ip>:81  — default login is often admin@example.com / changeme (change immediately).
+#
+# Proxy Hosts (Details tab):
+#   ecommerce.harshildex.com          Scheme http  Forward: frontend  Port 80
+#   backend.ecommerce.harshildex.com  Scheme http  Forward: backend   Port 5000
+#
+# Advanced snippets: deploy/lightsail/nginx-proxy-manager-setup.txt (use Snippet A / B as listed there;
+# when using this compose file, forward ports are 80 and 5000 to the containers, not 8080/5004.)
+#
+# Ensure host ports 80/443/81 are free (stop system nginx or another NPM stack first).
+# Override with NPM_HTTP_PORT, NPM_HTTPS_PORT, NPM_ADMIN_PORT if needed.
+
+networks:
+  proxy:
+
+services:
+  backend:
+    networks:
+      - default
+      - proxy
+
+  frontend:
+    networks:
+      - default
+      - proxy
+
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:2
+    restart: unless-stopped
+    ports:
+      - "${NPM_HTTP_PORT:-80}:80"
+      - "${NPM_HTTPS_PORT:-443}:443"
+      - "${NPM_ADMIN_PORT:-81}:81"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - proxy
+
+volumes:
+  npm_data:
+  npm_letsencrypt:

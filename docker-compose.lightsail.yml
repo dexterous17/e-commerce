@@ -12,6 +12,10 @@
 # Run from repo root:
 #   docker compose -f docker-compose.lightsail.yml up -d --build
 #
+# With Nginx Proxy Manager on the same host (shared Docker network):
+#   docker compose -f docker-compose.lightsail.yml -f docker-compose.nginx-proxy-manager.yml up -d --build
+#   See deploy/lightsail/nginx-proxy-manager-setup.txt
+#
 # Open TCP 22, 80, and 443 in the Lightsail networking firewall.
 #
 # Publish API and static app on loopback only so the host nginx (or another reverse proxy)
