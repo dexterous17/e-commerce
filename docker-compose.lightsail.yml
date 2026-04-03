@@ -12,7 +12,13 @@
 # Run from repo root:
 #   docker compose -f docker-compose.lightsail.yml up -d --build
 #
-# Open TCP 80 (and 443 if you terminate TLS on the host) in the Lightsail firewall.
+# Open TCP 22, 80, and 443 in the Lightsail networking firewall.
+#
+# Publish API and static app on loopback only so the host nginx (or another reverse proxy)
+# can bind :80/:443 and route:
+#   ecommerce.example.com          -> 127.0.0.1:${FRONTEND_PORT:-8080}
+#   backend.ecommerce.example.com  -> 127.0.0.1:${BACKEND_PORT:-5004}
+# Set FRONTEND_PORT / BACKEND_PORT in repo-root `.env` or the shell environment.
 
 services:
   backend:
@@ -42,6 +48,8 @@ services:
       AWS_S3_PREFIX: ${AWS_S3_PREFIX:-products}
     volumes:
       - backend_uploads:/app/backend/uploads
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-5004}:5000"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:5000/ >/dev/null || exit 1"]
       interval: 15s
@@ -60,7 +68,7 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "${FRONTEND_PORT:-80}:80"
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null || exit 1"]
       interval: 15s
