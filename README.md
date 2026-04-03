@@ -32,7 +32,7 @@ If you need a custom Postgres CA certificate, mount it into the backend containe
 
 From the **repo root**, **`npm start`** runs **`npm run dev` in `backend/`**, which starts the **Express API** (default port **5002**) and **Vite** (**5173**) together. Use **`npm run start:frontend`** if you only need the Vite dev server (you must run the API separately with **`cd backend && npm start`**).
 
-Sanity-check the API you are talking to: **`curl -s http://127.0.0.1:5002/api/health`** should return JSON with **`"ok":true`** and **`"s3ImageProxy":true`** when `backend/.env` has region and bucket set (private S3 buckets need the proxy or images 403).
+Sanity-check the API you are talking to: **`curl -s http://127.0.0.1:5002/api/health`** should return JSON with **`"ok":true`**, **`"s3ImageProxy":true`**, and usually **`"awsAccessKeyEnvSet":true`** when using keys in `aws/.env` or `backend/.env` (otherwise `/api/media/s3` cannot read private objects). **`awsAccessKeyEnvSet":false`** can still be OK on AWS if the SDK uses an instance role.
 
 ## Backend on your machine (Postgres in Docker)
 

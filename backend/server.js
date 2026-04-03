@@ -53,9 +53,15 @@ app.get("/api/config/paypal", (req, res) =>
 
 /** Confirms this Node process is the API and whether S3 image URLs are rewritten for clients. */
 app.get("/api/health", (req, res) => {
+  const awsKeysInEnv = Boolean(
+    process.env.AWS_ACCESS_KEY_ID?.trim() &&
+      process.env.AWS_SECRET_ACCESS_KEY?.trim()
+  );
   res.json({
     ok: true,
     s3ImageProxy: isImageProxyEnabled(),
+    /** False does not rule out IAM/instance roles; true means static keys are in env. */
+    awsAccessKeyEnvSet: awsKeysInEnv,
     listenPort: Number.parseInt(process.env.PORT || "5002", 10),
     nodeEnv: process.env.NODE_ENV || null,
   });
