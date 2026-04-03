@@ -4,6 +4,9 @@
 # Environment files
 .env
 .env.*
+database/.env
+database/.env.*
+!database/.env.example
 backend/.env
 backend/.env.*
 frontend/.env
