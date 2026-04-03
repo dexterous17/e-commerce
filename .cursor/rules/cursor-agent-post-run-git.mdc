@@ -1,0 +1,24 @@
+---
+description: After agent work, refresh .gitignore for new artifacts then git commit when needed
+alwaysApply: true
+---
+
+# Post-run: `.gitignore` and git commit
+
+When finishing **substantive** work (you created or changed files, added tooling, or produced build/test artifacts), do this **before** you stop:
+
+## 1. Update `.gitignore`
+
+- Scan for new **generated**, **cache**, **local-only**, or **dependency** paths that are not already ignored (e.g. `dist/`, coverage, Playwright/HTML reports, `.turbo`, editor/OS junk).
+- Prefer the **repo root** `.gitignore`; add path-scoped entries (e.g. `/frontend/playwright-report/`) when artifacts live under a subfolder.
+- **Never** weaken ignores for secrets: keep `.env`, keys, and certificate patterns as-is unless the user explicitly asked to track safe examples only.
+
+If nothing new should be ignored, skip edits.
+
+## 2. Commit
+
+- Run `git status`. If the working tree is **clean**, skip commit.
+- Otherwise stage the right files (`git add` — respect ignores; do not force-add secrets), then commit with a **short, accurate** message describing what changed.
+- Use `git_write` permission when the environment requires it for `git add` / `git commit`.
+
+If the user asked you **not** to commit or the session was **read-only** (questions only, no repo edits), skip the commit step and only run the `.gitignore` pass when you actually introduced artifacts that need ignoring.

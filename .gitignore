@@ -1,3 +1,40 @@
 /backend/node_modules/
 /frontend/node_modules/
-/backend/.env
+
+# Environment files
+.env
+.env.*
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+!.env.example
+!.env.sample
+!backend/.env.example
+!backend/.env.sample
+!frontend/.env.example
+!frontend/.env.sample
+
+# Secrets and local certificates/keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/*.txt
+!secrets/*.example
+!secrets/README.md
+
+# Cursor / agent debug session logs (local only)
+.cursor/debug*.log
+
+# OS files
+.DS_Store
+
+# Frontend build output
+/frontend/dist/
+/frontend/build/
+
+# Playwright (local HTML report and run artifacts)
+/frontend/playwright-report/
+/frontend/test-results/
