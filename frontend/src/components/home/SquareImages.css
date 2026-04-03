@@ -1,14 +1,55 @@
-.gallery {
-  background-color: white;
-  display: grid;
-  grid-template: repeat(7, 5vw) / repeat(8, 1fr);
-  grid-gap: 0.5rem;
-  padding: 0.5rem;
+/* --------------------------------------------------------------------------
+   Gallery section (container queries use gallery-section width)
+   -------------------------------------------------------------------------- */
+.gallery-section {
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+  container-name: gallery-section;
 }
 
-figure {
-  margin-bottom: 0;
+.gallery__loading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(12rem, 36vw, 18rem);
+}
+
+.gallery__message {
+  grid-column: 1 / -1;
+}
+
+.gallery {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: repeat(7, minmax(2rem, min(5vw, 5rem)));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  gap: clamp(0.35rem, 1.2cqi, 0.5rem);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(0.35rem, 1.5cqi, 0.5rem);
+  background-color: white;
+}
+
+.gallery-section figure {
+  min-height: 0;
+  margin: 0;
+}
+
+.gallery figure {
+  display: block;
+  align-self: stretch;
+  overflow: hidden;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .gallery__item--1 {
@@ -69,12 +110,12 @@ figure {
 }
 
 .gallery__img {
+  display: block;
   width: 100%;
   height: 100%;
-
+  min-height: 0;
   object-fit: cover;
   object-position: center;
-  display: block;
 }
 
 .gallery__item--6 .gallery__img {
@@ -82,82 +123,118 @@ figure {
   transform: scaleX(-1);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .gallery__item--6 .gallery__img {
+    transform: none;
+  }
+}
+
 .welcome-box {
-  z-index: 1;
   position: absolute;
-  left: 50%;
   top: 50%;
+  left: 50%;
+  z-index: 2;
+  box-sizing: border-box;
+  width: min(500px, calc(100% - 2rem));
+  max-width: calc(100% - 2rem);
+  padding: 1rem 1.25rem;
   transform: translate(-50%, -50%);
   text-align: center;
+  pointer-events: none;
   background: rgba(0, 0, 0, 0.8);
-  padding: 20px;
-  width: 500px;
 }
 
 .welcome-box h2,
 .welcome-box h1 {
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
   color: var(--light);
-  line-height: 4rem;
-  letter-spacing: 4px;
 }
 
 .welcome-box h2 {
+  margin-bottom: 0.35rem;
+  font-size: clamp(0.85rem, 2.5vw, 1.25rem);
   font-weight: 700;
 }
 
 .welcome-box h1 {
+  font-size: clamp(1.25rem, 4vw, 3.125rem);
   font-weight: 300;
-  font-size: 50px;
 }
 
-@media (max-width: 1000px) {
+/* --------------------------------------------------------------------------
+   Container queries — gallery (width = .gallery-section)
+   -------------------------------------------------------------------------- */
+
+@container gallery-section (max-width: 1000px) {
   .welcome-box {
-    width: 45%;
-    padding: 15px;
-  }
-  .welcome-box h2,
-  .welcome-box h1 {
-    font-size: 24px;
-    line-height: 3rem;
-    letter-spacing: 3px;
+    padding: 0.85rem 1rem;
   }
 }
 
-@media (max-width: 900px) {
-  .welcome-box {
-    width: 40%;
-    padding: 12px;
+/* Tablet / narrow desktop: mosaic is too dense — uniform 4-column flow */
+@container gallery-section (max-width: 1024px) {
+  .gallery {
+    grid-template: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(72px, 22cqi);
+    gap: clamp(0.3rem, 1cqi, 0.45rem);
+    padding: clamp(0.3rem, 1.2cqi, 0.45rem);
   }
-  .welcome-box h2,
-  .welcome-box h1 {
-    font-size: 20px;
-    line-height: 2rem;
-    letter-spacing: 2px;
+
+  .gallery [class*="gallery__item--"] {
+    grid-row: auto !important;
+    grid-column: auto !important;
   }
 }
 
-@media (max-width: 580px) {
-  .welcome-box {
-    width: 35%;
-    padding: 10px;
-  }
-  .welcome-box h2,
-  .welcome-box h1 {
-    font-size: 16px;
-    line-height: 1.5rem;
-    letter-spacing: 1.5px;
+@container gallery-section (max-width: 768px) {
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(96px, 30cqi);
+    gap: clamp(0.3rem, 1.2cqi, 0.4rem);
+    padding: clamp(0.3rem, 1.5cqi, 0.4rem);
   }
 }
 
-@media (max-width: 500px) {
-  .welcome-box {
-    width: 30%;
-    padding: 7px 10px;
+@container gallery-section (max-width: 480px) {
+  .gallery {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(120px, min(42cqi, 55vw));
+    gap: 0.35rem;
+    padding-block: 0.35rem;
+    padding-inline: max(0.35rem, env(safe-area-inset-left, 0px))
+      max(0.35rem, env(safe-area-inset-right, 0px));
   }
-  .welcome-box h2,
+}
+
+@container gallery-section (max-width: 360px) {
+  .gallery {
+    grid-auto-rows: minmax(100px, 38cqi);
+  }
+}
+
+/* Welcome box headings scale to container width */
+@container gallery-section (max-width: 600px) {
+  .welcome-box h2 {
+    font-size: clamp(0.75rem, 3cqi, 1rem);
+  }
   .welcome-box h1 {
-    font-size: 15px;
-    line-height: 1.3rem;
-    letter-spacing: 1.5px;
+    font-size: clamp(1rem, 5cqi, 2rem);
+  }
+}
+
+/* Narrow viewports: stack welcome copy below the mosaic instead of covering cells */
+@container gallery-section (max-width: 640px) {
+  .welcome-box {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    margin-top: var(--space-md);
+    pointer-events: auto;
   }
 }
