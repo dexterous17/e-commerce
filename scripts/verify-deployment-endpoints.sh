@@ -22,6 +22,17 @@ curl -fsS --connect-timeout 15 --max-time 60 "$BASE/api/health" \
   | { command -v jq >/dev/null && jq . || cat; } || die "health check failed (API or proxy down?)"
 
 echo ""
+echo "== GET $BASE/api/products?... (catalog count) =="
+PLIST=$(curl -fsS --connect-timeout 15 --max-time 60 \
+  "$BASE/api/products?pageNumber=1&pageSize=1") \
+  || die "product list request failed"
+COUNT=$(echo "$PLIST" | python3 -c "import json,sys; print(int(json.load(sys.stdin).get('count') or 0))")
+echo "$PLIST" | { command -v jq >/dev/null && jq . || head -c 400; echo; }
+if [[ "$COUNT" -eq 0 ]]; then
+  die "catalog is empty (count=0). Fix: SSH into Lightsail, cd to this repo, run ./scripts/lightsail-seed-from-manifest.sh (or: docker compose -f docker-compose.lightsail.yml exec backend npm run data:import:s3:manifest). Your .pem is only for ssh -i … ubuntu@<instance-ip>; keep the key private and never commit it."
+fi
+
+echo ""
 echo "== GET $BASE/api/products/featured =="
 FEAT=$(curl -fsS --connect-timeout 15 --max-time 60 "$BASE/api/products/featured") \
   || die "featured products request failed"

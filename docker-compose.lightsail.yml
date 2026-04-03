@@ -18,6 +18,11 @@
 #
 # Open TCP 22, 80, and 443 in the Lightsail networking firewall.
 #
+# If the storefront loads but shows no products/images, the API may be healthy while Postgres has
+# zero rows. Seed from the S3 manifest (on the host, repo root):
+#   ./scripts/lightsail-seed-from-manifest.sh
+# (destructive to existing seeded users/products — see script header).
+#
 # Publish API and static app on loopback only so the host nginx (or another reverse proxy)
 # can bind :80/:443 and route:
 #   ecommerce.example.com          -> 127.0.0.1:${FRONTEND_PORT:-8080}

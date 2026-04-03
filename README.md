@@ -89,7 +89,20 @@ npm run data:import
 
 # S3-backed product seed with bucket metadata + seed_manifest
 npm run data:import:s3
+
+# From products-s3-manifest.json (images already in S3) — used for production-style catalogs
+npm run data:import:s3:manifest
 ```
+
+**Lightsail / Docker** (run on the server from the repo root; wipes seeded users/products first):
+
+```bash
+./scripts/lightsail-seed-from-manifest.sh
+# equivalent:
+# docker compose -f docker-compose.lightsail.yml exec backend npm run data:import:s3:manifest
+```
+
+If [the live shop](http://ecommerce.harshildex.com/) shows no items but `/api/health` is OK, the database is usually empty — run the seed step above (SSH with your own key file, e.g. `ssh -i /path/to/LightsailDefaultKey-*.pem …`; never commit `.pem` files).
 
 The S3 seeder stores:
 
