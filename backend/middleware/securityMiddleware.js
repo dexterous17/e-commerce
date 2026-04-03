@@ -54,12 +54,22 @@ const maxGeneral = Number.parseInt(
   10
 );
 
+function isPublicMediaGet(req) {
+  return (
+    req.method === "GET" &&
+    typeof req.path === "string" &&
+    req.path.startsWith("/api/media")
+  );
+}
+
+/** Skips S3/image proxy traffic so product grids do not hit 429 under normal browsing. */
 export const apiGeneralRateLimit = rateLimit({
   windowMs: Number.isFinite(windowMs) && windowMs > 0 ? windowMs : 15 * 60 * 1000,
   max: Number.isFinite(maxGeneral) && maxGeneral > 0 ? maxGeneral : 400,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many requests, please try again later" },
+  skip: (req) => isPublicMediaGet(req),
 });
 
 const authWindow = Number.parseInt(

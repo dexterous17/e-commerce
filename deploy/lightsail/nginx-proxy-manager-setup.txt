@@ -147,3 +147,19 @@ Verify inside Docker (Option A — from any container on network proxy)
 ================================================================
 
   docker compose -f docker-compose.lightsail.yml -f docker-compose.nginx-proxy-manager.yml exec nginx-proxy-manager wget -qO- http://frontend/ | head
+
+================================================================
+After deploy — catch broken API / images early
+================================================================
+
+From the repo root (any machine that can reach your public URL):
+
+  ./scripts/verify-deployment-endpoints.sh https://ecommerce.harshildex.com
+
+This checks /api/health, featured products JSON, and an HTTP HEAD on the first
+product image (S3 proxy or uploads). If it fails, fix proxy hosts and env:
+
+  ./scripts/npm-repair-proxy-hosts.sh
+
+Ensure env/aws/.env on the server has credentials (or IAM role) so
+/api/media/s3 can call S3; see /api/health field s3ImageProxy.
