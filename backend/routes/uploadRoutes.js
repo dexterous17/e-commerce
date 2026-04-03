@@ -2,8 +2,13 @@
 import path from "path";
 import express from "express";
 import multer from "multer";
+import { fileURLToPath } from "url";
+
+import { protect, admin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+const backendRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const uploadsDir = path.join(backendRoot, "uploads");
 
 //innitializing multer storage engine and create config
 //pass in object with two functions
@@ -13,7 +18,7 @@ const router = express.Router();
 //take the fieldname add - and the timestamp, and the node path extension can get the extension name (.jpg .png ect)
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, uploadsDir);
   },
   filename(req, file, cb) {
     cb(
@@ -35,7 +40,7 @@ function checkFileType(file, cb) {
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb("Images only!");
+    cb(new Error("Images only!"));
   }
 }
 
@@ -43,6 +48,7 @@ function checkFileType(file, cb) {
 //you can limit what types of files you can upload into the route with filefilter
 const upload = multer({
   storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
     checkFileType(file, cb);
   },
@@ -51,8 +57,20 @@ const upload = multer({
 //this file is connected to /api/upload
 //.single means we are uploading just one image
 //when we call it on the front end we need to also call it image
-router.post("/", upload.array("image", 16), (req, res) => {
-  res.send(req.files);
+router.post("/", protect, admin, (req, res, next) => {
+  upload.array("image", 16)(req, res, (err) => {
+    if (err) {
+      next(err);
+      return;
+    }
+    const files = req.files || [];
+    res.json(
+      files.map((file) => ({
+        ...file,
+        path: path.posix.join("uploads", file.filename),
+      }))
+    );
+  });
 });
 
 export default router;

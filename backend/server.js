@@ -46,10 +46,15 @@ app.use("/api/upload", uploadRoutes);
 
 app.use("/api/media", mediaRoutes);
 
-//special route to access the paypal client id
-app.get("/api/config/paypal", (req, res) =>
-  res.send(process.env.PAYPAL_CLIENT_ID)
-);
+// Public PayPal client id (safe to expose; used by the browser SDK)
+app.get("/api/config/paypal", (req, res) => {
+  const clientId = process.env.PAYPAL_CLIENT_ID?.trim();
+  if (!clientId) {
+    res.status(503).json({ message: "PayPal is not configured" });
+    return;
+  }
+  res.json({ clientId });
+});
 
 /** Confirms this Node process is the API and whether S3 image URLs are rewritten for clients. */
 app.get("/api/health", (req, res) => {

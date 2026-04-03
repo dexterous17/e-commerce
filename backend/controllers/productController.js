@@ -75,21 +75,53 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 // @route     POST /api/products
 // @access    private/admin
 export const createProductHandler = asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  const name = String(body.name ?? "").trim();
+  if (!name) {
+    res.status(400);
+    throw new Error("Product name is required");
+  }
+
+  const price = Number(body.price);
+  if (!Number.isFinite(price) || price < 0) {
+    res.status(400);
+    throw new Error("A valid non-negative price is required");
+  }
+
+  const description = String(body.description ?? "").trim();
+  const category = String(body.category ?? "").trim();
+  const color = String(body.color ?? "").trim();
+  if (!description || !category || !color) {
+    res.status(400);
+    throw new Error("Description, category, and color are required");
+  }
+
+  const imagesForStore = Array.isArray(body.images)
+    ? canonicalizeImageUrlsForStorage(body.images)
+    : [];
+
+  const countInStock = Number(body.countInStock ?? 0);
+  if (!Number.isFinite(countInStock) || countInStock < 0 || !Number.isInteger(countInStock)) {
+    res.status(400);
+    throw new Error("countInStock must be a non-negative integer");
+  }
+
   const product = await createProductRecord({
     user: req.user._id,
-    name: "Name",
-    nwt: false,
-    brand: "Brand",
-    price: 0,
-    size: "Size",
-    description: "Description",
-    sex: "Sex",
-    category: "Category",
-    subCategory: "Sub Category",
-    color: "Color",
-    subColor: "subColor",
-    countInStock: 0,
-    images: [],
+    name,
+    nwt: Boolean(body.nwt),
+    brand: body.brand != null ? String(body.brand).trim() || null : null,
+    price,
+    size: body.size != null ? String(body.size).trim() || null : null,
+    description,
+    sex: body.sex != null ? String(body.sex).trim() || null : null,
+    category,
+    subCategory:
+      body.subCategory != null ? String(body.subCategory).trim() || null : null,
+    color,
+    subColor: body.subColor != null ? String(body.subColor).trim() || null : null,
+    countInStock,
+    images: imagesForStore,
   });
 
   res.status(201).json(mapProductImagesForApi(product));
@@ -127,7 +159,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
     images: imagesForStore,
   });
 
-  res.status(201).json(mapProductImagesForApi(updatedProduct));
+  res.json(mapProductImagesForApi(updatedProduct));
 });
 
 // @desc      get featured products

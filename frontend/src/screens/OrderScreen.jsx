@@ -71,7 +71,10 @@ const OrderScreen = () => {
       axios
         .get("/api/config/paypal")
         .then(({ data }) => {
-          const id = (typeof data === "string" ? data : String(data ?? "")).trim();
+          const id =
+            typeof data === "string"
+              ? data.trim()
+              : String(data?.clientId ?? "").trim();
           setPaypalClientId(id || "");
         })
         .catch(() => setPaypalClientId(""));
