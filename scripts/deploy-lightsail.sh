@@ -4,8 +4,18 @@
 # Prerequisites:
 #   - DNS A (and AAAA if using IPv6) for ecommerce.harshildex.com and
 #     backend.ecommerce.harshildex.com pointing at the instance public IP.
-#   - Lightsail firewall: TCP 22, 80, 443 open.
+#   - Lightsail firewall: TCP 22, 80, 443 open (restrict SSH source to your IP when possible).
 #   - On the server: env/database/.env, env/backend/.env, env/aws/.env (see repo templates).
+#
+# SSH security (client):
+#   - Uses only the given -i key (IdentitiesOnly), publickey only (no password / kbd-interactive).
+#   - Default: StrictHostKeyChecking=accept-new (rejects changed host keys after first connect).
+#   - Stronger: set LIGHTSAIL_KNOWN_HOSTS to a file of trusted host keys, e.g.
+#       mkdir -p deploy/lightsail
+#       ssh-keyscan -t ed25519,rsa YOUR_HOST >> deploy/lightsail/known_hosts
+#       export LIGHTSAIL_KNOWN_HOSTS="$PWD/deploy/lightsail/known_hosts"
+#     (that path is gitignored). Then every connect verifies the key.
+#   - Server hardening (password auth off, etc.): run deploy/lightsail/harden-sshd.sh on the VM once.
 #
 # Usage:
 #   export LIGHTSAIL_HOST=203.0.113.10
@@ -24,6 +34,65 @@ cd "$ROOT"
 : "${LIGHTSAIL_HOST:?Set LIGHTSAIL_HOST to your instance public IP or hostname}"
 LIGHTSAIL_USER="${LIGHTSAIL_USER:-ubuntu}"
 LIGHTSAIL_PEM="${LIGHTSAIL_PEM:?Set LIGHTSAIL_PEM to your .pem path}"
+
+if [[ ! -f "$LIGHTSAIL_PEM" ]]; then
+  echo "LIGHTSAIL_PEM is not a file: $LIGHTSAIL_PEM" >&2
+  exit 1
+fi
+
+# Refuse group-/world-readable private keys (OpenSSH warns; this avoids accidental leaks).
+lightsail_key_must_be_private() {
+  local f=$1 mode m
+  mode=$(stat -c '%a' "$f" 2>/dev/null || stat -f '%OLp' "$f")
+  m=$((8#$mode))
+  if (( m & 077 )); then
+    echo "ERROR: $f is too permissive (mode $mode). Run: chmod 600 $(printf %q "$f")" >&2
+    exit 1
+  fi
+}
+lightsail_key_must_be_private "$LIGHTSAIL_PEM"
+
+lightsail_build_ssh_opts() {
+  LIGHTSAIL_SSH_OPTS=(
+    -i "$LIGHTSAIL_PEM"
+    -o IdentitiesOnly=yes
+    -o PreferredAuthentications=publickey
+    -o PasswordAuthentication=no
+    -o KbdInteractiveAuthentication=no
+    -o PubkeyAuthentication=yes
+  )
+  if [[ -n "${LIGHTSAIL_KNOWN_HOSTS:-}" ]]; then
+    if [[ ! -f "$LIGHTSAIL_KNOWN_HOSTS" ]]; then
+      echo "ERROR: LIGHTSAIL_KNOWN_HOSTS is set but not a file: $LIGHTSAIL_KNOWN_HOSTS" >&2
+      exit 1
+    fi
+    LIGHTSAIL_SSH_OPTS+=(
+      -o "UserKnownHostsFile=${LIGHTSAIL_KNOWN_HOSTS}"
+      -o StrictHostKeyChecking=yes
+    )
+  else
+    LIGHTSAIL_SSH_OPTS+=(-o StrictHostKeyChecking=accept-new)
+  fi
+}
+
+lightsail_build_ssh_opts
+
+lightsail_ssh() {
+  ssh "${LIGHTSAIL_SSH_OPTS[@]}" "$@"
+}
+
+lightsail_scp() {
+  scp "${LIGHTSAIL_SSH_OPTS[@]}" "$@"
+}
+
+lightsail_rsync_rsh() {
+  local parts=(ssh "${LIGHTSAIL_SSH_OPTS[@]}") i s=""
+  for i in "${parts[@]}"; do
+    s+="$(printf '%q' "$i") "
+  done
+  printf '%s' "${s% }"
+}
+
 # Directory on the server: either a name under the remote home (default: e-commerce) or an absolute path.
 REMOTE_DIR="${LIGHTSAIL_REMOTE_DIR:-e-commerce}"
 if [[ "$REMOTE_DIR" == /* ]]; then
@@ -31,9 +100,10 @@ if [[ "$REMOTE_DIR" == /* ]]; then
 else
   REMOTE_CD="cd \$HOME/$(printf %q "$REMOTE_DIR")"
 fi
-SSH=(ssh -i "$LIGHTSAIL_PEM" -o StrictHostKeyChecking=accept-new "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}")
+
+RSYNC_RSH=$(lightsail_rsync_rsh)
 RSYNC=(rsync -avz
-  -e "ssh -i $LIGHTSAIL_PEM -o StrictHostKeyChecking=accept-new"
+  -e "$RSYNC_RSH"
   --exclude .git
   --exclude backend/node_modules
   --exclude frontend/node_modules
@@ -60,11 +130,11 @@ docker compose -f docker-compose.lightsail.yml ps
 "
 
 echo "==> Building and starting containers (FRONTEND_PORT=\${FRONTEND_PORT:-8080}, BACKEND_PORT=\${BACKEND_PORT:-5004})"
-"${SSH[@]}" bash -s <<< "$REMOTE_SCRIPT"
+lightsail_ssh bash -s <<< "$REMOTE_SCRIPT"
 
 if [[ "${INSTALL_HOST_NGINX:-}" == "1" ]]; then
   echo "==> Installing host nginx site (requires passwordless sudo or you type sudo password)"
-  scp -i "$LIGHTSAIL_PEM" -o StrictHostKeyChecking=accept-new \
+  lightsail_scp \
     "$ROOT/deploy/lightsail/nginx-ecommerce.conf" \
     "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}:/tmp/nginx-ecommerce.conf"
   NGINX_REMOTE=$(cat <<'EOS'
@@ -82,12 +152,12 @@ sudo systemctl enable nginx
 sudo systemctl reload nginx
 EOS
 )
-  "${SSH[@]}" bash -s <<< "$NGINX_REMOTE"
+  lightsail_ssh bash -s <<< "$NGINX_REMOTE"
 
   if [[ -n "${CERTBOT_EMAIL:-}" ]]; then
     echo "==> Obtaining TLS certificates with certbot"
-    EMAIL_Q=$(printf "%q" "$CERTBOT_EMAIL")
-    "${SSH[@]}" bash -s <<EOF
+    EMAIL_Q=$(printf %q "$CERTBOT_EMAIL")
+    lightsail_ssh bash -s <<EOF
 set -euo pipefail
 sudo apt-get install -y -qq certbot python3-certbot-nginx
 sudo certbot --nginx \\

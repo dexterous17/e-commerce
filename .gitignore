@@ -21,6 +21,9 @@ frontend/.env.*
 !.env.example
 !.env.sample
 
+# Lightsail: optional strict host key file (populate with ssh-keyscan -t ed25519)
+/deploy/lightsail/known_hosts
+
 # Secrets and local certificates/keys
 *.pem
 *.key
