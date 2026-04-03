@@ -1,56 +1,202 @@
+/* Global styles: tokens, base layout, typography, utilities, container queries.
+   Load order: bootstrap.min.css → index.css (see index.jsx). */
+
+/* --------------------------------------------------------------------------
+   Design tokens
+   -------------------------------------------------------------------------- */
 :root {
+  /* Fixed header clearance (Navbar fixed="top" + padding + brand line-height) */
+  --site-header-offset: 76px;
+
+  /* Layout */
+  --main-min-height-offset: 200px;
+  --main-min-height-offset-sm: 180px;
+
+  /* Colors */
   --background-light: #f4f4f4;
   --font-title-gray: #5a5a5a;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+
+  /* Border radii */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+
+  /* Motion */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+
+  /* Carousel (inherited by carousel children) */
+  --carousel-height: min(50vh, 420px);
+  --carousel-height-sm: 38vh;
+  --carousel-height-sm-min: 220px;
 }
 
-/* html {
-} */
+/* --------------------------------------------------------------------------
+   Base layout
+   -------------------------------------------------------------------------- */
+html {
+  overflow-x: hidden;
+}
 
 body {
+  overflow-x: hidden;
+  margin: 0;
   background-color: var(--background-light);
 }
 
-main {
-  margin-top: 70px;
-  min-height: calc(100vh - 248px);
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-.centered {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  /* bring your own prefixes */
-  transform: translate(-50%, -50%);
+/* Primary landmark: #main-content (see App.jsx). Named container for @container main-content rules. */
+main,
+#main-content {
+  box-sizing: border-box;
+  flex: 1 0 auto;
+  max-width: 100%;
+  min-width: 0; /* flex item: allow shrinking so children don’t force horizontal overflow */
+  min-height: calc(100vh - var(--main-min-height-offset));
+  margin-top: var(--site-header-offset);
+  scroll-margin-top: var(--site-header-offset); /* anchor / skip-link target clearance */
+  container: main-content / inline-size;
 }
 
-/* SCREENS */
-/* ORDER SCREEN */
-@media (max-width: 768px) {
-  .order-screen h1 {
-    font-size: 30px;
+/* main’s margin-top stays viewport-based — a container cannot query itself */
+@media (max-width: 576px) {
+  :root {
+    --site-header-offset: 68px;
   }
-  .order-screen__image {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 8px;
-  }
-}
 
-@media (max-width: 500px) {
-  .order-screen h1,
-  .order-screen h2 {
-    font-size: 24px;
+  main,
+  #main-content {
+    min-height: calc(100vh - var(--main-min-height-offset-sm));
   }
 }
 
-/* PLACE ORDER SCREEN */
-@media (max-width: 768px) {
-  .place-order-screen h1 {
-    font-size: 30px;
+/* --------------------------------------------------------------------------
+   Typography (global heading scale)
+   -------------------------------------------------------------------------- */
+h1 {
+  font-size: clamp(1.45rem, 5.5vw, 2.5rem);
+}
+
+h2 {
+  font-size: clamp(1.2rem, 4.5vw, 2rem);
+}
+
+h3 {
+  font-size: clamp(1.05rem, 3.8vw, 1.75rem);
+}
+
+/* --------------------------------------------------------------------------
+   Utilities
+   -------------------------------------------------------------------------- */
+.checkoutSteps {
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+}
+
+/* Form routes: parent is Bootstrap .container; this row is a direct child (no double container). */
+.form-screen h1 {
+  margin-bottom: var(--space-lg);
+  color: var(--font-title-gray);
+}
+
+.form-screen .form-label {
+  margin-bottom: var(--space-xs);
+  font-weight: 500;
+}
+
+.form-screen form > .btn[type="submit"] {
+  margin-top: var(--space-sm);
+}
+
+.form-screen__footer {
+  margin-top: var(--space-lg);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--font-title-gray);
+}
+
+.form-screen__footer a {
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Container queries — main content width (Bootstrap md = 768px)
+   Cart, profile, checkout, order / place-order shared rules.
+   -------------------------------------------------------------------------- */
+@container main-content (max-width: 768px) {
+  .cart-item-row {
+    row-gap: 0.75rem;
   }
+
+  .cart-item-row > [class*="col"] {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .cart-item-row .cart__image {
+    max-width: 160px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cart-item-row .form-control {
+    max-width: 120px;
+  }
+
+  .profile-screen > [class*="col"]:first-child {
+    margin-bottom: 1.75rem;
+  }
+
   .place-order-screen__image {
     display: flex;
+    flex: 0 0 120px !important;
+    max-width: 120px !important;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-inline: auto;
+    margin-bottom: var(--space-sm);
+  }
+
+  .order-screen__image {
+    display: flex;
+    flex: 0 0 120px !important;
+    max-width: 120px !important;
+    justify-content: center;
+    margin-bottom: var(--space-sm);
+  }
+
+  .order-screen h1 {
+    font-size: 1.875rem;
+  }
+
+  .place-order-screen h1 {
+    font-size: 1.875rem;
+  }
+}
+
+@container main-content (max-width: 480px) {
+  .checkoutSteps .nav-link {
+    padding-right: var(--space-sm);
+    padding-left: var(--space-sm);
+    font-size: 0.875rem;
+  }
+}
+
+@container main-content (max-width: 500px) {
+  .order-screen h1,
+  .order-screen h2 {
+    font-size: 1.5rem;
   }
 }
