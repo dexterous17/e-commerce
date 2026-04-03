@@ -12,6 +12,7 @@ import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import mediaRoutes from "./routes/mediaRoutes.js";
 
 import connectDB from "./config/db.js";
 import { dbgServer } from "./utils/debugLog.js";
@@ -41,6 +42,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 
 app.use("/api/upload", uploadRoutes);
+
+app.use("/api/media", mediaRoutes);
 
 //special route to access the paypal client id
 app.get("/api/config/paypal", (req, res) =>

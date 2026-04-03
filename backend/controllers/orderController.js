@@ -1,14 +1,22 @@
 import asyncHandler from "express-async-handler";
 
-//models
-//mongoose will call to fetch the products
-import Order from "../models/orderModel.js";
+import {
+  createOrder as createOrderRecord,
+  getOrderById as getOrderByIdRecord,
+  listOrders,
+  listOrdersByUser,
+  updateOrderToPaid as markOrderPaid,
+  updateOrderToShipped as markOrderShipped,
+} from "../models/orderModel.js";
+import {
+  canonicalizeImageUrlsForStorage,
+  mapOrderImagesForApi,
+} from "../utils/mediaImageUrls.js";
 
 // @desc      Create all products
-// @route     post /api/orders/
-// @access    provate
+// @route     POST /api/orders/
+// @access    private
 export const addOrderItems = asyncHandler(async (req, res) => {
-  //deconstruct the order from the body of the response
   const {
     orderItems,
     shippingAddress,
@@ -19,112 +27,95 @@ export const addOrderItems = asyncHandler(async (req, res) => {
     totalPrice,
   } = req.body;
 
-  //check to make sure there are order items
-  if (orderItems && orderItems.length === 0) {
+  if (!Array.isArray(orderItems) || orderItems.length === 0) {
     res.status(400);
     throw new Error("No order items");
-  } else {
-    const order = new Order({
-      user: req.user._id,
-      orderItems,
-      shippingAddress,
-      paymentMethod,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice,
-    });
-    //actually save the order that we just created
-    const createdOrder = await order.save();
-    //201 means something was created
-    res.status(201).json(createdOrder);
   }
+
+  const normalizedItems = orderItems.map((item) => ({
+    ...item,
+    images: Array.isArray(item.images)
+      ? canonicalizeImageUrlsForStorage(item.images)
+      : item.images,
+  }));
+
+  const createdOrder = await createOrderRecord({
+    userId: req.user._id,
+    orderItems: normalizedItems,
+    shippingAddress,
+    paymentMethod,
+    itemsPrice,
+    taxPrice,
+    shippingPrice,
+    totalPrice,
+  });
+
+  res.status(201).json(mapOrderImagesForApi(createdOrder));
 });
 
 // @desc      Get order by id
 // @route     GET /api/orders/:id
 // @access    private
-export const getOrderById = asyncHandler(async (req, res) => {
-  //in addition to the order, we also want some user information that is associated with the order
-  const order = await await Order.findById(req.params.id).populate(
-    "user",
-    "name email"
-  );
+export const getOrderByIdHandler = asyncHandler(async (req, res) => {
+  const order = await getOrderByIdRecord(req.params.id);
 
-  if (order) {
-    res.json(order);
-  } else {
+  if (!order) {
     res.status(404);
     throw new Error("Order not found");
   }
+
+  res.json(mapOrderImagesForApi(order));
 });
 
 // @desc      update order to paid
-// @route     GET /api/orders/:id/pay
+// @route     PUT /api/orders/:id/pay
 // @access    private
-export const updateOrderToPaid = asyncHandler(async (req, res) => {
-  //find order by id
-  const order = await Order.findById(req.params.id);
+export const updateOrderPaidStatus = asyncHandler(async (req, res) => {
+  const order = await markOrderPaid(req.params.id, {
+    id: req.body.id,
+    status: req.body.status,
+    update_time: req.body.update_time,
+    email_address: req.body.payer?.email_address,
+  });
 
-  //if the order exists, set it to paid, timestamp it, and give the result from paypal
-  if (order) {
-    //update the properties of the order
-    order.isPaid = true;
-    order.paidAt = Date.now();
-    order.paymentResult = {
-      id: req.body.id,
-      status: req.body.status,
-      update_time: req.body.update_time,
-      email_address: req.body.payer.email_address,
-    };
-    //save the updated order
-    const updatedOrder = await order.save();
-    //send to the user what is sent back from updating the order
-    res.json(updatedOrder);
-  } else {
+  if (!order) {
     res.status(404);
     throw new Error("Order not found");
   }
+
+  res.json(mapOrderImagesForApi(order));
 });
 
 // @desc      get logged in user orders
 // @route     GET /api/orders/myorders
 // @access    private
 export const getMyOrders = asyncHandler(async (req, res) => {
-  //find order by logged in user
-  const orders = await Order.find({ user: req.user._id });
-
-  res.json(orders);
+  res.json(await listOrdersByUser(req.user._id));
 });
 
 // @desc      get all orders
 // @route     GET /api/orders
 // @access    private/admin
 export const getOrders = asyncHandler(async (req, res) => {
-  //find all orders
-  const orders = await Order.find({}).populate("user", "id name");
-
-  res.json(orders);
+  res.json(await listOrders());
 });
 
 // @desc      update order to shipped
-// @route     GET /api/orders/:id/ship
+// @route     PUT /api/orders/:id/ship
 // @access    private/admin
-export const updateOrderToShipped = asyncHandler(async (req, res) => {
-  //find order by id
-  const order = await Order.findById(req.params.id);
+export const updateOrderShipmentStatus = asyncHandler(async (req, res) => {
+  const order = await markOrderShipped(req.params.id);
 
-  //if the order exists, set it to shipped, timestamp it, and give the result from paypal
-  if (order) {
-    //update the properties of the order
-    order.isShipped = true;
-    order.shippedAt = Date.now();
-    //save the updated order
-    const updatedOrder = await order.save();
-    //send to the user what is sent back from updating the order
-    res.json(updatedOrder);
-  } else {
+  if (!order) {
     res.status(404);
     throw new Error("Order not found");
   }
+
+  res.json(mapOrderImagesForApi(order));
 });
+
+export {
+  getOrderByIdHandler as getOrderById,
+  updateOrderPaidStatus as updateOrderToPaid,
+  updateOrderShipmentStatus as updateOrderToShipped,
+};

@@ -10,9 +10,13 @@ const backendRoot = path.resolve(
 );
 const repoRoot = path.resolve(backendRoot, "..");
 const databaseEnvPath = path.join(repoRoot, "database", ".env");
+const awsEnvPath = path.join(repoRoot, "aws", ".env");
 
 // Optional shared DB credentials (DATABASE_URL, PG*). backend/.env overrides.
 dotenv.config({ path: databaseEnvPath, quiet: true });
+
+// Optional repo-root AWS credentials and bucket settings (same keys as backend/.env).
+dotenv.config({ path: awsEnvPath, quiet: true });
 
 const envPath = path.join(backendRoot, ".env");
 const dotenvResult = dotenv.config({ path: envPath, quiet: true });

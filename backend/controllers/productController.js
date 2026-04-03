@@ -1,107 +1,81 @@
 import asyncHandler from "express-async-handler";
 
-//models
-//mongoose will call to fetch the products
-import Product from "../models/productModel.js";
+import {
+  createProduct as createProductRecord,
+  deleteProductById,
+  getFeaturedProducts as getFeaturedProductsList,
+  getProductById as getProductByIdRecord,
+  listProducts,
+  setProductInventoryToZero,
+  updateProductById,
+} from "../models/productModel.js";
+import {
+  canonicalizeImageUrlsForStorage,
+  mapProductImagesForApi,
+  mapProductListResponseForApi,
+} from "../utils/mediaImageUrls.js";
 
 // @desc      Fetch all products
 // @route     GET /api/products/
 // @access    public
 export const getProducts = asyncHandler(async (req, res) => {
-  let filter = req.query.filter.toLowerCase();
-  if (filter === "title") {
-    filter = "name";
-  } else if (filter === "gender") {
-    filter = "sex";
-  }
-  //this is how many products we want to appear on one page
-  // const pageSize = 50;
-  const pageSize = Number(req.query.pageSize);
-  //how to pickup the page number
-  const page = Number(req.query.pageNumber) || 1;
-  //checking to see if the body has a query string (the user searched in the bar)
-  //if there is, instead of returning all the products, we will narrow it down
-  const keyword = req.query.keyword
-    ? {
-        [filter]: {
-          $regex: req.query.keyword,
-          //'i' is case insensitive
-          $options: "i",
-        },
-      }
-    : {};
+  const products = await listProducts({
+    keyword: req.query.keyword || "",
+    filter: req.query.filter || "name",
+    page: Number.parseInt(req.query.pageNumber || "1", 10),
+    pageSize: Number.parseInt(req.query.pageSize || "50", 10),
+  });
 
-  //count method lets us count the methods
-  const count = await Product.countDocuments({ ...keyword });
-  //calls to DB gives us everything as a promise, therefore make it async await
-  //it will either be empty or it will have the keyword in it
-  //the limit says how many products to return, the skip will skip that first portion if it has moved on in pages
-  const products = await Product.find({ ...keyword })
-    .limit(pageSize)
-    .skip(pageSize * (page - 1));
-  //respond with all products, the current page, and the total page count
-  res.json({ count, products, page, pages: Math.ceil(count / pageSize) });
+  res.json(mapProductListResponseForApi(products));
 });
 
 // @desc      Fetch single product
 // @route     GET /api/products/:id
 // @access    public
-export const getProductById = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
-  //check to see if the product exists
-  if (product) {
-    //respond with product
-    res.json(product);
-  } else {
-    //if the product is not found and the id is a correct format (just not in DB), respond with a not found error (404)
+export const getProductByIdHandler = asyncHandler(async (req, res) => {
+  const product = await getProductByIdRecord(req.params.id);
+
+  if (!product) {
     res.status(404);
     throw new Error("Product not found");
   }
+
+  res.json(mapProductImagesForApi(product));
 });
 
-// @desc      SETS INVENTORY TO ZERO, i dont want to remove anything from DB to not cause conflict with old orders
+// @desc      SETS INVENTORY TO ZERO
 // @route     PATCH /api/products/:id
 // @access    private/admin
 export const productRemoveInventory = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const product = await setProductInventoryToZero(req.params.id);
 
-  //check to see if the product exists
-  if (product) {
-    product.countInStock = 0;
-    await product.save();
-    res.json({ message: "Product inventory set to 0" });
-
-    // await product.remove();
-    // res.json({ message: "Product removed" });
-  } else {
-    //if the product is not found and the id is a correct format (just not in DB), respond with a not found error (404)
+  if (!product) {
     res.status(404);
     throw new Error("Product not found");
   }
+
+  res.json({ message: "Product inventory set to 0" });
 });
 
 // @desc      DELETE a product
 // @route     DELETE /api/products/:id
 // @access    private/admin
 export const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const removed = await deleteProductById(req.params.id);
 
-  //check to see if the product exists
-  if (product) {
-    await product.remove();
-    res.json({ message: "Product removed" });
-  } else {
-    //if the product is not found and the id is a correct format (just not in DB), respond with a not found error (404)
+  if (!removed) {
     res.status(404);
     throw new Error("Product not found");
   }
+
+  res.json({ message: "Product removed" });
 });
 
 // @desc      Create a product
 // @route     POST /api/products
 // @access    private/admin
-export const createProduct = asyncHandler(async (req, res) => {
-  const product = new Product({
+export const createProductHandler = asyncHandler(async (req, res) => {
+  const product = await createProductRecord({
     user: req.user._id,
     name: "Name",
     nwt: false,
@@ -118,59 +92,54 @@ export const createProduct = asyncHandler(async (req, res) => {
     images: [],
   });
 
-  const createdProduct = await product.save();
-  res.status(201).json(createdProduct);
+  res.status(201).json(mapProductImagesForApi(product));
 });
 
 // @desc      Update a product
-// @route     Put /api/products/:id
+// @route     PUT /api/products/:id
 // @access    private/admin
 export const updateProduct = asyncHandler(async (req, res) => {
-  const {
-    name,
-    nwt,
-    brand,
-    price,
-    size,
-    description,
-    sex,
-    category,
-    subCategory,
-    color,
-    subColor,
-    countInStock,
-    images,
-  } = req.body;
+  const existingProduct = await getProductByIdRecord(req.params.id);
 
-  const product = await Product.findById(req.params.id);
-
-  if (product) {
-    product.name = name;
-    product.nwt = nwt;
-    product.brand = brand;
-    product.price = price;
-    product.size = size;
-    product.description = description;
-    product.sex = sex;
-    product.category = category;
-    product.subCategory = subCategory;
-    product.color = color;
-    product.subColor = subColor;
-    product.countInStock = countInStock;
-    product.images = images;
-
-    const updatedProduct = await product.save();
-    res.status(201).json(updatedProduct);
-  } else {
+  if (!existingProduct) {
     res.status(404);
     throw new Error("Product not found");
   }
+
+  const imagesForStore = Array.isArray(req.body.images)
+    ? canonicalizeImageUrlsForStorage(req.body.images)
+    : req.body.images;
+
+  const updatedProduct = await updateProductById(req.params.id, {
+    user: existingProduct.user,
+    name: req.body.name,
+    nwt: req.body.nwt,
+    brand: req.body.brand,
+    price: req.body.price,
+    size: req.body.size,
+    description: req.body.description,
+    sex: req.body.sex,
+    category: req.body.category,
+    subCategory: req.body.subCategory,
+    color: req.body.color,
+    subColor: req.body.subColor,
+    countInStock: req.body.countInStock,
+    images: imagesForStore,
+  });
+
+  res.status(201).json(mapProductImagesForApi(updatedProduct));
 });
 
-// @desc      get a specific product
+// @desc      get featured products
 // @route     GET /api/products/featured
 // @access    public
-export const getFeaturedProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({}).sort({ price: -1 }).limit(10);
-  res.json(products);
+export const getFeaturedProductsHandler = asyncHandler(async (req, res) => {
+  const list = await getFeaturedProductsList();
+  res.json(list.map(mapProductImagesForApi));
 });
+
+export {
+  createProductHandler as createProduct,
+  getFeaturedProductsHandler as getFeaturedProducts,
+  getProductByIdHandler as getProductById,
+};
