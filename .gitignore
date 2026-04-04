@@ -9,6 +9,10 @@
 /env/**/.env.*
 !/env/**/.env.example
 !/env/**/.env.sample
+!/env/**/.env.production.example
+
+# Deploy bundle from scripts/build-for-live.mjs (merged .env — do not commit)
+/build/
 # Legacy paths (still supported by backend/config/loadEnv.js)
 aws/.env
 aws/.env.*

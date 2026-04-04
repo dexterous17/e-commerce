@@ -8,6 +8,11 @@
     "start:frontend": "npm start --prefix frontend",
     "dev:frontend": "npm run dev --prefix frontend",
     "start:api": "npm start --prefix backend",
-    "build": "npm run build --prefix frontend"
+    "build": "node scripts/build-for-live.mjs",
+    "build:live": "node scripts/build-for-live.mjs",
+    "build:live:strict": "node scripts/build-for-live.mjs --strict",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:all": "npm run build"
   }
 }
