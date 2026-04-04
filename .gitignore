@@ -1,5 +1,12 @@
 /backend/node_modules/
 /frontend/node_modules/
+/node_modules/
+
+# Package manager debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Environment files
 .env
@@ -13,6 +20,9 @@
 
 # Deploy bundle from scripts/build-for-live.mjs (merged .env — do not commit)
 /build/
+
+# Docker Compose local overrides (ports, bind mounts, secrets)
+docker-compose.override.yml
 # Legacy paths (still supported by backend/config/loadEnv.js)
 aws/.env
 aws/.env.*
@@ -38,15 +48,34 @@ secrets/*.txt
 !secrets/*.example
 !secrets/README.md
 
+# Python (e.g. deploy/lightsail helpers)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Accidental duplicate files (e.g. macOS "Copy" → `name 2.json`)
+**/* 2.json
+
 # Cursor / agent debug session logs (local only)
 .cursor/debug*.log
 
-# OS files
+# OS / editor
 .DS_Store
+Thumbs.db
+.idea/
 
 # Frontend build output
 /frontend/dist/
 /frontend/build/
+/frontend/.vite/
+
+# Tests and coverage (local only)
+coverage/
+.nyc_output/
+*.lcov
+
+# Tooling caches
+.eslintcache
 
 # Playwright (local HTML report and run artifacts)
 /frontend/playwright-report/
