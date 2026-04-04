@@ -155,6 +155,11 @@ const startServer = async () => {
         "[S3 media] Image proxy ON — product APIs return /api/media/s3?key=… (not direct S3 URLs)."
           .green
       );
+    } else if (process.env.NODE_ENV === "production") {
+      console.log(
+        "[S3 media] Production — product APIs return direct AWS image URLs (set AWS_S3_PUBLIC_BASE_URL in env/aws for a stable public base). Use AWS_S3_IMAGE_PROXY=true only if you need the backend to stream from a private bucket."
+          .green
+      );
     } else {
       console.warn(
         "[S3 media] Image proxy OFF — product APIs return raw S3 URLs; browsers often see 403 on private buckets. Set AWS_REGION and AWS_S3_BUCKET_NAME (see env/aws/.env.example), avoid AWS_S3_IMAGE_PROXY=false unless intentional, then restart. If curl still shows https://…amazonaws.com, another process may still be bound to this port."

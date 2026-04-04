@@ -33,6 +33,13 @@ export function isImageProxyEnabled() {
     return false;
   }
 
+  // Production: return direct S3 / AWS_S3_PUBLIC_BASE_URL links from APIs (not /api/media/s3).
+  // Set AWS_S3_IMAGE_PROXY=true if the bucket is private and you need the backend proxy.
+  const nodeEnv = process.env.NODE_ENV?.trim();
+  if (nodeEnv === "production" && process.env.AWS_S3_IMAGE_PROXY !== "true") {
+    return false;
+  }
+
   let bucket = getBucketName();
   let region = process.env.AWS_REGION?.trim();
   if (!bucket || !region) {
@@ -263,14 +270,30 @@ export function rewriteImageUrlToProxy(imageUrl, product) {
   return `/api/media/s3?key=${encodeURIComponent(key)}`;
 }
 
+function mapImageUrlForApi(imageUrl, product) {
+  if (isImageProxyEnabled()) {
+    return rewriteImageUrlToProxy(imageUrl, product);
+  }
+
+  const key = extractS3KeyFromUrl(imageUrl, product);
+  if (key && isValidObjectKey(key)) {
+    const publicUrl = buildPublicUrlForObjectKey(key);
+    if (publicUrl) {
+      return publicUrl;
+    }
+  }
+
+  return imageUrl;
+}
+
 export function mapProductImagesForApi(product) {
-  if (!product || !isImageProxyEnabled()) {
+  if (!product) {
     return product;
   }
 
   return {
     ...product,
-    images: (product.images || []).map((u) => rewriteImageUrlToProxy(u, product)),
+    images: (product.images || []).map((u) => mapImageUrlForApi(u, product)),
   };
 }
 
@@ -286,7 +309,7 @@ export function mapProductListResponseForApi(data) {
 }
 
 export function mapOrderImagesForApi(order) {
-  if (!order || !isImageProxyEnabled()) {
+  if (!order) {
     return order;
   }
 
@@ -298,7 +321,7 @@ export function mapOrderImagesForApi(order) {
     ...order,
     orderItems: order.orderItems.map((item) => ({
       ...item,
-      images: (item.images || []).map((u) => rewriteImageUrlToProxy(u, null)),
+      images: (item.images || []).map((u) => mapImageUrlForApi(u, null)),
     })),
   };
 }
