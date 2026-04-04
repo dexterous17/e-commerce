@@ -1,33 +1,9 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    ports:
-      # Avoid clash with host/other stacks on 5432 (e.g. ecommerce-db). In-network services still use postgres:5432.
-      - "127.0.0.1:${POSTGRES_HOST_PORT:-15432}:5432"
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
-      POSTGRES_USER: ${POSTGRES_USER:-ecommerce}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-    secrets:
-      - postgres_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     # Same credential file as host loadEnv; avoids empty AWS_* from `environment:` wiping keys.
     env_file:
       - path: env/aws/.env
@@ -37,13 +13,8 @@ services:
       # In-container 5000 matches EXPOSE, healthcheck; local host API default is 5002 (see env/backend/.env.example).
       PORT: 5000
       SERVE_FRONTEND: "false"
-      PGHOST: postgres
-      PGPORT: 5432
-      PGDATABASE: ${POSTGRES_DB:-ecommerce}
-      PGUSER: ${POSTGRES_USER:-ecommerce}
-      PGPASSWORD_FILE: /run/secrets/postgres_password
       JWT_SECRET_FILE: /run/secrets/jwt_secret
-      PGSSLMODE: disable
+      SQLITE_DATABASE_PATH: /app/backend/data/ecommerce.sqlite
       PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
       # Non-empty defaults: ${VAR:-} injects "" and disables the S3 image proxy in-container
       # (env/backend/.env is not copied into the image — see .dockerignore).
@@ -54,10 +25,11 @@ services:
       # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: use env/aws/.env (env_file above) or export
       # before `docker compose up` so the SDK can GetObject for /api/media/s3 (do not use VAR:- here).
     secrets:
-      - postgres_password
       - jwt_secret
     volumes:
       - backend_uploads:/app/backend/uploads
+      - backend_upload:/app/backend/upload
+      - backend_sqlite:/app/backend/data
     ports:
       # Default 5004 (not 5002): host `npm start` in backend/ uses PORT=5002 + Vite proxy; publishing
       # the container on the same host port would block the local API. Override BACKEND_PORT if needed.
@@ -89,11 +61,10 @@ services:
       start_period: 10s
 
 volumes:
-  postgres_data:
   backend_uploads:
+  backend_upload:
+  backend_sqlite:
 
 secrets:
-  postgres_password:
-    file: ./secrets/postgres_password.txt
   jwt_secret:
     file: ./secrets/jwt_secret.txt

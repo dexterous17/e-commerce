@@ -1,7 +1,7 @@
 /**
  * When the SPA is served on a different host than the API, Vite sets VITE_API_ORIGIN
  * (see vite.config.js). Axios uses it as baseURL; image URLs under /api and /uploads
- * are prefixed so <img> requests hit the API host.
+ * are prefixed so <img> requests hit the API host. Same for `/upload` (S3 mirror under backend/upload).
  */
 export function getApiOrigin() {
   const raw = import.meta.env.VITE_API_ORIGIN;
@@ -20,7 +20,9 @@ export function resolvePublicApiUrl(url) {
     t.startsWith("/api/") ||
     t === "/api" ||
     t.startsWith("/uploads/") ||
-    t === "/uploads"
+    t === "/uploads" ||
+    t.startsWith("/upload/") ||
+    t === "/upload"
   ) {
     return `${base}${t}`;
   }

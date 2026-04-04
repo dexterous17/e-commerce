@@ -63,6 +63,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         "/api": devProxyTarget,
         "/uploads": devProxyTarget,
+        "/upload": devProxyTarget,
       },
     },
     build: {

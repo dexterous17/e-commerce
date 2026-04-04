@@ -200,7 +200,7 @@ export function extractS3KeyFromUrl(imageUrl, product) {
 
   const trimmed = imageUrl.trim();
 
-  if (trimmed.startsWith("/uploads/")) {
+  if (trimmed.startsWith("/uploads/") || trimmed.startsWith("/upload/")) {
     return null;
   }
 

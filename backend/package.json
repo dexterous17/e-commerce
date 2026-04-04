@@ -18,10 +18,12 @@
     "client": "npm run start:vite-only --prefix ../frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "images:download": "node scripts/downloadProductImages.js",
+    "images:sync:s3-to-upload": "node scripts/syncS3ToLocalUpload.js",
     "images:upload:s3-manifest": "node scripts/uploadProductsToS3Manifest.js",
     "data:import": "node seeder.js",
     "data:import:s3": "node seederS3.js",
     "data:import:s3:manifest": "node seederS3FromManifest.js",
+    "data:import:local-upload-manifest": "node seederLocalUploadFromManifest.js",
     "data:destroy": "node seeder.js -d",
     "data:destroy:s3": "node seederS3.js -d"
   },
@@ -41,8 +43,10 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
-    "multer": "^2.1.1",
-    "pg": "^8.16.3"
+    "multer": "^2.1.1"
+  },
+  "engines": {
+    "node": ">=22.5.0"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

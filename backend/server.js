@@ -99,6 +99,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/uploads", express.static(path.join(__backendDir, "uploads")));
+app.use("/upload", express.static(path.join(__backendDir, "upload")));
 
 const frontendDistRoot = path.join(__backendDir, "../frontend", "dist");
 const shouldServeFrontend =

@@ -1,18 +1,9 @@
-# AWS Lightsail / VM: frontend + backend in Docker, Postgres elsewhere.
+# AWS Lightsail / VM: frontend + backend in Docker; SQLite file on a Docker volume.
 #
 # Prerequisites on the server (same paths as this repo):
-#   - env/database/.env  — PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD (or DATABASE_URL)
 #   - env/backend/.env     — JWT_SECRET, PayPal, etc.
 #   - env/aws/.env         — AWS keys, bucket, region (required for /api/media/s3 image proxy)
-#
-# If Postgres runs on the SAME machine but outside Docker, 127.0.0.1 in DATABASE_URL will not
-# reach the host from inside a container. Use PGHOST=host.docker.internal (and matching
-# DATABASE_URL host) in env/database/.env — extra_hosts below makes that work on Linux.
-#
-# If you also run the repo's `postgres` service (docker-compose.yml) on network e-commerce_default,
-# env/database/.env often keeps 127.0.0.1 for host tools. Defaults below use PGHOST=postgres and
-# clear DATABASE_URL so discrete PG* vars apply. For RDS only: set LIGHTSAIL_DATABASE_URL in
-# repo-root `.env` on the server to the full connection string (overrides the empty default).
+# Optional: backend/db/.env — SQLITE_DATABASE_PATH (default in container: /app/backend/data/ecommerce.sqlite)
 #
 # Run from repo root:
 #   docker compose -f docker-compose.lightsail.yml up -d --build
@@ -23,7 +14,7 @@
 #
 # Open TCP 22, 80, and 443 in the Lightsail networking firewall.
 #
-# If the storefront loads but shows no products/images, the API may be healthy while Postgres has
+# If the storefront loads but shows no products/images, the API may be healthy while the DB has
 # zero rows. Seed from the S3 manifest (on the host, repo root):
 #   ./scripts/lightsail-seed-from-manifest.sh
 # (destructive to existing seeded users/products — see script header).
@@ -43,8 +34,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     env_file:
-      - path: env/database/.env
-        required: false
       - path: env/aws/.env
         required: false
       - path: env/backend/.env
@@ -58,10 +47,11 @@ services:
       TRUST_PROXY: "true"
       TRUST_PROXY_HOPS: "1"
       AWS_S3_IMAGE_PROXY: "true"
-      DATABASE_URL: ${LIGHTSAIL_DATABASE_URL:-}
-      PGHOST: ${LIGHTSAIL_PGHOST:-postgres}
+      SQLITE_DATABASE_PATH: /app/backend/data/ecommerce.sqlite
     volumes:
       - backend_uploads:/app/backend/uploads
+      - backend_upload:/app/backend/upload
+      - backend_sqlite:/app/backend/data
     ports:
       - "127.0.0.1:${BACKEND_PORT:-5004}:5000"
     healthcheck:
@@ -92,3 +82,5 @@ services:
 
 volumes:
   backend_uploads:
+  backend_upload:
+  backend_sqlite:

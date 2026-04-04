@@ -30,6 +30,12 @@ database/.env
 database/.env.*
 backend/.env
 backend/.env.*
+backend/db/.env
+backend/db/.env.production
+!backend/db/.env.example
+!backend/db/.env.production.example
+backend/data/*.sqlite
+backend/data/*.sqlite-*
 frontend/.env
 frontend/.env.*
 !.env.example
@@ -63,6 +69,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .idea/
+
+# Product images synced from S3 (large; keep backend/upload/.gitkeep only)
+/backend/upload/*
+!/backend/upload/.gitkeep
 
 # Frontend build output
 /frontend/dist/
