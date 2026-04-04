@@ -3,7 +3,7 @@
 # Prerequisites on the server (same paths as this repo):
 #   - env/database/.env  — PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD (or DATABASE_URL)
 #   - env/backend/.env     — JWT_SECRET, PayPal, etc.
-#   - env/aws/.env         — optional; S3 keys / bucket overrides
+#   - env/aws/.env         — AWS keys, bucket, region (required for /api/media/s3 image proxy)
 #
 # If Postgres runs on the SAME machine but outside Docker, 127.0.0.1 in DATABASE_URL will not
 # reach the host from inside a container. Use PGHOST=host.docker.internal (and matching
@@ -49,17 +49,15 @@ services:
         required: false
       - path: env/backend/.env
         required: false
+    # Never use ${AWS_*:-} or ${PAYPAL_*:-} here: when the host shell has no such vars,
+    # Compose injects "" and overrides env_file — bucket/credentials vanish and images/API break.
     environment:
       NODE_ENV: production
       PORT: 5000
       SERVE_FRONTEND: "false"
       TRUST_PROXY: "true"
       TRUST_PROXY_HOPS: "1"
-      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-}
-      AWS_S3_PUBLIC_BASE_URL: ${AWS_S3_PUBLIC_BASE_URL:-}
-      AWS_S3_PREFIX: ${AWS_S3_PREFIX:-products}
+      AWS_S3_IMAGE_PROXY: "true"
       DATABASE_URL: ${LIGHTSAIL_DATABASE_URL:-}
       PGHOST: ${LIGHTSAIL_PGHOST:-postgres}
     volumes:
