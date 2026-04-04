@@ -42,7 +42,11 @@ export function applyCors(app) {
 
   if (!isProd) {
     app.use(cors({ credentials: true }));
+    return;
   }
+
+  // Production without CORS_ORIGIN: reflect request Origin (split-domain API + storefront).
+  app.use(cors({ origin: true, credentials: true }));
 }
 
 const windowMs = Number.parseInt(

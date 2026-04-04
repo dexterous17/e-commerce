@@ -1,6 +1,6 @@
 /**
  * Production-oriented build:
- * - Frontend: Vite build with VITE_API_ORIGIN → backend.ecommerce.harshildex.com
+ * - Frontend: Vite build (VITE_API_ORIGIN in env/frontend/.env.production; empty = same-origin /api).
  *   (seeds env/frontend/.env.production from .env.production.example when missing).
  * - Backend: npm ci --omit=dev
  * - When env/database/.env.production and env/aws/.env.production exist, merges them
@@ -18,8 +18,6 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const strict = process.argv.includes("--strict");
-
-const LIVE_API_ORIGIN = "https://backend.ecommerce.harshildex.com";
 
 const prodDatabase = path.join(repoRoot, "env", "database", ".env.production");
 const prodAws = path.join(repoRoot, "env", "aws", ".env.production");
@@ -79,20 +77,21 @@ const frontendProd = path.join(repoRoot, "env", "frontend", ".env.production");
 
 copyIfMissing(frontendExample, frontendProd);
 
-// Ensure public API origin even if .env.production exists but omits VITE_API_ORIGIN
+// Ensure VITE_API_ORIGIN key exists (empty = same-origin /api via host nginx).
 if (exists(frontendProd)) {
   const raw = fs.readFileSync(frontendProd, "utf8");
   const hasOrigin = /^\s*VITE_API_ORIGIN\s*=/m.test(raw);
   if (!hasOrigin) {
-    const block = `\n# Added by scripts/build-for-live.mjs\nVITE_API_ORIGIN=${LIVE_API_ORIGIN}\n`;
+    const block =
+      `\n# Added by scripts/build-for-live.mjs (same-origin API)\nVITE_API_ORIGIN=\n`;
     fs.appendFileSync(frontendProd, block);
     console.log(
-      `[build-for-live] Appended VITE_API_ORIGIN to ${path.relative(repoRoot, frontendProd)}`
+      `[build-for-live] Appended VITE_API_ORIGIN= to ${path.relative(repoRoot, frontendProd)}`
     );
   }
 }
 
-console.log(`[build-for-live] Frontend API origin: ${LIVE_API_ORIGIN}`);
+console.log("[build-for-live] Frontend: VITE_API_ORIGIN from env/frontend/.env.production (empty => same-origin /api)");
 runNpm(["run", "build", "--prefix", "frontend"], repoRoot, { NODE_ENV: "production" });
 
 runNpm(["ci", "--omit=dev"], path.join(repoRoot, "backend"));

@@ -17,17 +17,18 @@ export default defineConfig(({ mode }) => {
     env.VITE_DEV_PROXY_TARGET ||
     "http://localhost:5002";
 
-  /** Split-domain production: API at backend.ecommerce.harshildex.com unless overridden. */
+  /**
+   * Empty = same-origin `/api` (host nginx routes to the API container). Use this in production
+   * when TLS terminates on the storefront hostname only (avoids blocked/mixed requests to a
+   * separate API host). Set VITE_API_ORIGIN=https://backend.ecommerce.harshildex.com only when
+   * that host is reachable with HTTPS and CORS allows the storefront origin.
+   */
   const hasExplicitApiOrigin = Object.prototype.hasOwnProperty.call(
     env,
     "VITE_API_ORIGIN"
   );
   const mergedApiOrigin = (
-    hasExplicitApiOrigin
-      ? String(env.VITE_API_ORIGIN).trim()
-      : mode === "production"
-        ? "https://backend.ecommerce.harshildex.com"
-        : ""
+    hasExplicitApiOrigin ? String(env.VITE_API_ORIGIN ?? "").trim() : ""
   ).replace(/\/$/, "");
 
   return {
