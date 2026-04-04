@@ -5,9 +5,6 @@
   "dependencies": {
     "@paypal/react-paypal-js": "^8.9.2",
     "@redux-devtools/extension": "^4.0.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^11.2.7",
-    "@testing-library/user-event": "^12.8.3",
     "axios": "^1.14.0",
     "gh-pages": "^6.3.0",
     "react": "^18.3.1",
@@ -17,8 +14,7 @@
     "react-router-bootstrap": "^0.26.3",
     "react-router-dom": "^6.28.0",
     "redux": "^4.2.1",
-    "redux-thunk": "^2.4.2",
-    "web-vitals": "^1.1.2"
+    "redux-thunk": "^2.4.2"
   },
   "scripts": {
     "check:vite-config": "node --check vite.config.js",
