@@ -21,10 +21,30 @@ function getEnv(...names) {
   return undefined;
 }
 
-function resolveConnectionString() {
+/** Resolves Postgres connection string from DATABASE_URL / PG_* / POSTGRES_*. */
+export function resolveDatabaseConnectionString() {
   const direct = getEnv("DATABASE_URL", "PG_CONNECTION_STRING");
   if (direct) {
-    return direct;
+    const trimmed = direct.trim();
+    const lower = trimmed.toLowerCase();
+    if (
+      lower.startsWith("sqlite:") ||
+      lower.startsWith("file:") ||
+      (lower.includes(".sqlite") && !lower.includes("://"))
+    ) {
+      throw new Error(
+        "This app uses PostgreSQL only. DATABASE_URL must start with postgresql:// or postgres:// (not SQLite). See backend/db/.env.example."
+      );
+    }
+    if (!/^postgres(ql)?:\/\//i.test(trimmed)) {
+      throw new Error(
+        "DATABASE_URL must be a PostgreSQL URL (postgresql://... or postgres://...)."
+      );
+    }
+    if (trimmed.toLowerCase().startsWith("postgres://")) {
+      return `postgresql://${trimmed.slice("postgres://".length)}`;
+    }
+    return trimmed;
   }
 
   const host = getEnv("PGHOST", "POSTGRES_HOST");
@@ -51,7 +71,7 @@ function maskConnectionString(connectionString) {
 
 function getPool() {
   if (!pool) {
-    const connectionString = resolveConnectionString();
+    const connectionString = resolveDatabaseConnectionString();
     if (!connectionString) {
       throw new Error(
         "DATABASE_URL is not set (or PGHOST, PGUSER, PGDATABASE / POSTGRES_*). See backend/db/.env.example."
@@ -105,7 +125,7 @@ export async function initializeDatabase() {
         }
       }
 
-      const masked = maskConnectionString(resolveConnectionString());
+      const masked = maskConnectionString(resolveDatabaseConnectionString());
       console.log(`PostgreSQL ready: ${masked || "(connected)"}`.underline.cyan);
       dbgDb("ready database=%s", masked || "");
     })().catch((error) => {
