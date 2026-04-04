@@ -265,7 +265,7 @@ export async function updateProductById(id, product, { client } = {}) {
          sub_color = $12,
          count_in_stock = $13,
          images = $14,
-         updated_at = datetime('now')
+         updated_at = NOW()
      WHERE _id = $15
      RETURNING ${PRODUCT_COLUMNS}`,
     [
@@ -295,7 +295,7 @@ export async function setProductInventoryToZero(id, { client } = {}) {
   const { rows } = await query(
     `UPDATE products
      SET count_in_stock = 0,
-         updated_at = datetime('now')
+         updated_at = NOW()
      WHERE _id = $1
      RETURNING ${PRODUCT_COLUMNS}`,
     [id],

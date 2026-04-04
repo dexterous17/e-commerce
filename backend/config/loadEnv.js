@@ -32,7 +32,7 @@ if (dotenvResult.error?.code === "ENOENT") {
       `      ${path.join(backendRoot, ".env")} (legacy)\n` +
       "      Create from template:  cp env/backend/.env.example env/backend/.env\n" +
       "      Or from backend/:       npm run env:init\n" +
-      "      SQLite: backend/db/.env or env/database/.env. AWS keys: env/aws/.env (or aws/.env)."
+      "      Database URL: backend/db/.env or env/database/.env. AWS keys: env/aws/.env (or aws/.env)."
   );
 } else if (
   envPath &&
@@ -130,7 +130,7 @@ const ALLOWED_SECRET_FILE_TARGETS = new Set([
   "AWS_SESSION_TOKEN",
   "JWT_SECRET",
   "PAYPAL_CLIENT_ID",
-  "SQLITE_DATABASE_PATH",
+  "DATABASE_URL",
 ]);
 
 for (const [name, filePath] of Object.entries(process.env)) {

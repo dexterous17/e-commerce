@@ -3,7 +3,7 @@
  * - Frontend: Vite build (VITE_API_ORIGIN in env/frontend/.env.production; empty = same-origin /api).
  *   (seeds env/frontend/.env.production from .env.production.example when missing).
  * - Backend: npm ci --omit=dev
- * - When backend/db/.env.production (or legacy env/database/.env.production) and env/aws/.env.production exist, merges them
+ * - When backend/db/.env.production (Postgres DATABASE_URL; or legacy env/database/.env.production) and env/aws/.env.production exist, merges them
  *   (plus optional env/backend/.env.production) into build/deploy/.env for server/Compose.
  *
  * Usage: node scripts/build-for-live.mjs [--strict]
@@ -123,7 +123,7 @@ if (hasDb && hasAws) {
   }
   const banner =
     "# Merged by scripts/build-for-live.mjs from env/*/.env.production (gitignored).\n" +
-    "# Order: sqlite (backend/db) → aws → backend. Later duplicate keys should win when parsed.\n\n";
+    "# Order: database (backend/db) → aws → backend. Later duplicate keys should win when parsed.\n\n";
   let body = "";
   for (const p of pieces) {
     const label = path.relative(repoRoot, p);

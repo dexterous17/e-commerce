@@ -190,7 +190,7 @@ export async function createOrder({
       const { rows: stockRows } = await query(
         `UPDATE products
          SET count_in_stock = count_in_stock - $1,
-             updated_at = datetime('now')
+             updated_at = NOW()
          WHERE _id = $2 AND count_in_stock >= $1
          RETURNING _id`,
         [qty, productId],
@@ -266,10 +266,10 @@ export async function updateOrderToPaid(id, paymentResult = {}) {
   return withTransaction(async (client) => {
     const { rows } = await query(
       `UPDATE orders
-       SET is_paid = 1,
-           paid_at = datetime('now'),
+       SET is_paid = TRUE,
+           paid_at = NOW(),
            payment_result = $1,
-           updated_at = datetime('now')
+           updated_at = NOW()
        WHERE _id = $2
        RETURNING _id`,
       [JSON.stringify(paymentResult || {}), id],
@@ -288,9 +288,9 @@ export async function updateOrderToShipped(id) {
   return withTransaction(async (client) => {
     const { rows } = await query(
       `UPDATE orders
-       SET is_shipped = 1,
-           shipped_at = datetime('now'),
-           updated_at = datetime('now')
+       SET is_shipped = TRUE,
+           shipped_at = NOW(),
+           updated_at = NOW()
        WHERE _id = $1
        RETURNING _id`,
       [id],

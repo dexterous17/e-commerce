@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Load catalog into SQLite using backend/data/products-s3-manifest.json (images already in S3).
+# Load catalog into PostgreSQL using backend/data/products-s3-manifest.json (images already in S3).
 # Run ON THE LIGHTSAIL HOST from this repo root, after: docker compose -f docker-compose.lightsail.yml up -d
 #
 #   ./scripts/lightsail-seed-from-manifest.sh

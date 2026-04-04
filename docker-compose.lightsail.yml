@@ -1,9 +1,9 @@
-# AWS Lightsail / VM: frontend + backend in Docker; SQLite file on a Docker volume.
+# AWS Lightsail / VM: frontend + backend in Docker; PostgreSQL is expected to be reachable via DATABASE_URL
+# (managed RDS, Neon, Supabase, etc.). The S3 image proxy and bucket settings come from env/aws/.env.
 #
 # Prerequisites on the server (same paths as this repo):
-#   - env/backend/.env     — JWT_SECRET, PayPal, etc.
-#   - env/aws/.env         — AWS keys, bucket, region (required for /api/media/s3 image proxy)
-# Optional: backend/db/.env — SQLITE_DATABASE_PATH (default in container: /app/backend/data/ecommerce.sqlite)
+#   - env/backend/.env     — JWT_SECRET, DATABASE_URL, PayPal, etc.
+#   - env/aws/.env         — AWS keys, bucket, region (required for /api/media/s3 when the bucket is private)
 #
 # Run from repo root:
 #   docker compose -f docker-compose.lightsail.yml up -d --build
@@ -47,11 +47,9 @@ services:
       TRUST_PROXY: "true"
       TRUST_PROXY_HOPS: "1"
       AWS_S3_IMAGE_PROXY: "true"
-      SQLITE_DATABASE_PATH: /app/backend/data/ecommerce.sqlite
     volumes:
       - backend_uploads:/app/backend/uploads
       - backend_upload:/app/backend/upload
-      - backend_sqlite:/app/backend/data
     ports:
       - "127.0.0.1:${BACKEND_PORT:-5004}:5000"
     healthcheck:
@@ -83,4 +81,3 @@ services:
 volumes:
   backend_uploads:
   backend_upload:
-  backend_sqlite:

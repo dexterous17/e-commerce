@@ -40,7 +40,7 @@ export async function upsertSeedManifest(
         bucket_prefix = excluded.bucket_prefix,
         stats = excluded.stats,
         raw_manifest = excluded.raw_manifest,
-        updated_at = datetime('now')`,
+        updated_at = NOW()`,
     [
       source,
       generatedAt,

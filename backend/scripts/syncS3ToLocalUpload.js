@@ -259,7 +259,7 @@ async function updateDatabase() {
            bucket_region = NULL,
            bucket_public_base_url = NULL,
            bucket_prefix = NULL,
-           updated_at = datetime('now')
+           updated_at = NOW()
        WHERE _id = $3`,
       [JSON.stringify(newImages), JSON.stringify(newLocal), row._id]
     );
@@ -284,7 +284,7 @@ async function updateDatabase() {
       JSON.stringify(images) !== JSON.stringify(newImages);
     if (changed) {
       await query(
-        `UPDATE order_items SET images = $1, updated_at = datetime('now') WHERE _id = $2`,
+        `UPDATE order_items SET images = $1, updated_at = NOW() WHERE _id = $2`,
         [JSON.stringify(newImages), row._id]
       );
       orderUpdates += 1;
@@ -300,7 +300,7 @@ async function updateDatabase() {
          bucket_region = NULL,
          bucket_public_base_url = NULL,
          bucket_prefix = NULL,
-         updated_at = datetime('now')
+         updated_at = NOW()
      WHERE source = 'products-s3-manifest'`
   );
   console.log("Cleared S3 bucket columns on seed_manifest (if present).".green);

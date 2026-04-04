@@ -1,9 +1,10 @@
 # Docker Setup
 
-This repository now runs with separate Docker containers for:
+This repository runs with separate Docker containers for:
 
+- `postgres`: PostgreSQL 16 (port **5432** on loopback by default — see repo-root **`.env`**)
 - `frontend`: Nginx serving the Vite build and proxying `/api` and `/uploads`
-- `backend`: Node/Express API with **SQLite** (database file on the `backend_sqlite` volume at `/app/backend/data/ecommerce.sqlite` inside the container)
+- `backend`: Node/Express API using **`DATABASE_URL`** (Compose sets it to the internal `postgres` service). Product images use **S3** via `env/aws/.env` (bucket, keys, optional `/api/media/s3` proxy).
 
 ## Start
 
@@ -24,7 +25,7 @@ Docker Compose reads secrets from:
 
 Optional non-secret configuration for Compose lives in repo-root **`.env`**. The template is **`env/docker/.env.example`** (copy to **`.env`** at the repo root).
 
-The backend also supports Docker's standard `*_FILE` pattern, so additional values such as `PAYPAL_CLIENT_ID_FILE`, `AWS_ACCESS_KEY_ID_FILE`, or `AWS_SECRET_ACCESS_KEY_FILE` can be wired in the same way if needed.
+The backend also supports Docker's standard `*_FILE` pattern, so additional values such as `PAYPAL_CLIENT_ID_FILE`, `AWS_ACCESS_KEY_ID_FILE`, **`DATABASE_URL_FILE`**, or `AWS_SECRET_ACCESS_KEY_FILE` can be wired in the same way if needed.
 
 ## Local dev (API + Vite, no Docker for Node)
 
@@ -32,12 +33,12 @@ From the **repo root**, **`npm start`** runs **`npm run dev` in `backend/`**, wh
 
 Sanity-check the API you are talking to: **`curl -s http://127.0.0.1:5002/api/health`** should return JSON with **`"ok":true`**, **`"s3ImageProxy":true`**, and usually **`"awsAccessKeyEnvSet":true`** when using keys in **`env/aws/.env`** (legacy **`aws/.env`** still works) (otherwise `/api/media/s3` cannot read private objects). **`awsAccessKeyEnvSet":false`** can still be OK on AWS if the SDK uses an instance role.
 
-## Backend on your machine (SQLite)
+## Backend on your machine (PostgreSQL)
 
-The API uses **Node.js built-in SQLite** (`node:sqlite`). **Node 22.5+** is required.
+The API uses the **`pg`** driver against **PostgreSQL**. Run Postgres locally, in Docker (`docker compose up postgres` only), or point **`DATABASE_URL`** at a hosted instance (RDS, Neon, etc.).
 
 1. Run **`cd backend && npm run env:init`** (or copy **`backend/db/.env.example`** to **`backend/db/.env`**).
-2. Optional: set **`SQLITE_DATABASE_PATH`** in **`backend/db/.env`** (default: **`data/ecommerce.sqlite`** under **`backend/`**).
+2. Set **`DATABASE_URL`** in **`backend/db/.env`** (or **`PGHOST`**, **`PGUSER`**, **`PGPASSWORD`**, **`PGDATABASE`** — see the example file).
 3. **`cd backend && npm start`**
 
 On macOS, **AirPlay Receiver** commonly listens on **5000** and answers HTTP with **403**, so local **`npm start`** defaults to **5002** (see **`env/backend/.env.example`**) and Vite’s dev proxy targets **`http://localhost:5002`** unless you set **`DEV_PROXY_TARGET`** in **`env/frontend/.env`**. If you run the API on another port, set **`PORT`** in **`env/backend/.env`** and the same URL in **`DEV_PROXY_TARGET`**.
@@ -62,15 +63,17 @@ Restart Cursor after MCP changes. If **Cursor Settings → MCP** shows a broken 
 
 1. From the repo root, run **`cd backend && npm run env:init`** (or copy each **`env/<system>/.env.example`** and **`backend/db/.env.example`** to the matching **`.env`** files).
 2. Set the real values for:
-   - **`SQLITE_DATABASE_PATH`** in **`backend/db/.env`** if the default file location is wrong for your host
+   - **`DATABASE_URL`** (or **`PG*`** / **`POSTGRES_*`**) in **`backend/db/.env`** for your Postgres host
    - `JWT_SECRET` and PayPal IDs in **`env/backend/.env`**
-   - AWS keys in **`env/aws/.env`** if you use S3
+   - AWS keys and bucket settings in **`env/aws/.env`** for S3-backed catalog images
 3. Install backend dependencies and start the API from the `backend/` directory:
 
 ```bash
 npm install
 npm start
 ```
+
+**Lightsail / Docker** — set **`DATABASE_URL`** in **`env/backend/.env`** to your managed Postgres; **`docker-compose.lightsail.yml`** does not run a database container.
 
 If you want to recreate the seeded database contents from code:
 
@@ -101,7 +104,7 @@ The S3 seeder stores:
 - original local file references in `products.local_images`
 - bucket metadata in the product row and in `seed_manifest`
 
-The backend schema (SQLite) mirrors the former Postgres layout:
+The backend schema (PostgreSQL):
 
 - `users._id`, `products._id` (UUID strings)
 - `products.images` stored as JSON text

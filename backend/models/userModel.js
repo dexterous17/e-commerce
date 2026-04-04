@@ -16,11 +16,12 @@ const USER_COLUMNS = `
 
 function normalizeDuplicateUserError(error) {
   const msg = String(error?.message || "");
+  const pgUnique = error?.code === "23505";
   const sqliteUnique =
     error?.code === "SQLITE_CONSTRAINT" &&
     (msg.includes("UNIQUE") || msg.includes("unique"));
 
-  if (sqliteUnique) {
+  if (pgUnique || sqliteUnique) {
     const duplicateUserError = new Error("User already exists");
     duplicateUserError.statusCode = 400;
     throw duplicateUserError;
@@ -162,7 +163,7 @@ export async function updateUserById(
     return getUserById(id, { includePassword, client });
   }
 
-  assignments.push("updated_at = datetime('now')");
+  assignments.push("updated_at = NOW()");
   values.push(id);
 
   try {

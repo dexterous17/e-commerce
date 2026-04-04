@@ -1,20 +1,13 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import colors from "colors";
-import { DatabaseSync } from "node:sqlite";
+import pg from "pg";
 
 import "./loadEnv.js";
-import schemaSql from "../db/schema.js";
+import schemaStatements from "../db/schema.js";
 import { dbgDb } from "../utils/debugLog.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const backendRoot = path.resolve(__dirname, "..");
+const { Pool } = pg;
 
-let dbInstance;
-let initializationPromise;
-let serializedChain = Promise.resolve();
+let pool;
 
 function getEnv(...names) {
   for (const name of names) {
@@ -28,134 +21,97 @@ function getEnv(...names) {
   return undefined;
 }
 
-function resolveSqlitePath() {
-  const configured = getEnv("SQLITE_DATABASE_PATH", "SQLITE_PATH");
-  if (!configured) {
-    return path.join(backendRoot, "data", "ecommerce.sqlite");
+function resolveConnectionString() {
+  const direct = getEnv("DATABASE_URL", "PG_CONNECTION_STRING");
+  if (direct) {
+    return direct;
   }
 
-  return path.isAbsolute(configured)
-    ? configured
-    : path.resolve(backendRoot, configured);
+  const host = getEnv("PGHOST", "POSTGRES_HOST");
+  const port = getEnv("PGPORT", "POSTGRES_PORT") || "5432";
+  const user = getEnv("PGUSER", "POSTGRES_USER");
+  const password = getEnv("PGPASSWORD", "POSTGRES_PASSWORD") ?? "";
+  const database = getEnv("PGDATABASE", "POSTGRES_DB");
+
+  if (host && user && database) {
+    const u = encodeURIComponent(user);
+    const p = encodeURIComponent(password);
+    return `postgresql://${u}:${p}@${host}:${port}/${database}`;
+  }
+
+  return null;
 }
 
-function runSerialized(fn) {
-  const next = serializedChain.then(fn, fn);
-  serializedChain = next.catch(() => {});
-  return next;
-}
-
-function bindSqliteValue(v) {
-  if (v === undefined) {
+function maskConnectionString(connectionString) {
+  if (!connectionString) {
     return null;
   }
-
-  if (typeof v === "boolean") {
-    return v ? 1 : 0;
-  }
-
-  return v;
+  return connectionString.replace(/:[^:@/]+@/, ":****@");
 }
 
-function convertPlaceholders(sqlText, params) {
-  if (!params || params.length === 0) {
-    return [sqlText, []];
-  }
-
-  const values = [];
-  const out = sqlText.replace(/\$(\d+)/g, (_, d) => {
-    const i = Number.parseInt(d, 10) - 1;
-    values.push(bindSqliteValue(params[i]));
-    return "?";
-  });
-
-  if (values.length === 0 && !/\$\d+/.test(sqlText)) {
-    const questionCount = (sqlText.match(/\?/g) || []).length;
-    if (questionCount > 0 && questionCount === params.length) {
-      return [sqlText, params.map(bindSqliteValue)];
+function getPool() {
+  if (!pool) {
+    const connectionString = resolveConnectionString();
+    if (!connectionString) {
+      throw new Error(
+        "DATABASE_URL is not set (or PGHOST, PGUSER, PGDATABASE / POSTGRES_*). See backend/db/.env.example."
+      );
     }
+
+    pool = new Pool({
+      connectionString,
+      max: 20,
+      idleTimeoutMillis: 30000,
+    });
   }
 
-  return [out, values];
-}
-
-function getDbSync() {
-  if (!dbInstance) {
-    const filepath = resolveSqlitePath();
-    fs.mkdirSync(path.dirname(filepath), { recursive: true });
-
-    const database = new DatabaseSync(filepath);
-    database.exec("PRAGMA foreign_keys = ON");
-    database.exec("PRAGMA journal_mode = WAL");
-    database.sqlitePath = filepath;
-    dbInstance = database;
-  }
-
-  return dbInstance;
-}
-
-function doQuerySync(database, text, params) {
-  const [sql, values] = convertPlaceholders(text, params);
-  const trimmed = sql.trim();
-  const upper = trimmed.replace(/^\(+/, "").toUpperCase();
-  const isSelect = upper.startsWith("SELECT") || upper.startsWith("WITH");
-  const hasReturning = /\bRETURNING\b/i.test(sql);
-
-  const statement = database.prepare(sql);
-
-  if (isSelect || hasReturning) {
-    const rows = statement.all(...values);
-    return { rows, rowCount: rows.length };
-  }
-
-  const info = statement.run(...values);
-  return { rows: [], rowCount: info.changes };
+  return pool;
 }
 
 export function query(text, params = [], runner) {
-  const execute = () => {
-    const database = runner || getDbSync();
-    return doQuerySync(database, text, params);
-  };
-
-  if (runner) {
-    return Promise.resolve(execute());
-  }
-
-  return runSerialized(() => Promise.resolve(execute()));
+  const executor = runner || getPool();
+  return executor.query(text, params).then((res) => ({
+    rows: res.rows,
+    rowCount: res.rowCount ?? 0,
+  }));
 }
 
 export async function withTransaction(callback) {
-  return runSerialized(async () => {
-    const database = getDbSync();
-    database.exec("BEGIN IMMEDIATE");
+  const client = await getPool().connect();
 
-    try {
-      const result = await callback(database);
-      database.exec("COMMIT");
-      return result;
-    } catch (error) {
-      database.exec("ROLLBACK");
-      throw error;
-    }
-  });
+  try {
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
+
+let initializationPromise;
 
 export async function initializeDatabase() {
   if (!initializationPromise) {
-    initializationPromise = Promise.resolve()
-      .then(() => {
-        const database = getDbSync();
-        database.exec(schemaSql);
-        const fp = database.sqlitePath || resolveSqlitePath();
+    initializationPromise = (async () => {
+      const p = getPool();
+      for (const sql of schemaStatements) {
+        const trimmed = sql.trim();
+        if (trimmed) {
+          await p.query(trimmed);
+        }
+      }
 
-        console.log(`SQLite ready: ${fp}`.underline.cyan);
-        dbgDb("ready database=%s", fp);
-      })
-      .catch((error) => {
-        initializationPromise = undefined;
-        throw error;
-      });
+      const masked = maskConnectionString(resolveConnectionString());
+      console.log(`PostgreSQL ready: ${masked || "(connected)"}`.underline.cyan);
+      dbgDb("ready database=%s", masked || "");
+    })().catch((error) => {
+      initializationPromise = undefined;
+      throw error;
+    });
   }
 
   return initializationPromise;
@@ -167,7 +123,7 @@ const connectDB = async () => {
   } catch (error) {
     console.error(`Error: ${error.message}`.red.underline.bold);
     console.error(
-      `Check SQLITE_DATABASE_PATH in backend/db/.env (see backend/db/.env.example). Node.js 22.5+ is required for built-in SQLite. Data directory must be writable.`
+      `Check DATABASE_URL or PG* / POSTGRES_* variables in backend/db/.env (see backend/db/.env.example).`
         .yellow
     );
     process.exit(1);

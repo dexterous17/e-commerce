@@ -37,7 +37,7 @@ for (;;) {
   }
   if (Date.now() >= deadline) {
     console.error(
-      `[wait-for-api] Timed out after ${timeoutMs}ms. Ensure Postgres is reachable and env/backend/.env PORT matches DEV_PROXY_TARGET in env/frontend/.env (${healthUrl.origin}).`
+      `[wait-for-api] Timed out after ${timeoutMs}ms. Ensure the API is running (DATABASE_URL / Postgres for backend, PORT) and env/backend/.env PORT matches DEV_PROXY_TARGET in env/frontend/.env (${healthUrl.origin}).`
     );
     process.exit(1);
   }
