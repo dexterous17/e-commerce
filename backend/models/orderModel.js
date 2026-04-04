@@ -1,6 +1,47 @@
 import { randomUUID } from "crypto";
 
 import { query, withTransaction } from "../config/db.js";
+import { toIsoMaybe } from "../utils/toIso.js";
+
+function parseJsonObject(value, fallback = {}) {
+  if (value == null) {
+    return fallback;
+  }
+
+  if (typeof value === "object") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return fallback;
+    }
+  }
+
+  return fallback;
+}
+
+function parseOptionalJson(value) {
+  if (value == null || value === "") {
+    return undefined;
+  }
+
+  if (typeof value === "object") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
 
 const ORDER_COLUMNS = `
   o._id AS id,
@@ -56,19 +97,19 @@ function mapOrder(row, { includeUser = false, includeItems = false } = {}) {
           email: row.user_email || "",
         }
       : row.user_id,
-    shippingAddress: row.shipping_address || {},
+    shippingAddress: parseJsonObject(row.shipping_address, {}),
     paymentMethod: row.payment_method,
-    paymentResult: row.payment_result || undefined,
+    paymentResult: parseOptionalJson(row.payment_result),
     itemsPrice: Number(row.items_price),
     taxPrice: Number(row.tax_price),
     shippingPrice: Number(row.shipping_price),
     totalPrice: Number(row.total_price),
-    isPaid: row.is_paid,
-    paidAt: row.paid_at?.toISOString() || null,
-    isShipped: row.is_shipped,
-    shippedAt: row.shipped_at?.toISOString() || null,
-    createdAt: row.created_at?.toISOString() || null,
-    updatedAt: row.updated_at?.toISOString() || null,
+    isPaid: Boolean(row.is_paid),
+    paidAt: toIsoMaybe(row.paid_at),
+    isShipped: Boolean(row.is_shipped),
+    shippedAt: toIsoMaybe(row.shipped_at),
+    createdAt: toIsoMaybe(row.created_at),
+    updatedAt: toIsoMaybe(row.updated_at),
   };
 
   if (includeItems) {
@@ -149,7 +190,7 @@ export async function createOrder({
       const { rows: stockRows } = await query(
         `UPDATE products
          SET count_in_stock = count_in_stock - $1,
-             updated_at = NOW()
+             updated_at = datetime('now')
          WHERE _id = $2 AND count_in_stock >= $1
          RETURNING _id`,
         [qty, productId],
@@ -175,7 +216,7 @@ export async function createOrder({
         tax_price,
         shipping_price,
         total_price
-      ) VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         orderId,
         userId,
@@ -199,7 +240,7 @@ export async function createOrder({
           images,
           price,
           product_id
-        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           randomUUID(),
           orderId,
@@ -225,10 +266,10 @@ export async function updateOrderToPaid(id, paymentResult = {}) {
   return withTransaction(async (client) => {
     const { rows } = await query(
       `UPDATE orders
-       SET is_paid = TRUE,
-           paid_at = NOW(),
-           payment_result = $1::jsonb,
-           updated_at = NOW()
+       SET is_paid = 1,
+           paid_at = datetime('now'),
+           payment_result = $1,
+           updated_at = datetime('now')
        WHERE _id = $2
        RETURNING _id`,
       [JSON.stringify(paymentResult || {}), id],
@@ -247,9 +288,9 @@ export async function updateOrderToShipped(id) {
   return withTransaction(async (client) => {
     const { rows } = await query(
       `UPDATE orders
-       SET is_shipped = TRUE,
-           shipped_at = NOW(),
-           updated_at = NOW()
+       SET is_shipped = 1,
+           shipped_at = datetime('now'),
+           updated_at = datetime('now')
        WHERE _id = $1
        RETURNING _id`,
       [id],

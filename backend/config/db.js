@@ -2,22 +2,19 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import colors from "colors";
-import pg from "pg";
+import { DatabaseSync } from "node:sqlite";
 
 import "./loadEnv.js";
 import schemaSql from "../db/schema.js";
 import { dbgDb } from "../utils/debugLog.js";
 
-const { Pool } = pg;
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..", "..");
+const backendRoot = path.resolve(__dirname, "..");
 
-let pool;
+let dbInstance;
 let initializationPromise;
-
-const LOCAL_DATABASE_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+let serializedChain = Promise.resolve();
 
 function getEnv(...names) {
   for (const name of names) {
@@ -31,169 +28,121 @@ function getEnv(...names) {
   return undefined;
 }
 
-function resolveRepoPath(filePath) {
-  if (!filePath) {
-    return null;
+function resolveSqlitePath() {
+  const configured = getEnv("SQLITE_DATABASE_PATH", "SQLITE_PATH");
+  if (!configured) {
+    return path.join(backendRoot, "data", "ecommerce.sqlite");
   }
 
-  return path.isAbsolute(filePath)
-    ? filePath
-    : path.resolve(repoRoot, filePath);
+  return path.isAbsolute(configured)
+    ? configured
+    : path.resolve(backendRoot, configured);
 }
 
-function getConnectionHost(connectionString, fallbackHost) {
-  if (!connectionString) {
-    return fallbackHost;
-  }
-
-  try {
-    return new URL(connectionString).hostname;
-  } catch {
-    return fallbackHost;
-  }
+function runSerialized(fn) {
+  const next = serializedChain.then(fn, fn);
+  serializedChain = next.catch(() => {});
+  return next;
 }
 
-function getSslConfig(connectionHost) {
-  const sslMode = String(
-    getEnv("PGSSLMODE", "POSTGRES_SSL_MODE", "DATABASE_SSL_MODE") || ""
-  ).toLowerCase();
-  const explicitToggle = getEnv("PGSSL", "POSTGRES_SSL", "DATABASE_SSL");
-  const explicitRejectUnauthorized = getEnv(
-    "PGSSL_REJECT_UNAUTHORIZED",
-    "POSTGRES_SSL_REJECT_UNAUTHORIZED",
-    "DATABASE_SSL_REJECT_UNAUTHORIZED"
-  );
-  const inlineCertificate = getEnv("POSTGRES_SSL_CA", "DATABASE_SSL_CA");
-  const explicitCertPath = getEnv(
-    "PGSSLROOTCERT",
-    "PGSSLROOTCERT_PATH",
-    "POSTGRES_SSL_CA_PATH",
-    "DATABASE_SSL_CA_PATH"
-  );
-  const sslRequested =
-    (explicitToggle && explicitToggle.toLowerCase() === "true") ||
-    Boolean(inlineCertificate) ||
-    Boolean(explicitCertPath) ||
-    ["require", "verify-ca", "verify-full", "prefer"].includes(sslMode);
-
-  if (!sslRequested || sslMode === "disable") {
-    return undefined;
+function convertPlaceholders(sqlText, params) {
+  if (!params || params.length === 0) {
+    return [sqlText, []];
   }
 
-  let certificateAuthority;
-
-  if (inlineCertificate) {
-    certificateAuthority = inlineCertificate.includes("BEGIN CERTIFICATE")
-      ? inlineCertificate.replace(/\\n/g, "\n")
-      : fs.readFileSync(resolveRepoPath(inlineCertificate), "utf8");
-  } else if (explicitCertPath) {
-    certificateAuthority = fs.readFileSync(
-      resolveRepoPath(explicitCertPath),
-      "utf8"
-    );
-  }
-
-  const rejectUnauthorized =
-    explicitRejectUnauthorized === undefined
-      ? Boolean(certificateAuthority)
-      : explicitRejectUnauthorized.toLowerCase() !== "false";
-
-  return {
-    rejectUnauthorized,
-    ...(certificateAuthority ? { ca: certificateAuthority } : {}),
-  };
-}
-
-function createPool() {
-  if (pool) {
-    return pool;
-  }
-
-  const connectionString = getEnv("DATABASE_URL", "POSTGRES_URL", "POSTGRES_URI");
-  const fallbackHost = getEnv("PGHOST", "POSTGRES_HOST");
-  const connectionHost = getConnectionHost(connectionString, fallbackHost);
-  const ssl = getSslConfig(connectionHost);
-  const poolConfig = connectionString
-    ? { connectionString }
-    : {
-        host: fallbackHost,
-        port: Number.parseInt(getEnv("PGPORT", "POSTGRES_PORT") || "5432", 10),
-        user: getEnv("PGUSER", "POSTGRES_USER"),
-        password: getEnv("PGPASSWORD", "POSTGRES_PASSWORD"),
-        database: getEnv("PGDATABASE", "POSTGRES_DB"),
-      };
-
-  if (
-    !connectionString &&
-    (!poolConfig.host || !poolConfig.user || !poolConfig.database)
-  ) {
-    throw new Error(
-      "Missing Postgres connection settings. Set DATABASE_URL or PGHOST/PGUSER/PGPASSWORD/PGDATABASE."
-    );
-  }
-
-  if (ssl) {
-    poolConfig.ssl = ssl;
-  }
-
-  pool = new Pool(poolConfig);
-  pool.on("error", (error) => {
-    console.error(`Postgres pool error: ${error.message}`.red.bold);
+  const values = [];
+  const out = sqlText.replace(/\$(\d+)/g, (_, d) => {
+    const i = Number.parseInt(d, 10) - 1;
+    let v = params[i];
+    if (v === undefined) {
+      v = null;
+    } else if (typeof v === "boolean") {
+      v = v ? 1 : 0;
+    }
+    values.push(v);
+    return "?";
   });
 
-  return pool;
+  return [out, values];
 }
 
-export function getPool() {
-  return createPool();
+function getDbSync() {
+  if (!dbInstance) {
+    const filepath = resolveSqlitePath();
+    fs.mkdirSync(path.dirname(filepath), { recursive: true });
+
+    const database = new DatabaseSync(filepath);
+    database.exec("PRAGMA foreign_keys = ON");
+    database.exec("PRAGMA journal_mode = WAL");
+    database.sqlitePath = filepath;
+    dbInstance = database;
+  }
+
+  return dbInstance;
+}
+
+function doQuerySync(database, text, params) {
+  const [sql, values] = convertPlaceholders(text, params);
+  const trimmed = sql.trim();
+  const upper = trimmed.replace(/^\(+/, "").toUpperCase();
+  const isSelect = upper.startsWith("SELECT") || upper.startsWith("WITH");
+  const hasReturning = /\bRETURNING\b/i.test(sql);
+
+  const statement = database.prepare(sql);
+
+  if (isSelect || hasReturning) {
+    const rows = statement.all(...values);
+    return { rows, rowCount: rows.length };
+  }
+
+  const info = statement.run(...values);
+  return { rows: [], rowCount: info.changes };
 }
 
 export function query(text, params = [], runner) {
-  const executor = runner || createPool();
-  return executor.query(text, params);
+  const execute = () => {
+    const database = runner || getDbSync();
+    return doQuerySync(database, text, params);
+  };
+
+  if (runner) {
+    return Promise.resolve(execute());
+  }
+
+  return runSerialized(() => Promise.resolve(execute()));
 }
 
 export async function withTransaction(callback) {
-  const client = await createPool().connect();
+  return runSerialized(async () => {
+    const database = getDbSync();
+    database.exec("BEGIN IMMEDIATE");
 
-  try {
-    await client.query("BEGIN");
-    const result = await callback(client);
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+    try {
+      const result = await callback(database);
+      database.exec("COMMIT");
+      return result;
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
+  });
 }
 
 export async function initializeDatabase() {
   if (!initializationPromise) {
-    initializationPromise = (async () => {
-      const client = await createPool().connect();
+    initializationPromise = Promise.resolve()
+      .then(() => {
+        const database = getDbSync();
+        database.exec(schemaSql);
+        const fp = database.sqlitePath || resolveSqlitePath();
 
-      try {
-        await client.query("SELECT 1");
-        await client.query(schemaSql);
-
-        const statusResult = await client.query(
-          "SELECT current_database() AS database_name, current_user AS user_name"
-        );
-        const { database_name, user_name } = statusResult.rows[0];
-
-        console.log(
-          `Postgres connected: ${database_name} as ${user_name}`.underline.cyan
-        );
-        dbgDb("ready database=%s user=%s", database_name, user_name);
-      } finally {
-        client.release();
-      }
-    })().catch((error) => {
-      initializationPromise = undefined;
-      throw error;
-    });
+        console.log(`SQLite ready: ${fp}`.underline.cyan);
+        dbgDb("ready database=%s", fp);
+      })
+      .catch((error) => {
+        initializationPromise = undefined;
+        throw error;
+      });
   }
 
   return initializationPromise;
@@ -204,14 +153,10 @@ const connectDB = async () => {
     await initializeDatabase();
   } catch (error) {
     console.error(`Error: ${error.message}`.red.underline.bold);
-    if (error.code === "ECONNREFUSED") {
-      const host = getEnv("PGHOST", "POSTGRES_HOST") || "127.0.0.1";
-      const port = getEnv("PGPORT", "POSTGRES_PORT") || "5432";
-      console.error(
-        `Postgres refused TCP connection at ${host}:${port}. Start the database (e.g. \`docker compose up -d postgres\` from the repo root) or fix PGHOST/PGPORT/PGUSER/PGPASSWORD in env/database/.env.`
-          .yellow
-      );
-    }
+    console.error(
+      `Check SQLITE_DATABASE_PATH in backend/db/.env (see backend/db/.env.example). Node.js 22.5+ is required for built-in SQLite. Data directory must be writable.`
+        .yellow
+    );
     process.exit(1);
   }
 };

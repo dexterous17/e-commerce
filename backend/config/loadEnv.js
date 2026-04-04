@@ -11,7 +11,7 @@ import {
   resolvedDatabaseEnvPath,
 } from "./repoEnvPaths.js";
 
-// Load order: database → aws → backend (later files override earlier; same as before).
+// Load order: backend/db → env/database (legacy) → aws → backend (later overrides earlier).
 if (resolvedDatabaseEnvPath) {
   dotenv.config({ path: resolvedDatabaseEnvPath, quiet: true });
 }
@@ -32,7 +32,7 @@ if (dotenvResult.error?.code === "ENOENT") {
       `      ${path.join(backendRoot, ".env")} (legacy)\n` +
       "      Create from template:  cp env/backend/.env.example env/backend/.env\n" +
       "      Or from backend/:       npm run env:init\n" +
-      "      Postgres: env/database/.env (or database/.env). AWS keys: env/aws/.env (or aws/.env)."
+      "      SQLite: backend/db/.env or env/database/.env. AWS keys: env/aws/.env (or aws/.env)."
   );
 } else if (
   envPath &&
@@ -128,16 +128,9 @@ const ALLOWED_SECRET_FILE_TARGETS = new Set([
   "AWS_ACCESS_KEY_ID",
   "AWS_SECRET_ACCESS_KEY",
   "AWS_SESSION_TOKEN",
-  "DATABASE_URL",
   "JWT_SECRET",
   "PAYPAL_CLIENT_ID",
-  "PGDATABASE",
-  "PGHOST",
-  "PGPASSWORD",
-  "PGPORT",
-  "PGUSER",
-  "POSTGRES_URI",
-  "POSTGRES_URL",
+  "SQLITE_DATABASE_PATH",
 ]);
 
 for (const [name, filePath] of Object.entries(process.env)) {

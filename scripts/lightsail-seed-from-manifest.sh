@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Load catalog into Postgres using backend/data/products-s3-manifest.json (images already in S3).
+# Load catalog into SQLite using backend/data/products-s3-manifest.json (images already in S3).
 # Run ON THE LIGHTSAIL HOST from this repo root, after: docker compose -f docker-compose.lightsail.yml up -d
 #
 #   ./scripts/lightsail-seed-from-manifest.sh
 #
-# Requires env/database/.env (and env/aws/.env if the seeder verifies S3 objects).
+# Requires env/backend/.env (JWT, etc.) and env/aws/.env if the seeder verifies S3 objects.
 #
 # WARNING: This seeder deletes existing users, products, orders, and seed_manifest, then re-inserts
 # users from backend/data/users.js plus products from the manifest. Do not run on a DB you care to keep

@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 
 import { query } from "../config/db.js";
+import { toIsoMaybe } from "../utils/toIso.js";
 
 const PRODUCT_COLUMNS = `
   _id AS id,
@@ -61,7 +62,7 @@ function mapProduct(row) {
     _id: row.id,
     user: row.user_id,
     name: row.name,
-    nwt: row.nwt,
+    nwt: Boolean(row.nwt),
     brand: row.brand,
     price: Number(row.price),
     size: row.size,
@@ -79,8 +80,8 @@ function mapProduct(row) {
     bucketPublicBaseUrl: row.bucket_public_base_url || null,
     bucketPrefix: row.bucket_prefix || null,
     seedSource: row.seed_source || null,
-    createdAt: row.created_at?.toISOString() || null,
-    updatedAt: row.updated_at?.toISOString() || null,
+    createdAt: toIsoMaybe(row.created_at),
+    updatedAt: toIsoMaybe(row.updated_at),
   };
 }
 
@@ -121,10 +122,12 @@ export async function listProducts({
   const trimmedKeyword = String(keyword || "").trim();
   const hasKeyword = trimmedKeyword.length > 0;
   const params = hasKeyword ? [`%${trimmedKeyword}%`] : [];
-  const whereClause = hasKeyword ? `WHERE ${column} ILIKE $1` : "";
+  const whereClause = hasKeyword
+    ? `WHERE LOWER(${column}) LIKE LOWER($1)`
+    : "";
 
   const countResult = await query(
-    `SELECT COUNT(*)::int AS count FROM products ${whereClause}`,
+    `SELECT CAST(COUNT(*) AS INTEGER) AS count FROM products ${whereClause}`,
     params
   );
   const count = Number(countResult.rows[0]?.count || 0);
@@ -169,9 +172,10 @@ export async function getProductsByIds(ids, { client } = {}) {
     return new Map();
   }
 
+  const placeholders = unique.map(() => "?").join(", ");
   const { rows } = await query(
-    `SELECT ${PRODUCT_COLUMNS} FROM products WHERE _id = ANY($1::uuid[])`,
-    [unique],
+    `SELECT ${PRODUCT_COLUMNS} FROM products WHERE _id IN (${placeholders})`,
+    unique,
     client
   );
 
@@ -211,8 +215,8 @@ export async function createProduct(product, { client } = {}) {
       seed_source
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8,
-      $9, $10, $11, $12, $13, $14, $15::jsonb,
-      $16::jsonb, $17, $18, $19, $20, $21
+      $9, $10, $11, $12, $13, $14, $15,
+      $16, $17, $18, $19, $20, $21
     )
     RETURNING ${PRODUCT_COLUMNS}`,
     [
@@ -260,8 +264,8 @@ export async function updateProductById(id, product, { client } = {}) {
          color = $11,
          sub_color = $12,
          count_in_stock = $13,
-         images = $14::jsonb,
-         updated_at = NOW()
+         images = $14,
+         updated_at = datetime('now')
      WHERE _id = $15
      RETURNING ${PRODUCT_COLUMNS}`,
     [
@@ -291,7 +295,7 @@ export async function setProductInventoryToZero(id, { client } = {}) {
   const { rows } = await query(
     `UPDATE products
      SET count_in_stock = 0,
-         updated_at = NOW()
+         updated_at = datetime('now')
      WHERE _id = $1
      RETURNING ${PRODUCT_COLUMNS}`,
     [id],

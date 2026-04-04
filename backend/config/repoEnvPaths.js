@@ -30,9 +30,12 @@ export const preferredDatabaseEnvPath = path.join(
   "database",
   ".env"
 );
+/** SQLite / DB path vars — canonical location under backend/db */
+export const preferredBackendDbEnvPath = path.join(backendRoot, "db", ".env");
 export const preferredAwsEnvPath = path.join(repoRoot, "env", "aws", ".env");
 
 export const resolvedDatabaseEnvPath = firstExistingPath([
+  preferredBackendDbEnvPath,
   preferredDatabaseEnvPath,
   path.join(repoRoot, "database", ".env"),
 ]);

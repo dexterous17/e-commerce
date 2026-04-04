@@ -1,51 +1,209 @@
-import mongoose from "mongoose";
+import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
-const userSchema = mongoose.Schema(
+import { query } from "../config/db.js";
+import { toIsoMaybe } from "../utils/toIso.js";
+
+const USER_COLUMNS = `
+  _id AS id,
+  name,
+  email,
+  password,
+  is_admin,
+  created_at,
+  updated_at
+`;
+
+function normalizeDuplicateUserError(error) {
+  const msg = String(error?.message || "");
+  const sqliteUnique =
+    error?.code === "SQLITE_CONSTRAINT" &&
+    (msg.includes("UNIQUE") || msg.includes("unique"));
+
+  if (error?.code === "23505" || sqliteUnique) {
+    const duplicateUserError = new Error("User already exists");
+    duplicateUserError.statusCode = 400;
+    throw duplicateUserError;
+  }
+
+  throw error;
+}
+
+function mapUser(row, { includePassword = false } = {}) {
+  if (!row) {
+    return null;
+  }
+
+  const user = {
+    _id: row.id,
+    name: row.name,
+    email: row.email,
+    isAdmin: Boolean(row.is_admin),
+    createdAt: toIsoMaybe(row.created_at),
+    updatedAt: toIsoMaybe(row.updated_at),
+  };
+
+  if (includePassword) {
+    user.password = row.password;
+  }
+
+  return user;
+}
+
+export async function matchPassword(enteredPassword, hashedPassword) {
+  return bcrypt.compare(enteredPassword, hashedPassword);
+}
+
+export async function findUserByEmail(
+  email,
+  { includePassword = false, client } = {}
+) {
+  const { rows } = await query(
+    `SELECT ${USER_COLUMNS} FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+    [email],
+    client
+  );
+
+  return mapUser(rows[0], { includePassword });
+}
+
+export async function getUserById(
+  id,
+  { includePassword = false, client } = {}
+) {
+  const { rows } = await query(
+    `SELECT ${USER_COLUMNS} FROM users WHERE _id = $1 LIMIT 1`,
+    [id],
+    client
+  );
+
+  return mapUser(rows[0], { includePassword });
+}
+
+export async function listUsers({ client } = {}) {
+  const { rows } = await query(
+    `SELECT ${USER_COLUMNS}
+     FROM users
+     ORDER BY created_at DESC`,
+    [],
+    client
+  );
+
+  return rows.map((row) => mapUser(row));
+}
+
+export async function createUser(
+  { name, email, password, isAdmin = false, passwordIsHashed = false },
+  { includePassword = false, client } = {}
+) {
+  const hashedPassword = passwordIsHashed
+    ? password
+    : await bcrypt.hash(password, 10);
+
+  try {
+    const { rows } = await query(
+      `INSERT INTO users (
+        _id,
+        name,
+        email,
+        password,
+        is_admin
+      ) VALUES ($1, $2, $3, $4, $5)
+      RETURNING ${USER_COLUMNS}`,
+      [randomUUID(), name, email, hashedPassword, isAdmin],
+      client
+    );
+
+    return mapUser(rows[0], { includePassword });
+  } catch (error) {
+    normalizeDuplicateUserError(error);
+  }
+}
+
+export async function updateUserById(
+  id,
   {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    isAdmin: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
+    name,
+    email,
+    password,
+    isAdmin,
+    passwordIsHashed = false,
   },
-  //you dont need to add timestamps manually, you can send an optional second argument options object
-  {
-    timestamps: true,
+  { includePassword = false, client } = {}
+) {
+  const assignments = [];
+  const values = [];
+
+  if (name !== undefined) {
+    values.push(name);
+    assignments.push(`name = $${values.length}`);
   }
-);
 
-//will take in entered password and hash it to hashed pw in the DB
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-//adding middleware to encrypt the password before it gets saved
-//it only runs when the password is sent or modified, and not when the profile is just updated
-userSchema.pre("save", async function (next) {
-  //this is a function of mongoose to see if the password was updated
-  if (!this.isModified("password")) {
-    next();
+  if (email !== undefined) {
+    values.push(email);
+    assignments.push(`email = $${values.length}`);
   }
-  //if it was modified then this will run and hash the password
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
 
-//create model from the schema, capital and singular
-const User = mongoose.model("User", userSchema);
+  if (password !== undefined) {
+    const hashedPassword = passwordIsHashed
+      ? password
+      : await bcrypt.hash(password, 10);
 
-export default User;
+    values.push(hashedPassword);
+    assignments.push(`password = $${values.length}`);
+  }
+
+  if (isAdmin !== undefined) {
+    values.push(isAdmin);
+    assignments.push(`is_admin = $${values.length}`);
+  }
+
+  if (assignments.length === 0) {
+    return getUserById(id, { includePassword, client });
+  }
+
+  assignments.push("updated_at = datetime('now')");
+  values.push(id);
+
+  try {
+    const { rows } = await query(
+      `UPDATE users
+       SET ${assignments.join(", ")}
+       WHERE _id = $${values.length}
+       RETURNING ${USER_COLUMNS}`,
+      values,
+      client
+    );
+
+    return mapUser(rows[0], { includePassword });
+  } catch (error) {
+    normalizeDuplicateUserError(error);
+  }
+}
+
+export async function deleteUserById(id, { client } = {}) {
+  const result = await query(`DELETE FROM users WHERE _id = $1`, [id], client);
+  return result.rowCount > 0;
+}
+
+export async function deleteAllUsers(client) {
+  await query(`DELETE FROM users`, [], client);
+}
+
+export async function insertUsers(users, client) {
+  const createdUsers = [];
+
+  for (const user of users) {
+    createdUsers.push(
+      await createUser(
+        {
+          ...user,
+          passwordIsHashed: true,
+        },
+        { client }
+      )
+    );
+  }
+
+  return createdUsers;
+}
