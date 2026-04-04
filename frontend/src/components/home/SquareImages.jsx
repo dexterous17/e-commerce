@@ -4,6 +4,7 @@ import axios from "axios";
 
 import BunnyLoader from "../BunnyLoader";
 import Message from "../Message";
+import { resolvePublicApiUrl } from "../../apiBase";
 import { rewriteDirectS3ImageUrlToProxy } from "../../utils/rewriteProductImageUrls";
 
 import "./SquareImages.css";
@@ -33,13 +34,13 @@ function gallerySrc(url) {
   }
   const t = url.trim();
   if (t.startsWith("/api/media/s3") || t.includes("/api/media/s3?")) {
-    return t;
+    return resolvePublicApiUrl(t);
   }
   if (/^https?:\/\//i.test(t)) {
     return rewriteDirectS3ImageUrlToProxy(t);
   }
-  /** /uploads/... — keep as root-relative (nginx proxies to API) */
-  return t.startsWith("/") ? t : `/${t}`;
+  /** /uploads/... — root-relative unless SPA and API use different hosts */
+  return resolvePublicApiUrl(t.startsWith("/") ? t : `/${t}`);
 }
 
 /**

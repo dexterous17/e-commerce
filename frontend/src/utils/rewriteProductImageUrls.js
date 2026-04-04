@@ -1,3 +1,5 @@
+import { resolvePublicApiUrl } from "../apiBase";
+
 /**
  * Rewrites direct S3 object URLs to the backend proxy path so <img> works with private buckets.
  * Used when rehydrating cart from localStorage (URLs were saved before the API proxy was on).
@@ -11,7 +13,7 @@ export function rewriteDirectS3ImageUrlToProxy(url) {
     trimmed.startsWith("/api/media/s3") ||
     trimmed.includes("/api/media/s3?")
   ) {
-    return trimmed;
+    return resolvePublicApiUrl(trimmed);
   }
   if (!/^https?:\/\//i.test(trimmed)) {
     return url;
@@ -47,7 +49,9 @@ export function rewriteDirectS3ImageUrlToProxy(url) {
     if (!key.startsWith("products/")) {
       return url;
     }
-    return `/api/media/s3?key=${encodeURIComponent(key)}`;
+    return resolvePublicApiUrl(
+      `/api/media/s3?key=${encodeURIComponent(key)}`
+    );
   } catch {
     return url;
   }

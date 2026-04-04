@@ -17,8 +17,24 @@ export default defineConfig(({ mode }) => {
     env.VITE_DEV_PROXY_TARGET ||
     "http://localhost:5002";
 
+  /** Split-domain production: API at backend.ecommerce.harshildex.com unless overridden. */
+  const hasExplicitApiOrigin = Object.prototype.hasOwnProperty.call(
+    env,
+    "VITE_API_ORIGIN"
+  );
+  const mergedApiOrigin = (
+    hasExplicitApiOrigin
+      ? String(env.VITE_API_ORIGIN).trim()
+      : mode === "production"
+        ? "https://backend.ecommerce.harshildex.com"
+        : ""
+  ).replace(/\/$/, "");
+
   return {
     base: process.env.PUBLIC_URL || "/",
+    define: {
+      "import.meta.env.VITE_API_ORIGIN": JSON.stringify(mergedApiOrigin),
+    },
     plugins: [
       react(),
       {
