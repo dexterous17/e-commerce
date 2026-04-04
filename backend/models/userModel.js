@@ -20,7 +20,7 @@ function normalizeDuplicateUserError(error) {
     error?.code === "SQLITE_CONSTRAINT" &&
     (msg.includes("UNIQUE") || msg.includes("unique"));
 
-  if (error?.code === "23505" || sqliteUnique) {
+  if (sqliteUnique) {
     const duplicateUserError = new Error("User already exists");
     duplicateUserError.statusCode = 400;
     throw duplicateUserError;

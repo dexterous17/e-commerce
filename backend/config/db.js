@@ -45,6 +45,18 @@ function runSerialized(fn) {
   return next;
 }
 
+function bindSqliteValue(v) {
+  if (v === undefined) {
+    return null;
+  }
+
+  if (typeof v === "boolean") {
+    return v ? 1 : 0;
+  }
+
+  return v;
+}
+
 function convertPlaceholders(sqlText, params) {
   if (!params || params.length === 0) {
     return [sqlText, []];
@@ -53,15 +65,16 @@ function convertPlaceholders(sqlText, params) {
   const values = [];
   const out = sqlText.replace(/\$(\d+)/g, (_, d) => {
     const i = Number.parseInt(d, 10) - 1;
-    let v = params[i];
-    if (v === undefined) {
-      v = null;
-    } else if (typeof v === "boolean") {
-      v = v ? 1 : 0;
-    }
-    values.push(v);
+    values.push(bindSqliteValue(params[i]));
     return "?";
   });
+
+  if (values.length === 0 && !/\$\d+/.test(sqlText)) {
+    const questionCount = (sqlText.match(/\?/g) || []).length;
+    if (questionCount > 0 && questionCount === params.length) {
+      return [sqlText, params.map(bindSqliteValue)];
+    }
+  }
 
   return [out, values];
 }

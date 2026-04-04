@@ -172,7 +172,7 @@ export async function getProductsByIds(ids, { client } = {}) {
     return new Map();
   }
 
-  const placeholders = unique.map(() => "?").join(", ");
+  const placeholders = unique.map((_, index) => `$${index + 1}`).join(", ");
   const { rows } = await query(
     `SELECT ${PRODUCT_COLUMNS} FROM products WHERE _id IN (${placeholders})`,
     unique,
