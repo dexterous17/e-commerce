@@ -116,12 +116,14 @@ RSYNC=(rsync -avz
   --exclude frontend/playwright-report
   --exclude frontend/test-results
   --exclude '**/.DS_Store'
+  --exclude '*.pem'
   ./ "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}:${REMOTE_DIR}")
 
 echo "==> Syncing repository to ${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}:${REMOTE_DIR}"
 "${RSYNC[@]}"
 
 REMOTE_SCRIPT="set -euo pipefail
+export LIGHTSAIL_WITH_NPM=\"${LIGHTSAIL_WITH_NPM:-}\"
 ${REMOTE_CD}
 if ! command -v docker >/dev/null 2>&1; then
   echo \"Docker not found. Install: https://docs.docker.com/engine/install/ubuntu/\"
@@ -139,7 +141,7 @@ docker compose \"\${COMPOSE_FILES[@]}\" ps
 "
 
 echo "==> Building and starting containers (FRONTEND_PORT=\${FRONTEND_PORT:-8080}, BACKEND_PORT=\${BACKEND_PORT:-5004})"
-lightsail_ssh bash -s <<< "$REMOTE_SCRIPT"
+lightsail_ssh "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" -- bash -s <<< "$REMOTE_SCRIPT"
 
 if [[ "${INSTALL_HOST_NGINX:-}" == "1" ]]; then
   echo "==> Installing host nginx site (requires passwordless sudo or you type sudo password)"
@@ -161,12 +163,12 @@ sudo systemctl enable nginx
 sudo systemctl reload nginx
 EOS
 )
-  lightsail_ssh bash -s <<< "$NGINX_REMOTE"
+  lightsail_ssh "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" -- bash -s <<< "$NGINX_REMOTE"
 
   if [[ -n "${CERTBOT_EMAIL:-}" ]]; then
     echo "==> Obtaining TLS certificates with certbot"
     EMAIL_Q=$(printf %q "$CERTBOT_EMAIL")
-    lightsail_ssh bash -s <<EOF
+    lightsail_ssh "${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}" -- bash -s <<EOF
 set -euo pipefail
 sudo apt-get install -y -qq certbot python3-certbot-nginx
 sudo certbot --nginx \\
