@@ -5,6 +5,8 @@
   "description": "Harshil",
   "main": "server.js",
   "scripts": {
+    "build": "npm ci --omit=dev",
+    "build:docker": "docker build -f Dockerfile -t ecommerce-backend:latest ..",
     "token:demo": "node scripts/demo-generate-token.mjs",
     "env:init": "node scripts/init-env.mjs",
     "env:debug": "node scripts/debug-env.mjs",
