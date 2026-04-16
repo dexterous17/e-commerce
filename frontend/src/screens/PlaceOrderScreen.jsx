@@ -12,7 +12,7 @@ import Meta from "../components/Meta";
 import { createOrder } from "../actions/orderActions";
 import { ORDER_CREATE_RESET } from "../constants/orderConstants";
 import { USER_DETAILS_RESET } from "../constants/userConstants";
-import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "../apiBase";
 
 const PlaceOrderScreen = () => {
   const cart = useSelector((state) => state.cart);
@@ -115,7 +115,7 @@ const PlaceOrderScreen = () => {
                           className="pl-0 pr-0 place-order-screen__image"
                         >
                           <Image
-                            src={rewriteDirectS3ImageUrlToProxy(item.images[0])}
+                            src={resolvePublicApiUrl(item.images[0])}
                             alt={item.name}
                             fluid
                             rounded

@@ -2,7 +2,7 @@ import { combineReducers, createStore, applyMiddleware } from "redux";
 import thunk from "redux-thunk";
 import { composeWithDevTools } from "@redux-devtools/extension";
 
-import { rewriteCartItemImages } from "./utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "./apiBase";
 
 //reducers
 import {
@@ -72,7 +72,11 @@ const readJson = (key, fallback) => {
 //upon inilization it will check local storage to see if there are any cartItems, if there is, it adds it to our initial state, otherwise it sets it as empty array
 const cartItemsParsed = readJson("cartItems", []);
 const cartItemsRaw = Array.isArray(cartItemsParsed) ? cartItemsParsed : [];
-const cartItemsFromLocalStorage = rewriteCartItemImages(cartItemsRaw);
+const cartItemsFromLocalStorage = cartItemsRaw.map((item) =>
+  !item?.images?.length
+    ? item
+    : { ...item, images: item.images.map((u) => resolvePublicApiUrl(u)) }
+);
 if (
   cartItemsRaw.length > 0 &&
   JSON.stringify(cartItemsFromLocalStorage) !== JSON.stringify(cartItemsRaw)

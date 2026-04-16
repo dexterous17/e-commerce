@@ -11,7 +11,7 @@ import Message from "./Message";
 
 //actions
 import { listFeaturedProducts } from "../actions/productActions";
-import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "../apiBase";
 
 const CAROUSEL_INTERVAL_MS = 5000;
 
@@ -87,16 +87,25 @@ const FeaturedCarousel = () => {
             <Link to={`/products/${product._id}`}>
               <img
                 className="img-fluid"
-                src={rewriteDirectS3ImageUrlToProxy(product.images[0])}
+                src={resolvePublicApiUrl(product.images[0])}
                 alt={product.name}
                 loading={i === 0 ? "eager" : "lazy"}
                 decoding="async"
                 {...(i === 0 ? { fetchpriority: "high" } : {})}
               />
               <div className="carousel-caption">
-                <h2>
-                  {product.name} (${product.price})
-                </h2>
+                <div className="featured-carousel__caption-inner">
+                  <span className="featured-carousel__eyebrow">Featured</span>
+                  <h2 className="featured-carousel__title">{product.name}</h2>
+                  <p className="featured-carousel__meta">
+                    <span className="featured-carousel__price">
+                      ${product.price}
+                    </span>
+                    <span className="featured-carousel__hint" aria-hidden="true">
+                      View
+                    </span>
+                  </p>
+                </div>
               </div>
             </Link>
           </div>

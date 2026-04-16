@@ -1,7 +1,7 @@
 import { Image, Button } from "react-bootstrap";
 import { useState, useMemo, useEffect } from "react";
 
-import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "../apiBase";
 
 const ControlledCarousel = ({ product }) => {
   const { images: rawImages, name } = product;
@@ -41,7 +41,7 @@ const ControlledCarousel = ({ product }) => {
   return (
     <>
       <Image
-        src={rewriteDirectS3ImageUrlToProxy(filteredImages[imageIndex])}
+        src={resolvePublicApiUrl(filteredImages[imageIndex])}
         alt={name}
         fluid
         className="w-100"

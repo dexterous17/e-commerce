@@ -8,7 +8,7 @@ import "./Product.css";
 import ProductModal from "../components/ProductModal";
 
 import { addToCart } from "../actions/cartActions";
-import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "../apiBase";
 
 const Product = memo(({ product, inCart }) => {
   const [modalShow, setModalShow] = useState(false);
@@ -42,7 +42,7 @@ const Product = memo(({ product, inCart }) => {
     <Card className="my-3 p-3 rounded text-dark shadow test">
       <Link to={`/products/${id}`}>
         <Card.Img
-          src={rewriteDirectS3ImageUrlToProxy(images[0])}
+          src={resolvePublicApiUrl(images[0])}
           variant="top"
           className="position-relative product__image rounded"
           loading="lazy"

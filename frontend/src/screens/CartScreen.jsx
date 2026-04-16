@@ -16,7 +16,7 @@ import Meta from "../components/Meta";
 
 //actions
 import { addToCart, removeFromCart } from "../actions/cartActions";
-import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "../apiBase";
 
 const CartScreen = () => {
   const dispatch = useDispatch();
@@ -66,7 +66,7 @@ const CartScreen = () => {
                     <Col md={2} sm={5} xs={4} className="cart__image">
                       <Link to={`/products/${item.product}`}>
                         <Image
-                          src={rewriteDirectS3ImageUrlToProxy(item.images[0])}
+                          src={resolvePublicApiUrl(item.images[0])}
                           alt={item.name}
                           fluid
                           rounded

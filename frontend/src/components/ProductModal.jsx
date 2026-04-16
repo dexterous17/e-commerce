@@ -1,7 +1,7 @@
 import { Modal, Button, Row, Col, Container, Image } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "../apiBase";
 
 const ProductModal = (props) => {
   const {
@@ -38,7 +38,7 @@ const ProductModal = (props) => {
             <Col xs={12} lg={4}>
               {/* image */}
               <Image
-                src={rewriteDirectS3ImageUrlToProxy(images[0])}
+                src={resolvePublicApiUrl(images[0])}
                 alt={name}
                 fluid
                 className="d-block mx-auto w-100 rounded"

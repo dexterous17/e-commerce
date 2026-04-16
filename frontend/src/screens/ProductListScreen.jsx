@@ -20,7 +20,7 @@ import {
 
 //constants ACTIONS
 import { PRODUCT_CREATE_RESET } from "../constants/productConstants";
-import { rewriteDirectS3ImageUrlToProxy } from "../utils/rewriteProductImageUrls";
+import { resolvePublicApiUrl } from "../apiBase";
 
 const ProductListScreen = () => {
   const dispatch = useDispatch();
@@ -170,7 +170,7 @@ const ProductListScreen = () => {
                   <td>
                     <Image
                       style={{ height: "68px", width: "68px" }}
-                      src={rewriteDirectS3ImageUrlToProxy(product.images[0])}
+                      src={resolvePublicApiUrl(product.images[0])}
                       alt={product.name}
                       fluid
                       rounded
