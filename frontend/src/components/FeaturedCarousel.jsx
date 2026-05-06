@@ -39,24 +39,27 @@ const FeaturedCarousel = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    setIndex((i) => {
-      if (withImages.length === 0) return 0;
-      return Math.min(i, withImages.length - 1);
-    });
-  }, [withImages.length]);
-
-  useEffect(() => {
     if (withImages.length <= 1 || paused) return undefined;
     const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % withImages.length);
+      setIndex((i) => {
+        const n = withImages.length;
+        if (n <= 1) return 0;
+        const cur = Math.min(i, n - 1);
+        return (cur + 1) % n;
+      });
     }, CAROUSEL_INTERVAL_MS);
     return () => window.clearInterval(id);
   }, [withImages.length, paused]);
 
+  const displayIndex =
+    withImages.length === 0 ? 0 : Math.min(index, withImages.length - 1);
+
   const go = (delta) => {
     setIndex((i) => {
       const n = withImages.length;
-      return (i + delta + n) % n;
+      if (n === 0) return 0;
+      const cur = Math.min(i, n - 1);
+      return (cur + delta + n) % n;
     });
   };
 
@@ -75,13 +78,13 @@ const FeaturedCarousel = () => {
           {withImages.map((product, i) => (
             <li
               key={product._id}
-              className={i === index ? "active" : undefined}
+              className={i === displayIndex ? "active" : undefined}
             >
               <button
                 type="button"
                 onClick={() => setIndex(i)}
                 aria-label={`Go to slide ${i + 1} of ${withImages.length}`}
-                aria-current={i === index ? "true" : undefined}
+                aria-current={i === displayIndex ? "true" : undefined}
               />
             </li>
           ))}
@@ -91,7 +94,7 @@ const FeaturedCarousel = () => {
         {withImages.map((product, i) => (
           <div
             key={product._id}
-            className={`carousel-item${i === index ? " active" : ""}`}
+            className={`carousel-item${i === displayIndex ? " active" : ""}`}
           >
             <Link to={`/products/${product._id}`}>
               <img

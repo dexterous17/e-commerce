@@ -31,23 +31,16 @@ const PlaceOrderScreen = () => {
     }
   }, [cart.shippingAddress.address, cart.paymentMethod, navigate]);
 
-  //calculate prices (tax, shipping, subtotal ect)
-  cart.itemsPrice = cart.cartItems
+  const itemsPrice = cart.cartItems
     .reduce((acc, item) => acc + item.price * item.qty, 0)
     .toFixed(2);
-
-  //shipping needs a system
-  //if its over $100 => fee shipping, else $10
-  cart.shippingPrice = cart.itemsPrice > 100 ? 0 : 10;
-
-  //tax needs a system
-  cart.taxPrice = Number(0.15 * cart.itemsPrice).toFixed(2);
-
-  //total
-  cart.totalPrice = (
-    Number(cart.itemsPrice) +
-    Number(cart.shippingPrice) +
-    Number(cart.taxPrice)
+  const itemsPriceNum = Number(itemsPrice);
+  const shippingPrice = itemsPriceNum > 100 ? 0 : 10;
+  const taxPrice = Number(0.15 * itemsPriceNum).toFixed(2);
+  const totalPrice = (
+    itemsPriceNum +
+    shippingPrice +
+    Number(taxPrice)
   ).toFixed(2);
 
   useEffect(() => {
@@ -66,10 +59,10 @@ const PlaceOrderScreen = () => {
         orderItems: cart.cartItems,
         shippingAddress: cart.shippingAddress,
         paymentMethod: cart.paymentMethod,
-        itemsPrice: cart.itemsPrice,
-        taxPrice: cart.taxPrice,
-        shippingPrice: cart.shippingPrice,
-        totalPrice: cart.totalPrice,
+        itemsPrice,
+        taxPrice,
+        shippingPrice,
+        totalPrice,
       })
     );
   };
@@ -148,28 +141,28 @@ const PlaceOrderScreen = () => {
               <ListGroup.Item>
                 <Row>
                   <Col>Items</Col>
-                  <Col>${cart.itemsPrice}</Col>
+                  <Col>${itemsPrice}</Col>
                 </Row>
               </ListGroup.Item>
               {/* shipping total */}
               <ListGroup.Item>
                 <Row>
                   <Col>Shipping</Col>
-                  <Col>${cart.shippingPrice.toFixed(2)}</Col>
+                  <Col>${shippingPrice.toFixed(2)}</Col>
                 </Row>
               </ListGroup.Item>
               {/* tax total */}
               <ListGroup.Item>
                 <Row>
                   <Col>Tax</Col>
-                  <Col>${cart.taxPrice}</Col>
+                  <Col>${taxPrice}</Col>
                 </Row>
               </ListGroup.Item>
               {/* items TOTAL */}
               <ListGroup.Item>
                 <Row>
                   <Col>Total</Col>
-                  <Col>${cart.totalPrice}</Col>
+                  <Col>${totalPrice}</Col>
                 </Row>
               </ListGroup.Item>
               {/* if the order submission returns an error, display it */}

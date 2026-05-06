@@ -19,6 +19,51 @@ import { getOrderDetails, payOrder, shipOrder } from "../actions/orderActions";
 import { ORDER_PAY_RESET, ORDER_SHIP_RESET } from "../constants/orderConstants";
 import { resolvePublicApiUrl } from "../apiBase";
 
+function OrderPayPalConfigurator({ orderId, totalPrice, onApproveCapture }) {
+  const [clientId, setClientId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    axios
+      .get("/api/config/paypal")
+      .then(({ data }) => {
+        if (cancelled) return;
+        const id =
+          typeof data === "string"
+            ? data.trim()
+            : String(data?.clientId ?? "").trim();
+        setClientId(id || "");
+      })
+      .catch(() => {
+        if (!cancelled) setClientId("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  if (clientId === null) {
+    return <BunnyLoader />;
+  }
+  if (clientId === "") {
+    return (
+      <Message variant="warning">
+        PayPal is not configured (missing PAYPAL_CLIENT_ID on the server).
+      </Message>
+    );
+  }
+  return (
+    <Suspense fallback={<BunnyLoader />}>
+      <OrderPayPalSection
+        clientId={clientId}
+        orderId={orderId}
+        totalPrice={totalPrice}
+        onApproveCapture={onApproveCapture}
+      />
+    </Suspense>
+  );
+}
+
 const OrderScreen = () => {
   const { id: orderId } = useParams();
   const navigate = useNavigate();
@@ -29,8 +74,6 @@ const OrderScreen = () => {
   const handleShowShip = () => {
     setShowShip(true);
   };
-
-  const [paypalClientId, setPaypalClientId] = useState(null);
 
   const dispatch = useDispatch();
 
@@ -52,10 +95,6 @@ const OrderScreen = () => {
   const { userInfo } = userLogin;
 
   useEffect(() => {
-    setPaypalClientId(null);
-  }, [orderId]);
-
-  useEffect(() => {
     if (!userInfo) {
       navigate("/login");
       return;
@@ -65,20 +104,6 @@ const OrderScreen = () => {
       dispatch({ type: ORDER_PAY_RESET });
       dispatch({ type: ORDER_SHIP_RESET });
       dispatch(getOrderDetails(orderId));
-      return;
-    }
-
-    if (!order.isPaid && paypalClientId === null) {
-      axios
-        .get("/api/config/paypal")
-        .then(({ data }) => {
-          const id =
-            typeof data === "string"
-              ? data.trim()
-              : String(data?.clientId ?? "").trim();
-          setPaypalClientId(id || "");
-        })
-        .catch(() => setPaypalClientId(""));
     }
   }, [
     order,
@@ -88,7 +113,6 @@ const OrderScreen = () => {
     navigate,
     userInfo,
     successShip,
-    paypalClientId,
   ]);
 
   const successPaymentHandler = (paymentResult) => {
@@ -225,23 +249,12 @@ const OrderScreen = () => {
               {!order.isPaid && (
                 <ListGroup.Item>
                   {loadingPay && <BunnyLoader />}
-                  {paypalClientId === null ? (
-                    <BunnyLoader />
-                  ) : paypalClientId === "" ? (
-                    <Message variant="warning">
-                      PayPal is not configured (missing PAYPAL_CLIENT_ID on the
-                      server).
-                    </Message>
-                  ) : (
-                    <Suspense fallback={<BunnyLoader />}>
-                      <OrderPayPalSection
-                        clientId={paypalClientId}
-                        orderId={orderId}
-                        totalPrice={order.totalPrice}
-                        onApproveCapture={successPaymentHandler}
-                      />
-                    </Suspense>
-                  )}
+                  <OrderPayPalConfigurator
+                    key={orderId}
+                    orderId={orderId}
+                    totalPrice={order.totalPrice}
+                    onApproveCapture={successPaymentHandler}
+                  />
                 </ListGroup.Item>
               )}
               {loadingShip && <BunnyLoader />}

@@ -1,5 +1,5 @@
 import { Image, Button } from "react-bootstrap";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 
 import { resolvePublicApiUrl } from "../apiBase";
 
@@ -13,25 +13,25 @@ const ControlledCarousel = ({ product }) => {
 
   const [imageIndex, setImageIndex] = useState(0);
 
-  useEffect(() => {
-    setImageIndex(0);
-  }, [product._id]);
-
-  useEffect(() => {
-    if (filteredImages.length === 0) return;
-    setImageIndex((i) => Math.min(i, filteredImages.length - 1));
-  }, [filteredImages.length]);
+  const cappedIndex =
+    filteredImages.length === 0
+      ? 0
+      : Math.min(imageIndex, filteredImages.length - 1);
 
   const changeImageLeft = () => {
     if (filteredImages.length === 0) return;
-    setImageIndex((i) => (i === 0 ? filteredImages.length - 1 : i - 1));
+    setImageIndex((i) => {
+      const cur = Math.min(i, filteredImages.length - 1);
+      return cur === 0 ? filteredImages.length - 1 : cur - 1;
+    });
   };
 
   const changeImageRight = () => {
     if (filteredImages.length === 0) return;
-    setImageIndex((i) =>
-      i === filteredImages.length - 1 ? 0 : i + 1
-    );
+    setImageIndex((i) => {
+      const cur = Math.min(i, filteredImages.length - 1);
+      return cur === filteredImages.length - 1 ? 0 : cur + 1;
+    });
   };
 
   if (filteredImages.length === 0) {
@@ -41,11 +41,11 @@ const ControlledCarousel = ({ product }) => {
   return (
     <>
       <Image
-        src={resolvePublicApiUrl(filteredImages[imageIndex])}
+        src={resolvePublicApiUrl(filteredImages[cappedIndex])}
         alt={name}
         fluid
         className="w-100"
-        loading={imageIndex === 0 ? undefined : "lazy"}
+        loading={cappedIndex === 0 ? undefined : "lazy"}
         decoding="async"
       />
       <div className="d-flex mt-2 mb-2">
