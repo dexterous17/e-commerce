@@ -27,8 +27,12 @@ export default defineConfig(({ mode }) => {
     env,
     "VITE_API_ORIGIN"
   );
+  // Fall back to process.env.VITE_API_ORIGIN so Docker ARG/ENV build args are honoured
+  // when env/frontend/ is not present in the build context (e.g. CI or plain docker build).
   const mergedApiOrigin = (
-    hasExplicitApiOrigin ? String(env.VITE_API_ORIGIN ?? "").trim() : ""
+    hasExplicitApiOrigin
+      ? String(env.VITE_API_ORIGIN ?? "").trim()
+      : String(process.env.VITE_API_ORIGIN ?? "").trim()
   ).replace(/\/$/, "");
 
   return {
@@ -84,6 +88,9 @@ export default defineConfig(({ mode }) => {
             }
             if (id.includes("redux") || id.includes("react-redux")) {
               return "redux";
+            }
+            if (id.includes("/axios/") || id.includes("\\axios\\")) {
+              return "axios";
             }
             if (id.includes("react-bootstrap") || id.includes("/bootstrap/")) {
               return "ui-bootstrap";

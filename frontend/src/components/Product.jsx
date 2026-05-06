@@ -1,11 +1,11 @@
 import { Card, Container, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { useState, useCallback, memo } from "react";
+import { lazy, Suspense, useState, useCallback, memo } from "react";
 import { useDispatch } from "react-redux";
 
 import "./Product.css";
 
-import ProductModal from "../components/ProductModal";
+const ProductModal = lazy(() => import("./ProductModal"));
 
 import { addToCart } from "../actions/cartActions";
 import { resolvePublicApiUrl } from "../apiBase";
@@ -98,13 +98,17 @@ const Product = memo(({ product, inCart }) => {
         </Button>
       </Card.Footer>
 
-      <ProductModal
-        show={modalShow}
-        onHide={handleModalClose}
-        product={product}
-        handleAddToCart={handleAddToCart}
-        inCart={inCart}
-      />
+      {modalShow && (
+        <Suspense fallback={null}>
+          <ProductModal
+            show
+            onHide={handleModalClose}
+            product={product}
+            handleAddToCart={handleAddToCart}
+            inCart={inCart}
+          />
+        </Suspense>
+      )}
     </Card>
   );
 });

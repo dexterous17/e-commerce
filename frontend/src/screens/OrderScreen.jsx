@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Row, Col, ListGroup, Image, Card, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+
+const OrderPayPalSection = lazy(() => import("../components/OrderPayPalSection"));
 
 //components
 import Message from "../components/Message";
@@ -232,39 +233,14 @@ const OrderScreen = () => {
                       server).
                     </Message>
                   ) : (
-                    <PayPalScriptProvider
-                      options={{
-                        clientId: paypalClientId,
-                        currency: "USD",
-                      }}
-                    >
-                      <PayPalButtons
-                        style={{ layout: "vertical" }}
-                        createOrder={(data, actions) =>
-                          actions.order.create({
-                            purchase_units: [
-                              {
-                                custom_id: orderId,
-                                amount: {
-                                  currency_code: "USD",
-                                  value: Number(order.totalPrice).toFixed(2),
-                                },
-                              },
-                            ],
-                          })
-                        }
-                        onApprove={(data, actions) =>
-                          actions.order.capture().then((details) => {
-                            successPaymentHandler({
-                              id: details.id,
-                              status: details.status,
-                              update_time: details.update_time,
-                              payer: details.payer,
-                            });
-                          })
-                        }
+                    <Suspense fallback={<BunnyLoader />}>
+                      <OrderPayPalSection
+                        clientId={paypalClientId}
+                        orderId={orderId}
+                        totalPrice={order.totalPrice}
+                        onApproveCapture={successPaymentHandler}
                       />
-                    </PayPalScriptProvider>
+                    </Suspense>
                   )}
                 </ListGroup.Item>
               )}

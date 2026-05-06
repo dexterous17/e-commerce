@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Link } from "react-router-dom";
 
 //CSS
@@ -20,10 +20,19 @@ const FeaturedCarousel = () => {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  const featuredProducts = useSelector((state) => state.productFeatured);
+  const featuredProducts = useSelector(
+    (state) => state.productFeatured,
+    shallowEqual
+  );
   const { loading, error, products: rawProducts } = featuredProducts;
-  const products = Array.isArray(rawProducts) ? rawProducts : [];
-  const withImages = products.filter((p) => p?.images?.[0]);
+  const products = useMemo(
+    () => (Array.isArray(rawProducts) ? rawProducts : []),
+    [rawProducts]
+  );
+  const withImages = useMemo(
+    () => products.filter((p) => p?.images?.[0]),
+    [products]
+  );
 
   useEffect(() => {
     dispatch(listFeaturedProducts());
@@ -117,6 +126,8 @@ const FeaturedCarousel = () => {
             type="button"
             className="carousel-control-prev"
             onClick={() => go(-1)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
             aria-label="Previous slide"
           >
             <span className="carousel-control-prev-icon" aria-hidden="true" />
@@ -125,6 +136,8 @@ const FeaturedCarousel = () => {
             type="button"
             className="carousel-control-next"
             onClick={() => go(1)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
             aria-label="Next slide"
           >
             <span className="carousel-control-next-icon" aria-hidden="true" />

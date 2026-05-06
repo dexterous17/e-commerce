@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Navbar, Nav, Container, NavDropdown } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
@@ -14,8 +14,7 @@ import "./Header.css";
 
 const Header = () => {
   const [navExpanded, setNavExpanded] = useState(false);
-  const userLogin = useSelector((state) => state.userLogin);
-  const { userInfo } = userLogin;
+  const userInfo = useSelector((state) => state.userLogin.userInfo);
 
   const dispatch = useDispatch();
 
@@ -133,4 +132,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default memo(Header);
