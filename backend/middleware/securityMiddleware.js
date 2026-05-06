@@ -66,13 +66,19 @@ function isPublicMediaGet(req) {
   return p.startsWith("/api/media");
 }
 
+function rateLimitJsonHandler(message) {
+  return (_req, res) => {
+    res.status(429).json({ message });
+  };
+}
+
 /** Skips S3/image proxy traffic so product grids do not hit 429 under normal browsing. */
 export const apiGeneralRateLimit = rateLimit({
   windowMs: Number.isFinite(windowMs) && windowMs > 0 ? windowMs : 15 * 60 * 1000,
   max: Number.isFinite(maxGeneral) && maxGeneral > 0 ? maxGeneral : 400,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: "Too many requests, please try again later" },
+  handler: rateLimitJsonHandler("Too many requests, please try again later"),
   skip: (req) => isPublicMediaGet(req),
 });
 
@@ -89,7 +95,9 @@ export const authLoginRateLimit = rateLimit({
   max: Number.isFinite(authMax) && authMax > 0 ? authMax : 40,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: "Too many login attempts, please try again later" },
+  handler: rateLimitJsonHandler(
+    "Too many login attempts, please try again later"
+  ),
   skipSuccessfulRequests: true,
 });
 
@@ -105,7 +113,9 @@ export const authRegisterRateLimit = rateLimit({
   max: Number.isFinite(regMax) && regMax > 0 ? regMax : 25,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: "Too many registration attempts, please try again later" },
+  handler: rateLimitJsonHandler(
+    "Too many registration attempts, please try again later"
+  ),
 });
 
 export function applyRateLimits(app) {

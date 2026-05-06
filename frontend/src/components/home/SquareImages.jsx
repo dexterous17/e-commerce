@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+import { getApiErrorMessage } from "../../utils/apiErrorMessage";
+
 import BunnyLoader from "../BunnyLoader";
 import Message from "../Message";
 import { resolvePublicApiUrl } from "../../apiBase";
@@ -66,9 +68,7 @@ const SquareImages = () => {
       } catch (e) {
         if (!cancelled) {
           setError(
-            e.response?.data?.message ||
-              e.message ||
-              "Could not load gallery images."
+            getApiErrorMessage(e, "Could not load gallery images.")
           );
           setItems([]);
         }
