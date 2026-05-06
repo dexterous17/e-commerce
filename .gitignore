@@ -70,9 +70,13 @@ __pycache__/
 Thumbs.db
 .idea/
 
-# Product images synced from S3 (large; keep backend/upload/.gitkeep only)
+# Generated / synced product images (large; keep .gitkeep for empty dirs)
+# Singular upload/: S3 sync scripts (backend/scripts/syncS3ToLocalUpload.js)
 /backend/upload/*
 !/backend/upload/.gitkeep
+# Plural uploads/: multer static + download scripts (backend/uploads/products/)
+/backend/uploads/*
+!/backend/uploads/.gitkeep
 
 # Frontend build output
 /frontend/dist/
