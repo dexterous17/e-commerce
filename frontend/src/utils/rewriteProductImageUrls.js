@@ -1,4 +1,4 @@
-import { resolvePublicApiUrl } from "../apiBase";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 /**
  * Rewrites direct S3 object URLs to the backend proxy path so <img> works with private buckets.

@@ -1,7 +1,7 @@
 import { Modal, Button, Row, Col, Container, Image } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import { resolvePublicApiUrl } from "../apiBase";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 const ProductModal = (props) => {
   const {

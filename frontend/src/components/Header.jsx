@@ -4,7 +4,7 @@ import { LinkContainer } from "react-router-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 
 //actions
-import { logout } from "../actions/userActions";
+import { logout } from "../store/actions/userActions";
 
 //components
 import SearchBox from "./SearchBox";

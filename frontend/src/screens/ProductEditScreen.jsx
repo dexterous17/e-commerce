@@ -11,10 +11,10 @@ import FormContainer from "../components/FormContainer";
 import Meta from "../components/Meta";
 
 //actions
-import { listProductDetails, updateProduct } from "../actions/productActions";
+import { listProductDetails, updateProduct } from "../store/actions/productActions";
 
 //constants ACTIONS
-import { PRODUCT_UPDATE_RESET } from "../constants/productConstants";
+import { PRODUCT_UPDATE_RESET } from "../store/constants/productConstants";
 
 function ProductEditForm({ product, productId, userInfo, dispatch }) {
   const imageSeed =

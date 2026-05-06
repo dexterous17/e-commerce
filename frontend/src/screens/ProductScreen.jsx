@@ -18,8 +18,8 @@ import BunnyLoader from "../components/BunnyLoader";
 import Meta from "../components/Meta";
 
 //action creators
-import { listProductDetails } from "../actions/productActions";
-import { addToCart } from "../actions/cartActions";
+import { listProductDetails } from "../store/actions/productActions";
+import { addToCart } from "../store/actions/cartActions";
 
 const ProductScreen = () => {
   //component level state for qty. this is how many items the user selects in the drop down

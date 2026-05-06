@@ -1,7 +1,7 @@
 .nwt {
   position: absolute;
-  right: 25px;
   top: 25px;
+  right: 25px;
 }
 
 .size__font {
@@ -12,12 +12,13 @@
   line-height: 1.2rem;
 }
 
+/* Uses --transition-base from :root */
 .product__image {
   opacity: 0.85;
-  transition: all 0.3s;
+  transition: opacity var(--transition-base);
 }
 
 .product__image:hover {
   opacity: 1;
-  transition: all 0.3s;
+  transition: opacity var(--transition-base);
 }

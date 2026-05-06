@@ -9,10 +9,10 @@ import CheckoutSteps from "../components/CheckoutSteps";
 import Meta from "../components/Meta";
 
 //actions
-import { createOrder } from "../actions/orderActions";
-import { ORDER_CREATE_RESET } from "../constants/orderConstants";
-import { USER_DETAILS_RESET } from "../constants/userConstants";
-import { resolvePublicApiUrl } from "../apiBase";
+import { createOrder } from "../store/actions/orderActions";
+import { ORDER_CREATE_RESET } from "../store/constants/orderConstants";
+import { USER_DETAILS_RESET } from "../store/constants/userConstants";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 const PlaceOrderScreen = () => {
   const cart = useSelector((state) => state.cart);

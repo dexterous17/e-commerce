@@ -10,8 +10,8 @@ import BunnyLoader from "./BunnyLoader";
 import Message from "./Message";
 
 //actions
-import { listFeaturedProducts } from "../actions/productActions";
-import { resolvePublicApiUrl } from "../apiBase";
+import { listFeaturedProducts } from "../store/actions/productActions";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 const CAROUSEL_INTERVAL_MS = 5000;
 

@@ -7,8 +7,8 @@ import "./Product.css";
 
 const ProductModal = lazy(() => import("./ProductModal"));
 
-import { addToCart } from "../actions/cartActions";
-import { resolvePublicApiUrl } from "../apiBase";
+import { addToCart } from "../store/actions/cartActions";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 const Product = memo(({ product, inCart }) => {
   const [modalShow, setModalShow] = useState(false);

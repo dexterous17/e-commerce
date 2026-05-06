@@ -2,12 +2,12 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import axios from "axios";
 
-import { getApiOrigin } from "./apiBase";
-import { setupAxios } from "./setupAxios";
+import { getApiOrigin } from "./lib/apiBase";
+import { setupAxios } from "./lib/setupAxios";
 import store from "./store";
-import "./bootstrap.min.css";
-import "./index.css";
-import App from "./App";
+import "./styles/bootstrap.min.css";
+import "./styles/index.css";
+import App from "./app/App";
 
 const apiOrigin = getApiOrigin();
 if (apiOrigin) {

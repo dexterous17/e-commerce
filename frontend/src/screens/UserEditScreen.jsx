@@ -10,10 +10,10 @@ import FormContainer from "../components/FormContainer";
 import Meta from "../components/Meta";
 
 //actions
-import { getUserDetails, updateUser } from "../actions/userActions";
+import { getUserDetails, updateUser } from "../store/actions/userActions";
 
 //constants // ACTIONS
-import { USER_UPDATE_RESET } from "../constants/userConstants";
+import { USER_UPDATE_RESET } from "../store/constants/userConstants";
 
 function UserEditForm({ user, userId, dispatch }) {
   const [email, setEmail] = useState(user.email);

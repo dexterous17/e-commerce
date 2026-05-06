@@ -13,11 +13,11 @@ import Meta from "../components/Meta";
 import ConfirmationModal from "../components/ConfirmationModal";
 
 //actions
-import { getOrderDetails, payOrder, shipOrder } from "../actions/orderActions";
+import { getOrderDetails, payOrder, shipOrder } from "../store/actions/orderActions";
 
 //constants // ACTIONS
-import { ORDER_PAY_RESET, ORDER_SHIP_RESET } from "../constants/orderConstants";
-import { resolvePublicApiUrl } from "../apiBase";
+import { ORDER_PAY_RESET, ORDER_SHIP_RESET } from "../store/constants/orderConstants";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 function OrderPayPalConfigurator({ orderId, totalPrice, onApproveCapture }) {
   const [clientId, setClientId] = useState(null);

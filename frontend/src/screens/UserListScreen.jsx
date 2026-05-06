@@ -10,7 +10,7 @@ import ConfirmationModal from "../components/ConfirmationModal";
 import Meta from "../components/Meta";
 
 //actions
-import { listUsers, deleteUser } from "../actions/userActions";
+import { listUsers, deleteUser } from "../store/actions/userActions";
 
 const UserListScreen = () => {
   const dispatch = useDispatch();

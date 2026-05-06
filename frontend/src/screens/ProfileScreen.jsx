@@ -9,11 +9,11 @@ import BunnyLoader from "../components/BunnyLoader";
 import Meta from "../components/Meta";
 
 //constants // ACTIONS
-import { USER_UPDATE_PROFILE_RESET } from "../constants/userConstants";
+import { USER_UPDATE_PROFILE_RESET } from "../store/constants/userConstants";
 
 //actions
-import { getUserDetails, updateUserProfile } from "../actions/userActions";
-import { listMyOrders } from "../actions/orderActions";
+import { getUserDetails, updateUserProfile } from "../store/actions/userActions";
+import { listMyOrders } from "../store/actions/orderActions";
 
 function ProfileEditorForm({ user, dispatch }) {
   const [email, setEmail] = useState(user.email);

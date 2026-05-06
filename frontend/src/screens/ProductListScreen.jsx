@@ -16,11 +16,11 @@ import {
   removeProductInventory,
   createProduct,
   deleteProduct,
-} from "../actions/productActions";
+} from "../store/actions/productActions";
 
 //constants ACTIONS
-import { PRODUCT_CREATE_RESET } from "../constants/productConstants";
-import { resolvePublicApiUrl } from "../apiBase";
+import { PRODUCT_CREATE_RESET } from "../store/constants/productConstants";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 const ProductListScreen = () => {
   const dispatch = useDispatch();

@@ -15,8 +15,8 @@ import Message from "../components/Message";
 import Meta from "../components/Meta";
 
 //actions
-import { addToCart, removeFromCart } from "../actions/cartActions";
-import { resolvePublicApiUrl } from "../apiBase";
+import { addToCart, removeFromCart } from "../store/actions/cartActions";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 const CartScreen = () => {
   const dispatch = useDispatch();

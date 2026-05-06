@@ -1,3 +1,47 @@
+.header-search-form {
+  position: relative; /* contain sr-only labels; avoid flex overlap quirks */
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  align-content: center;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.header-search-fieldset {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Keep screen-reader labels/legend out of the flex row (defensive if .sr-only is missing) */
+.header-search-form > label.sr-only,
+.header-search-fieldset > legend.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.header__search-box {
+  flex: 1 1 160px;
+  width: auto !important;
+  max-width: min(320px, 100%);
+  min-width: 0;
+}
+
 .header__search-box:focus {
   border-color: var(--secondary);
   box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset,
@@ -5,20 +49,82 @@
 }
 
 .header__select {
-  margin-left: -25px;
-  border: none;
+  flex: 0 0 7.5rem;
+  width: 7.5rem;
+  max-width: min(7.5rem, 100%);
+  min-width: 0;
+  margin-inline-start: 0;
   padding: 0px 8px;
+  border: none;
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header__select:focus {
-  background-color: white;
   border: none;
+  background-color: white;
   box-shadow: none;
 }
 
-@media (max-width: 1200px) {
+.header-search-fieldset .btn {
+  flex-shrink: 0;
+}
+
+@media (min-width: 1200px) {
+  .header-search-form {
+    flex-wrap: nowrap;
+    gap: var(--space-md);
+  }
+
+  .header-search-fieldset {
+    gap: var(--space-md);
+  }
+
   .header__search-box {
-    width: 300px !important;
+    flex: 1 1 12rem;
+    max-width: min(28rem, 100%);
+    min-width: 7rem;
+  }
+
+  .header__select {
+    flex: 0 0 8rem;
+    width: 8rem;
+    max-width: min(8rem, 100%);
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .header-search-form {
+    flex-wrap: nowrap;
+  }
+
+  .header-search-fieldset {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  /*
+   * In a column flex container, flex-basis applies to height — not width.
+   * Reset flex so .header__select’s 7.5rem basis does not become ~120px tall.
+   */
+  .header__select {
+    flex: 0 1 auto;
+    flex-basis: auto;
+    align-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    min-height: 31px; /* ~.form-control-sm */
+    height: auto;
+  }
+
+  .header__search-box {
+    flex: 0 1 auto;
+    flex-basis: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 }

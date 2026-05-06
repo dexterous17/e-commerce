@@ -1,7 +1,7 @@
 import { Image, Button } from "react-bootstrap";
 import { useState, useMemo } from "react";
 
-import { resolvePublicApiUrl } from "../apiBase";
+import { resolvePublicApiUrl } from "../lib/apiBase";
 
 const ControlledCarousel = ({ product }) => {
   const { images: rawImages, name } = product;

@@ -6,7 +6,7 @@ import { getApiErrorMessage } from "../../utils/apiErrorMessage";
 
 import BunnyLoader from "../BunnyLoader";
 import Message from "../Message";
-import { resolvePublicApiUrl } from "../../apiBase";
+import { resolvePublicApiUrl } from "../../lib/apiBase";
 
 import "./SquareImages.css";
 

@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Table, Button } from "react-bootstrap";
 
 //actions
-import { listOrders } from "../actions/orderActions";
+import { listOrders } from "../store/actions/orderActions";
 
 //components
 import BunnyLoader from "../components/BunnyLoader";
