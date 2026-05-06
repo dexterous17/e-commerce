@@ -12,6 +12,7 @@ module.exports = defineConfig({
     // Default: reuse a running dev server for speed. Set PW_REUSE_SERVER=0 so tests always start
     // `npm run dev` (Vite waits for API — avoids Vite-only on 5173 with no backend).
     reuseExistingServer: process.env.PW_REUSE_SERVER !== '0',
-    timeout: 120000,
+    // Allow cold Postgres + migrations + concurrent boot (frontend/scripts/wait-for-api defaults to 180s).
+    timeout: 240000,
   },
 });

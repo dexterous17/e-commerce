@@ -12,78 +12,18 @@
  */
 
 const { test, expect } = require('@playwright/test');
-
-const API_ORIGIN =
-  process.env.E2E_API_ORIGIN || process.env.DEV_PROXY_TARGET || 'http://127.0.0.1:5002';
+const { ensureApiReady, getApiOrigin } = require('./e2e-helpers');
 
 const runId = process.env.GITHUB_RUN_ID || String(Date.now());
 const testEmail = `e2e-login-${runId}@example.com`;
 const testPassword = 'e2ePass99';
 const testName = 'E2E Login User';
 
-/**
- * Wait until the backend answers /api/health. If something already listens on 5173 but the API
- * is down (Vite-only dev server), fail fast with a clear message — otherwise Playwright would
- * reuse that server and login E2E cannot register a user.
- */
-async function ensureApiReady(request) {
-  const base = API_ORIGIN.replace(/\/$/, '');
-  const healthUrl = `${base}/api/health`;
-
-  let firstFailure = true;
-  const deadline = Date.now() + 120_000;
-
-  while (Date.now() < deadline) {
-    try {
-      const r = await request.get(healthUrl);
-      if (r.ok()) {
-        return;
-      }
-    } catch {
-      /* connection refused while stack boots */
-    }
-
-    if (firstFailure) {
-      firstFailure = false;
-      try {
-        const viteProbe = await request.get('http://127.0.0.1:5173/');
-        if (viteProbe.ok()) {
-          try {
-            const r = await request.get(healthUrl);
-            if (r.ok()) {
-              return;
-            }
-          } catch {
-            /* keep waiting — maybe API still starting */
-          }
-          throw new Error(
-            `API not reachable at ${base} (GET ${healthUrl}) but port 5173 responds. ` +
-              'Another process may be running Vite without the backend. Stop it, or run a full `npm run dev` ' +
-              'from frontend/ (starts API + Vite), or set PW_REUSE_SERVER=0 so Playwright starts the stack. ' +
-              'Ensure Postgres is running and DATABASE_URL is set for the API.'
-          );
-        }
-      } catch (e) {
-        if (e instanceof Error && e.message.includes('API not reachable at')) {
-          throw e;
-        }
-      }
-    }
-
-    await new Promise((r) => setTimeout(r, 500));
-  }
-
-  throw new Error(
-    `Timed out waiting for ${healthUrl}. Start Postgres, configure DATABASE_URL (backend/db/.env), ` +
-      'then run `npm run dev` from frontend/ or let Playwright start it (no Vite-only process on 5173).'
-  );
-}
-
 test.describe('Login', () => {
   test.beforeAll(async ({ request }) => {
     await ensureApiReady(request);
 
-    const res = await request.post(`${API_ORIGIN.replace(/\/$/, '')}/api/users`, {
+    const res = await request.post(`${getApiOrigin()}/api/users`, {
       data: {
         name: testName,
         email: testEmail,
