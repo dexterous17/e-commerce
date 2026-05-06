@@ -108,7 +108,7 @@ const shouldServeFrontend =
 
 if (shouldServeFrontend) {
   app.use(express.static(frontendDistRoot));
-  app.get("*", (req, res, next) => {
+  app.get("/{*splat}", (req, res, next) => {
     if (req.originalUrl.startsWith("/api")) {
       next();
       return;
