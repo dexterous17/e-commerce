@@ -1,0 +1,28 @@
+Regenerate demo WebM files (Playwright captures real browser automation).
+
+Requirements:
+  - API healthy and at least one product with countInStock > 0
+  - For Vite stack: Postgres + DATABASE_URL for the backend; from frontend/, `npm run test:e2e:demo-videos`
+
+Command (writes into this folder):
+
+  cd frontend && npm run test:e2e:demo-videos
+
+Against an already-running dev server on 5173:
+
+  PW_REUSE_SERVER=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:e2e:demo-videos
+
+Against Docker Compose static frontend on 3000 (set API host to match your BACKEND_PORT, often 5004):
+
+  PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 E2E_API_ORIGIN=http://127.0.0.1:5004 npm run test:e2e:demo-videos
+
+Outputs:
+  01-storefront-tour.webm
+  02-register-session.webm
+  03-checkout-flow.webm
+
+Embed in Markdown (GitHub):
+
+  <video src="https://raw.githubusercontent.com/<org>/<repo>/<branch>/docs/demo-videos/01-storefront-tour.webm" controls muted playsinline width="560"></video>
+
+Or link to the file on main so viewers can click download.

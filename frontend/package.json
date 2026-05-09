@@ -26,6 +26,7 @@
     "test": "node -e \"console.log('No tests configured')\"",
     "lint": "eslint src",
     "test:e2e": "playwright test",
+    "test:e2e:demo-videos": "playwright test --project=demo-videos",
     "test:e2e:install": "playwright install",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
