@@ -9,7 +9,7 @@ const {
   fetchFirstInStockProduct,
 } = require('../e2e-helpers');
 
-const breathe = async (page, ms = 550) => {
+const breathe = async (page, ms = 950) => {
   await page.waitForTimeout(ms);
 };
 

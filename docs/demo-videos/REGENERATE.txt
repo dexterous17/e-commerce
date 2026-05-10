@@ -4,6 +4,10 @@ Requirements:
   - API healthy and at least one product with countInStock > 0
   - For local Vite stack: Postgres + DATABASE_URL for the backend; from frontend/, `npm run test:e2e:demo-videos`
 
+Pacing (optional):
+  Recordings default to slowMo=125ms between actions and longer “breathe” pauses.
+  Faster local/CI: DEMO_SLOW_MO=0 npm run test:e2e:demo-videos
+
 Cursor / tooling note:
   Some environments pin PLAYWRIGHT_BROWSERS_PATH to an empty sandbox path. Unset it before install + test:
     env -u PLAYWRIGHT_BROWSERS_PATH npx playwright install chromium

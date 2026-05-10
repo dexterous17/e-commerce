@@ -5,7 +5,7 @@
 const { test, expect } = require('@playwright/test');
 const { ensureApiReady } = require('../e2e-helpers');
 
-const breathe = async (page, ms = 550) => {
+const breathe = async (page, ms = 950) => {
   await page.waitForTimeout(ms);
 };
 
@@ -22,7 +22,7 @@ test.describe(() => {
     await breathe(page);
 
     await page.locator('#header-search-q').fill('torrid');
-    await breathe(page, 350);
+    await breathe(page, 600);
     await page.getByRole('button', { name: 'Submit product search' }).click();
 
     await expect(page).toHaveURL(/\/products\/search\//);

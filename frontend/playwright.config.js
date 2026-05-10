@@ -43,7 +43,8 @@ module.exports = defineConfig({
           size: { width: 960, height: 540 },
         },
         launchOptions: {
-          slowMo: Number(process.env.DEMO_SLOW_MO || 0),
+          // ms delay between Playwright ops — higher = slower, clearer demo pacing (override with DEMO_SLOW_MO=0)
+          slowMo: Number(process.env.DEMO_SLOW_MO ?? 125),
         },
       },
       workers: 1,
