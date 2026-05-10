@@ -2,27 +2,52 @@ Regenerate demo WebM files (Playwright captures real browser automation).
 
 Requirements:
   - API healthy and at least one product with countInStock > 0
-  - For Vite stack: Postgres + DATABASE_URL for the backend; from frontend/, `npm run test:e2e:demo-videos`
+  - For local Vite stack: Postgres + DATABASE_URL for the backend; from frontend/, `npm run test:e2e:demo-videos`
 
-Command (writes into this folder):
+Cursor / tooling note:
+  Some environments pin PLAYWRIGHT_BROWSERS_PATH to an empty sandbox path. Unset it before install + test:
+    env -u PLAYWRIGHT_BROWSERS_PATH npx playwright install chromium
 
-  cd frontend && npm run test:e2e:demo-videos
+How files get here:
+  Playwright saves each clip as frontend/test-results/<run>/video.webm. Successful
+  `npm run test:e2e:demo-videos*` runs automatically copy stable names into this folder via
+  `frontend/scripts/sync-demo-webm-from-results.mjs`. To copy manually after a run:
+    cd frontend && npm run sync-demo-webm
+
+Local recordings:
+
+  cd frontend && env -u PLAYWRIGHT_BROWSERS_PATH npm run test:e2e:demo-videos
+
+Against production https://ecommerce.harshildex.com (creates real disposable users / test orders):
+
+  WARNING: Hits your live storefront and APIs. Prefer off-peak runs.
+
+    cd frontend && npm run test:e2e:demo-videos:prod
+
+  Equivalent manual env:
+
+    env -u PLAYWRIGHT_BROWSERS_PATH DEMO_RECORD_RUN_ID=$(date +%s) \\
+      PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=https://ecommerce.harshildex.com \\
+      E2E_API_ORIGIN=https://ecommerce.harshildex.com npm run test:e2e:demo-videos
 
 Against an already-running dev server on 5173:
 
-  PW_REUSE_SERVER=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:e2e:demo-videos
+  PW_REUSE_SERVER=1 PLAYWRIGHT_SKIP_WEBSERVER=1 env -u PLAYWRIGHT_BROWSERS_PATH npm run test:e2e:demo-videos
 
-Against Docker Compose static frontend on 3000 (set API host to match your BACKEND_PORT, often 5004):
+Against Docker Compose static frontend on 3000:
 
-  PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 E2E_API_ORIGIN=http://127.0.0.1:5004 npm run test:e2e:demo-videos
+  PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 E2E_API_ORIGIN=http://127.0.0.1:5004 env -u PLAYWRIGHT_BROWSERS_PATH npm run test:e2e:demo-videos
 
 Outputs:
-  01-storefront-tour.webm
-  02-register-session.webm
-  03-checkout-flow.webm
+  01-storefront-tour.webm — home, browse, product detail, add to cart
+  02-register-session.webm — shopper registration UI
+  03-checkout-flow.webm — sign in, checkout through order confirmation
+  04-search-catalog.webm — search header, filtered list, open a product
+  05-sign-in-session.webm — API seed user then sign-in UI
+  06-profile-orders.webm — sign in, profile and My Orders
 
 Embed in Markdown (GitHub):
 
   <video src="https://raw.githubusercontent.com/<org>/<repo>/<branch>/docs/demo-videos/01-storefront-tour.webm" controls muted playsinline width="560"></video>
 
-Or link to the file on main so viewers can click download.
+Or link to the file so viewers can download.

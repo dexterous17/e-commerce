@@ -31,14 +31,19 @@ module.exports = defineConfig({
     },
     {
       name: 'demo-videos',
+      timeout: Math.max(
+        Number(process.env.DEMO_VIDEO_TEST_TIMEOUT_MS || 480_000),
+        120_000
+      ),
       testMatch: '**/demo-videos/*.spec.js',
       use: {
         video: {
           mode: 'on',
-          size: { width: 1280, height: 720 },
+          // Smaller footprint = faster finalize than 1280×720
+          size: { width: 960, height: 540 },
         },
         launchOptions: {
-          slowMo: 140,
+          slowMo: Number(process.env.DEMO_SLOW_MO || 0),
         },
       },
       workers: 1,

@@ -2,7 +2,7 @@
 
 **You:** Where do the storefront demo WebMs come from?
 
-**Guide:** They are recorded by Playwright specs under `frontend/tests/demo-videos/`. The npm script `npm run test:e2e:demo-videos` runs the `demo-videos` project defined in Playwright config. Output files land under `docs/demo-videos/` (see `frontend/tests/demo-videos/_outputPath.js` and `REGENERATE.txt`).
+**Guide:** They are recorded by Playwright specs under `frontend/tests/demo-videos/`. The npm script `npm run test:e2e:demo-videos` runs the `demo-videos` project; Playwright writes `video.webm` under `frontend/test-results/`, then `frontend/scripts/sync-demo-webm-from-results.mjs` copies stable filenames into `docs/demo-videos/`. See `docs/demo-videos/REGENERATE.txt`.
 
 ---
 

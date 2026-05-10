@@ -4,7 +4,6 @@
  */
 const { test, expect } = require('@playwright/test');
 const { ensureApiReady, fetchFirstInStockProduct } = require('../e2e-helpers');
-const { demoVideoPath } = require('./_outputPath');
 
 const breathe = async (page, ms = 650) => {
   await page.waitForTimeout(ms);
@@ -39,10 +38,7 @@ test.describe(() => {
 
     await page.getByRole('button', { name: 'Add to Cart' }).click();
     await expect(page).toHaveURL(/\/cart\/?$/);
-    await expect(page.getByRole('link', { name: product.name })).toBeVisible();
+    await expect(page.getByRole('link', { name: product.name }).first()).toBeVisible();
     await breathe(page);
-
-    const clip = page.video();
-    if (clip) await clip.saveAs(demoVideoPath('01-storefront-tour'));
   });
 });

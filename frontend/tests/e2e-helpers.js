@@ -9,6 +9,15 @@ function getApiOrigin() {
   return DEFAULT_API_ORIGIN.replace(/\/$/, '');
 }
 
+function isLoopbackApiOrigin(base) {
+  try {
+    const u = new URL(base.includes('://') ? base : `http://${base}`);
+    return u.hostname === 'localhost' || u.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Wait until the backend answers GET /api/health.
  * Fails fast if port 5173 responds but the API does not (Vite-only process).
@@ -16,6 +25,20 @@ function getApiOrigin() {
 async function ensureApiReady(request) {
   const base = getApiOrigin();
   const healthUrl = `${base}/api/health`;
+
+  if (!isLoopbackApiOrigin(base)) {
+    const deadline = Date.now() + 180_000;
+    while (Date.now() < deadline) {
+      try {
+        const r = await request.get(healthUrl);
+        if (r.ok()) return;
+      } catch {
+        /* transient network / cold start */
+      }
+      await new Promise((res) => setTimeout(res, 1500));
+    }
+    throw new Error(`Timed out waiting for ${healthUrl}.`);
+  }
 
   let firstFailure = true;
   const deadline = Date.now() + 120_000;

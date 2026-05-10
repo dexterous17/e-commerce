@@ -8,7 +8,6 @@ const {
   registerUserViaApi,
   fetchFirstInStockProduct,
 } = require('../e2e-helpers');
-const { demoVideoPath } = require('./_outputPath');
 
 const breathe = async (page, ms = 550) => {
   await page.waitForTimeout(ms);
@@ -61,13 +60,10 @@ test.describe(() => {
     await expect(page).toHaveURL(/\/placeorder\/?$/);
     await breathe(page);
 
-    await page.getByRole('button', { name: 'Place Order' }).click();
-    await expect(page).toHaveURL(/\/orders\/[^/]+/, { timeout: 30_000 });
+    await page.locator('.place-order-screen').getByRole('button', { name: 'Place Order' }).click();
+    await expect(page).toHaveURL(/\/orders\/[^/]+/, { timeout: 180_000 });
     await expect(page.getByRole('heading', { name: 'Order Items' })).toBeVisible();
-    await expect(page.getByRole('link', { name: product.name })).toBeVisible();
+    await expect(page.getByRole('link', { name: product.name }).first()).toBeVisible();
     await breathe(page);
-
-    const clip = page.video();
-    if (clip) await clip.saveAs(demoVideoPath('03-checkout-flow'));
   });
 });

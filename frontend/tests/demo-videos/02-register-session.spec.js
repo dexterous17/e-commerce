@@ -4,7 +4,6 @@
  */
 const { test, expect } = require('@playwright/test');
 const { ensureApiReady } = require('../e2e-helpers');
-const { demoVideoPath } = require('./_outputPath');
 
 const breathe = async (page, ms = 550) => {
   await page.waitForTimeout(ms);
@@ -34,10 +33,7 @@ test.describe(() => {
     await page.getByRole('button', { name: 'Register' }).click();
 
     await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
-    await expect(page.locator('#username')).toContainText(name);
+    await expect(page.getByRole('button', { name })).toBeVisible({ timeout: 15_000 });
     await breathe(page);
-
-    const clip = page.video();
-    if (clip) await clip.saveAs(demoVideoPath('02-register-session'));
   });
 });
