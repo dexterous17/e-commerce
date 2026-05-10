@@ -126,9 +126,36 @@ async function fetchFirstInStockProduct(request, options = {}) {
   return product;
 }
 
+/**
+ * Marks an order paid via PUT /api/orders/:id/pay (demo / E2E only).
+ * Succeeds when the server skips PayPal API verification: non‑production, no
+ * `PAYPAL_CLIENT_SECRET`, and `PAYPAL_SKIP_VERIFY=true` (see `backend/utils/paypalVerify.js`).
+ *
+ * @param {import('@playwright/test').APIRequestContext} request
+ * @param {string} orderId
+ * @param {string} bearerToken JWT from localStorage userInfo.token
+ */
+async function payOrderViaApiForDemo(request, orderId, bearerToken) {
+  const url = `${getApiOrigin()}/api/orders/${encodeURIComponent(orderId)}/pay`;
+  const res = await request.put(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${bearerToken}`,
+    },
+    data: {
+      id: `demo-webm-pay-${orderId}`,
+      status: 'COMPLETED',
+      update_time: new Date().toISOString(),
+      payer: { email_address: 'demo-video@example.com' },
+    },
+  });
+  return res;
+}
+
 module.exports = {
   getApiOrigin,
   ensureApiReady,
   registerUserViaApi,
   fetchFirstInStockProduct,
+  payOrderViaApiForDemo,
 };
