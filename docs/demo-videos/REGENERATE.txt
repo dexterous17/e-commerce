@@ -50,8 +50,9 @@ Outputs:
   05-sign-in-session.webm — API seed user then sign-in UI
   06-profile-orders.webm — sign in, profile and My Orders
 
-Embed in Markdown (GitHub):
+README / GitHub:
 
-  <video src="https://raw.githubusercontent.com/<org>/<repo>/<branch>/docs/demo-videos/01-storefront-tour.webm" controls muted playsinline width="560"></video>
+  GitHub strips <video> in README.md. Link to each clip so the GitHub file page opens its player, e.g. from repo root:
+    [demo](docs/demo-videos/01-storefront-tour.webm)
 
-Or link to the file so viewers can download.
+  Raw stream (outside README): https://raw.githubusercontent.com/<org>/<repo>/<branch>/docs/demo-videos/01-storefront-tour.webm

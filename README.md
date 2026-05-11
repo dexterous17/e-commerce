@@ -85,49 +85,20 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 Playwright screen recordings (WebM) live in [`docs/demo-videos/`](docs/demo-videos/). To regenerate them locally or against a deployed URL, follow [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt).
 
-<details>
-<summary><strong>01 — Storefront tour</strong> (home, browse, product detail, add to cart)</summary>
+**Why there is no inline player here:** GitHub’s README sanitizes Markdown and **drops embedded `<video>` tags**, so clips cannot play inside this page. Use **Open on GitHub** below: it opens each `.webm` on GitHub’s file page, which includes a built-in player (and download). Links are **repo-relative** so they keep working on forks.
 
-<video src="./docs/demo-videos/01-storefront-tour.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
+| # | What it shows | Open on GitHub (plays in browser) |
+|---|----------------|-----------------------------------|
+| 01 | Storefront tour — home, browse, product, add to cart | [Open `01-storefront-tour.webm`](docs/demo-videos/01-storefront-tour.webm) |
+| 02 | Register session | [Open `02-register-session.webm`](docs/demo-videos/02-register-session.webm) |
+| 03 | Checkout — sign in, shipping, payment step, place order, confirmation | [Open `03-checkout-flow.webm`](docs/demo-videos/03-checkout-flow.webm) |
+| 04 | Search catalog | [Open `04-search-catalog.webm`](docs/demo-videos/04-search-catalog.webm) |
+| 05 | Sign in session | [Open `05-sign-in-session.webm`](docs/demo-videos/05-sign-in-session.webm) |
+| 06 | Profile & orders — checkout, pay, My Orders listing | [Open `06-profile-orders.webm`](docs/demo-videos/06-profile-orders.webm) |
 
-</details>
+If a link 404s, run the demo-video Playwright project (see `REGENERATE.txt`) so `sync-demo-webm` copies the files into `docs/demo-videos/`.
 
-<details>
-<summary><strong>02 — Register session</strong> (shopper registration)</summary>
-
-<video src="./docs/demo-videos/02-register-session.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
-
-</details>
-
-<details>
-<summary><strong>03 — Checkout flow</strong> (sign in, shipping, payment step, place order, order confirmation)</summary>
-
-<video src="./docs/demo-videos/03-checkout-flow.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
-
-</details>
-
-<details>
-<summary><strong>04 — Search catalog</strong> (header search, filtered list, open a product)</summary>
-
-<video src="./docs/demo-videos/04-search-catalog.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
-
-</details>
-
-<details>
-<summary><strong>05 — Sign in session</strong> (API-seeded user, sign-in UI)</summary>
-
-<video src="./docs/demo-videos/05-sign-in-session.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
-
-</details>
-
-<details>
-<summary><strong>06 — Profile &amp; orders</strong> (checkout, payment confirmation, profile and My Orders listing)</summary>
-
-<video src="./docs/demo-videos/06-profile-orders.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
-
-</details>
-
-If a clip is missing in your clone, run the demo-video Playwright project (see `REGENERATE.txt`) so `sync-demo-webm` copies the stable filenames above.
+**Browser note:** WebM support varies; Chrome and Firefox reliably play these on GitHub’s file page. Safari may fall back to download only—use another browser if the player doesn’t appear.
 
 ---
 
