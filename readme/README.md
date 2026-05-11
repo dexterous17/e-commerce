@@ -23,29 +23,28 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Tech Stack
 
-<details>
-<summary><strong>Backend</strong></summary>
+### Backend
 
-- Node.js 22.5+ (ES modules), Express 4
-- PostgreSQL 16 (`pg` driver)
-- JWT (`HS256`) + bcrypt (authentication)
-- AWS SDK v3 (S3 image storage)
-- Helmet, CORS, express-rate-limit (security)
-- Multer (file uploads)
+| Concern | Technology |
+|--------|--------------|
+| Runtime & HTTP API | Node.js 22.5+ (ES modules), Express 4 |
+| Database | PostgreSQL 16 (`pg` driver) |
+| Authentication | JWT (`HS256`), bcrypt |
+| Image storage | AWS SDK v3 (S3) |
+| Security middleware | Helmet, CORS, express-rate-limit |
+| Multipart uploads | Multer |
 
-</details>
+### Frontend
 
-<details>
-<summary><strong>Frontend</strong></summary>
-
-- React 18, Vite 8, React Router 6
-- Redux 4 + Redux Thunk
-- React Bootstrap 1.6
-- Axios 1.14
-- PayPal React SDK
-- Playwright (E2E tests)
-
-</details>
+| Concern | Technology |
+|--------|--------------|
+| UI & client routing | React 18, React Router 6 |
+| Build & dev server | Vite 8 |
+| App state & async work | Redux 4, Redux Thunk |
+| UI components & layout | React Bootstrap 1.6 |
+| HTTP to the API | Axios 1.14 |
+| Checkout | PayPal React SDK |
+| End-to-end tests | Playwright |
 
 **Infrastructure**
 - Docker Compose (Postgres, Node/Express, Nginx, Portainer, Nginx Proxy Manager)
