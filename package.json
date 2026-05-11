@@ -13,6 +13,7 @@
     "build:live:strict": "node scripts/build-for-live.mjs --strict",
     "build:frontend": "npm run build --prefix frontend",
     "build:backend": "npm run build --prefix backend",
-    "build:all": "npm run build"
+    "build:all": "npm run build",
+    "render-demo-gifs": "bash scripts/render-demo-gifs.sh"
   }
 }

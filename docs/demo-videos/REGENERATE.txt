@@ -56,3 +56,6 @@ README / GitHub:
     [demo](docs/demo-videos/01-storefront-tour.webm)
 
   Raw stream (outside README): https://raw.githubusercontent.com/<org>/<repo>/<branch>/docs/demo-videos/01-storefront-tour.webm
+
+  Inline animated previews: after WebMs are updated, run repo root `npm run render-demo-gifs`
+  (needs ffmpeg) to refresh GIF/ from docs/demo-videos/*.webm — README embeds those GIFs.

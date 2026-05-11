@@ -7,6 +7,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Demo videos](#demo-videos)
+  - [Demo GIFs](#demo-gifs)
 - [Docker Setup](#docker-setup)
 - [Local Development](#local-development)
 - [Backend on Your Machine (PostgreSQL)](#backend-on-your-machine-postgresql)
@@ -99,6 +100,39 @@ Playwright screen recordings (WebM) live in [`docs/demo-videos/`](docs/demo-vide
 If a link 404s, run the demo-video Playwright project (see `REGENERATE.txt`) so `sync-demo-webm` copies the files into `docs/demo-videos/`.
 
 **Browser note:** WebM support varies; Chrome and Firefox reliably play these on GitHub’s file page. Safari may fall back to download only—use another browser if the player doesn’t appear.
+
+### Demo GIFs
+
+**Inline previews** for the GitHub README: palette-optimized GIF exports of the same clips in [`GIF/`](GIF/) (WebM does not embed in README). Quality is reduced for size. Regenerate after you refresh the WebMs:
+
+```bash
+./scripts/render-demo-gifs.sh
+# Optional: DEMO_GIF_FPS=6 DEMO_GIF_WIDTH=480 ./scripts/render-demo-gifs.sh
+```
+
+#### 01 — Storefront tour
+
+![01 — Storefront tour (animated GIF)](GIF/01-storefront-tour.gif)
+
+#### 02 — Register session
+
+![02 — Register session (animated GIF)](GIF/02-register-session.gif)
+
+#### 03 — Checkout flow
+
+![03 — Checkout flow (animated GIF)](GIF/03-checkout-flow.gif)
+
+#### 04 — Search catalog
+
+![04 — Search catalog (animated GIF)](GIF/04-search-catalog.gif)
+
+#### 05 — Sign in session
+
+![05 — Sign in session (animated GIF)](GIF/05-sign-in-session.gif)
+
+#### 06 — Profile & orders
+
+![06 — Profile & orders (animated GIF)](GIF/06-profile-orders.gif)
 
 ---
 
