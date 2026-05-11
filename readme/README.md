@@ -103,7 +103,7 @@ If a link 404s, run the demo-video Playwright project (see `REGENERATE.txt`) so 
 
 ### Demo GIFs
 
-**Inline previews** for the GitHub README: palette-optimized GIF exports of the same clips in [`GIF/`](GIF/) (WebM does not embed in README). Quality is reduced for size. Regenerate after you refresh the WebMs:
+**Inline previews** for the GitHub README: palette-optimized GIF exports of the same clips in [`docs/gif/`](docs/gif/) (WebM does not embed in README). Quality is reduced for size. Regenerate after you refresh the WebMs:
 
 ```bash
 ./scripts/render-demo-gifs.sh
@@ -112,27 +112,27 @@ If a link 404s, run the demo-video Playwright project (see `REGENERATE.txt`) so 
 
 #### 01 — Storefront tour
 
-![01 — Storefront tour (animated GIF)](GIF/01-storefront-tour.gif)
+![01 — Storefront tour (animated GIF)](docs/gif/01-storefront-tour.gif)
 
 #### 02 — Register session
 
-![02 — Register session (animated GIF)](GIF/02-register-session.gif)
+![02 — Register session (animated GIF)](docs/gif/02-register-session.gif)
 
 #### 03 — Checkout flow
 
-![03 — Checkout flow (animated GIF)](GIF/03-checkout-flow.gif)
+![03 — Checkout flow (animated GIF)](docs/gif/03-checkout-flow.gif)
 
 #### 04 — Search catalog
 
-![04 — Search catalog (animated GIF)](GIF/04-search-catalog.gif)
+![04 — Search catalog (animated GIF)](docs/gif/04-search-catalog.gif)
 
 #### 05 — Sign in session
 
-![05 — Sign in session (animated GIF)](GIF/05-sign-in-session.gif)
+![05 — Sign in session (animated GIF)](docs/gif/05-sign-in-session.gif)
 
 #### 06 — Profile & orders
 
-![06 — Profile & orders (animated GIF)](GIF/06-profile-orders.gif)
+![06 — Profile & orders (animated GIF)](docs/gif/06-profile-orders.gif)
 
 ---
 

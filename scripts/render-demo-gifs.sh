@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Convert docs/demo-videos/*.webm previews → GIF/GIF/*.gif for README embedding on GitHub.
+# Convert docs/demo-videos/*.webm previews → docs/gif/*.gif for README embedding on GitHub.
 # Requires: ffmpeg (palette workflow keeps GIF sizes manageable.)
 #
 # Usage (repo root): ./scripts/render-demo-gifs.sh
@@ -9,7 +9,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="$ROOT/docs/demo-videos"
-DST="$ROOT/GIF"
+DST="$ROOT/docs/gif"
 
 FPS="${DEMO_GIF_FPS:-8}"
 WIDTH="${DEMO_GIF_WIDTH:-560}"
