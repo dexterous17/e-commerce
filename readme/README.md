@@ -4,20 +4,27 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Table of Contents
 
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Demo videos](#demo-videos)
-  - [Demo GIFs](#demo-gifs)
-- [Docker Setup](#docker-setup)
-- [Local Development](#local-development)
-- [Backend on Your Machine (PostgreSQL)](#backend-on-your-machine-postgresql)
-- [Environment Variables](#environment-variables)
-- [Database Schema](#database-schema)
-- [API Reference](#api-reference)
-- [Docker MCP (Cursor)](#docker-mcp-cursor)
-- [Deployment (Lightsail)](#deployment-lightsail)
-- [Data Seeding](#data-seeding)
-- [Process guides (chat walkthroughs)](docs/process/README.md)
+<details>
+<summary><strong>Browse sections</strong> (click to expand)</summary>
+
+| Section | What you'll find |
+|:--------|:-----------------|
+| [**Tech Stack**](#tech-stack) | Backend, frontend, and infrastructure at a glance |
+| [**Project Structure**](#project-structure) | Repo layout and what each folder is for |
+| [**Demo videos**](#demo-videos) | Longer walkthrough recordings |
+| [**Demo GIFs**](#demo-gifs) | Short looping UI previews (under Demo videos) |
+| [**Docker Setup**](#docker-setup) | Compose stack, ports, and how to run in containers |
+| [**Local Development**](#local-development) | Vite, API proxy, and day-to-day dev on the host |
+| [**Backend on Your Machine (PostgreSQL)**](#backend-on-your-machine-postgresql) | Installing and wiring Postgres for the API |
+| [**Environment Variables**](#environment-variables) | Env files, secrets, and configuration reference |
+| [**Database Schema**](#database-schema) | Tables, relationships, and data model |
+| [**API Reference**](#api-reference) | HTTP routes and payloads |
+| [**Docker MCP (Cursor)**](#docker-mcp-cursor) | Using Docker from Cursor’s MCP tools |
+| [**Deployment (Lightsail)**](#deployment-lightsail) | Production deploy on AWS Lightsail |
+| [**Data Seeding**](#data-seeding) | Loading sample products and users |
+| [**Process guides (chat walkthroughs)**](docs/process/README.md) | Step-by-step process docs outside this file |
+
+</details>
 
 ---
 
