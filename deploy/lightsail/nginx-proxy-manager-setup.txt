@@ -24,8 +24,10 @@ From the repo root:
 
   docker compose -f docker-compose.lightsail.yml -f docker-compose.nginx-proxy-manager.yml up -d --build
 
-The npm-bootstrap service creates proxy hosts and can fix an existing host that points at
-the wrong upstream (re-run with ./scripts/npm-repair-proxy-hosts.sh).
+The npm-bootstrap service creates proxy hosts, can fix an existing host that points at
+the wrong upstream, and can attach a shared Let's Encrypt certificate when
+NPM_LETSENCRYPT_EMAIL (or a real NPM_ADMIN_EMAIL) is configured
+(re-run with ./scripts/npm-repair-proxy-hosts.sh).
 
 Open the admin UI on port 81 (see docker-compose.nginx-proxy-manager.yml header).
 
@@ -41,7 +43,8 @@ Manual Proxy Hosts (if bootstrap is disabled) — container hostnames:
     Forward hostname: backend
     Forward port: 5000
 
-SSL tab: Request Let’s Encrypt certificate; enable Force SSL if you want HTTPS everywhere.
+SSL tab: only needed if you skip bootstrap TLS. When bootstrap TLS is enabled, the script
+requests the certificate and attaches it for you; use NPM_FORCE_SSL=1 for HTTPS redirects.
 
 Advanced tab — paste Snippet A for the storefront host, Snippet B for the API host (below).
 

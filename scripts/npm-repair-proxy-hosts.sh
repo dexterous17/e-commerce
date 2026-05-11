@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Re-run NPM bootstrap to create or fix proxy hosts (wrong upstream / wrong site).
+# Re-run NPM bootstrap to create or fix proxy hosts (wrong upstream / wrong site) and,
+# when NPM_LETSENCRYPT_EMAIL is configured, attach the shared TLS certificate as well.
 # Run on the server from the repo root after ecommerce + NPM are already up.
 #
 #   ./scripts/npm-repair-proxy-hosts.sh

@@ -7,6 +7,8 @@
 #   - Lightsail firewall: TCP 22, 80, 443 open (restrict SSH source to your IP when possible).
 #   - If Nginx Proxy Manager terminates TLS on :443, add Proxy Hosts per
 #     deploy/lightsail/nginx-proxy-manager-setup.txt (do not forward to 127.0.0.1 from NPM).
+#     For automatic Let's Encrypt during bootstrap, set NPM_LETSENCRYPT_EMAIL in
+#     env/npm-bootstrap/.env before LIGHTSAIL_WITH_NPM=1 deploys or repair runs.
 #   - On the server: env/database/.env, env/backend/.env, env/aws/.env (see repo templates).
 #
 # SSH security (client):
@@ -27,6 +29,10 @@
 #
 # Optional: include Nginx Proxy Manager (merge compose file on the server):
 #   LIGHTSAIL_WITH_NPM=1 ./scripts/deploy-lightsail.sh
+#
+# Optional: use Caddy as the reverse proxy instead of nginx/NPM (handles TLS automatically):
+#   LIGHTSAIL_WITH_CADDY=1 ./scripts/deploy-lightsail.sh
+#   (edit deploy/caddy/Caddyfile — set your email — before first run)
 #
 # Optional: install/update host nginx + TLS (needs sudo on server, CERTBOT_EMAIL set):
 #   INSTALL_HOST_NGINX=1 CERTBOT_EMAIL=you@example.com ./scripts/deploy-lightsail.sh
@@ -124,6 +130,7 @@ echo "==> Syncing repository to ${LIGHTSAIL_USER}@${LIGHTSAIL_HOST}:${REMOTE_DIR
 
 REMOTE_SCRIPT="set -euo pipefail
 export LIGHTSAIL_WITH_NPM=\"${LIGHTSAIL_WITH_NPM:-}\"
+export LIGHTSAIL_WITH_CADDY=\"${LIGHTSAIL_WITH_CADDY:-}\"
 ${REMOTE_CD}
 if ! command -v docker >/dev/null 2>&1; then
   echo \"Docker not found. Install: https://docs.docker.com/engine/install/ubuntu/\"
@@ -134,6 +141,9 @@ export BACKEND_PORT=\"\${BACKEND_PORT:-5004}\"
 COMPOSE_FILES=(-f docker-compose.lightsail.yml)
 if [[ \"\${LIGHTSAIL_WITH_NPM:-}\" == \"1\" ]]; then
   COMPOSE_FILES+=(-f docker-compose.nginx-proxy-manager.yml)
+fi
+if [[ \"\${LIGHTSAIL_WITH_CADDY:-}\" == \"1\" ]]; then
+  COMPOSE_FILES+=(-f docker-compose.caddy.yml)
 fi
 docker compose \"\${COMPOSE_FILES[@]}\" build
 docker compose \"\${COMPOSE_FILES[@]}\" up -d
@@ -182,7 +192,11 @@ else
   echo "Host nginx not modified. To install routing + HTTPS, run:"
   echo "  INSTALL_HOST_NGINX=1 CERTBOT_EMAIL=you@example.com $0"
   echo "(after DNS points both hostnames at this instance)"
+  echo "If you use Nginx Proxy Manager instead, set env/npm-bootstrap/.env with"
+  echo "NPM_LETSENCRYPT_EMAIL=you@example.com and run ./scripts/npm-repair-proxy-hosts.sh"
+  echo "If you use Caddy, edit deploy/caddy/Caddyfile (set your email), then:"
+  echo "  LIGHTSAIL_WITH_CADDY=1 $0"
 fi
 
-echo "Done. Frontend (via host nginx): http://ecommerce.harshildex.com"
-echo "     API hostname: http://backend.ecommerce.harshildex.com"
+echo "Done. Storefront hostname: http://ecommerce.harshildex.com"
+echo "      API hostname: http://backend.ecommerce.harshildex.com"

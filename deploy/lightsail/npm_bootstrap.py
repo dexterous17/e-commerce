@@ -89,6 +89,13 @@ def env(name: str, default: str | None = None) -> str | None:
     return v
 
 
+def env_bool(name: str, default: bool = False) -> bool:
+    value = env(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
 def request_json(
     method: str,
     url: str,
@@ -155,6 +162,102 @@ def norm_port(v: Any) -> int:
         return 0
 
 
+def norm_int(v: Any) -> int:
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return 0
+
+
+def norm_bool(v: Any) -> bool:
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return bool(v)
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true", "yes", "on")
+    return False
+
+
+def parse_domain_names(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return [str(item).strip() for item in parsed if str(item).strip()]
+        except json.JSONDecodeError:
+            return [part.strip() for part in value.split(",") if part.strip()]
+    return []
+
+
+def normalize_domains(domains: list[str]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for domain in domains:
+        norm = domain.strip().lower()
+        if not norm or norm in seen:
+            continue
+        seen.add(norm)
+        out.append(norm)
+    return out
+
+
+def certificate_covers_domains(certificate: dict[str, Any], domains: list[str]) -> bool:
+    cert_domains = set(normalize_domains(parse_domain_names(certificate.get("domain_names"))))
+    required = set(normalize_domains(domains))
+    return bool(required) and required.issubset(cert_domains)
+
+
+def ensure_certificate(
+    base: str,
+    token: str,
+    *,
+    domains: list[str],
+    letsencrypt_email: str,
+) -> int:
+    normalized_domains = normalize_domains(domains)
+    certificates = request_json("GET", f"{base}/api/nginx/certificates", token=token)
+    if not isinstance(certificates, list):
+        raise RuntimeError(f"Unexpected certificates list: {certificates!r}")
+
+    for certificate in certificates:
+        if not isinstance(certificate, dict):
+            continue
+        cid = norm_int(certificate.get("id"))
+        if cid <= 0:
+            continue
+        if certificate_covers_domains(certificate, normalized_domains):
+            print(
+                f"[npm-bootstrap] Reusing certificate id={cid} for "
+                f"{', '.join(normalized_domains)}"
+            )
+            return cid
+
+    body = {
+        "provider": "letsencrypt",
+        "domain_names": normalized_domains,
+        "meta": {
+            "letsencrypt_email": letsencrypt_email,
+            "letsencrypt_agree": True,
+        },
+    }
+    created = request_json(
+        "POST", f"{base}/api/nginx/certificates", body=body, token=token
+    )
+    if not isinstance(created, dict):
+        raise RuntimeError(f"Unexpected certificate create response: {created!r}")
+    cid = norm_int(created.get("id"))
+    if cid <= 0:
+        raise RuntimeError(f"Certificate create did not return a valid id: {created!r}")
+    print(
+        f"[npm-bootstrap] Created Let's Encrypt certificate id={cid} for "
+        f"{', '.join(normalized_domains)}"
+    )
+    return cid
+
+
 def build_put_body(
     full: dict[str, Any],
     *,
@@ -162,6 +265,10 @@ def build_put_body(
     forward_host: str,
     forward_port: int,
     advanced_config: str,
+    certificate_id: int,
+    ssl_forced: bool,
+    hsts_enabled: bool,
+    hsts_subdomains: bool,
 ) -> dict[str, Any]:
     keys = [
         "domain_names",
@@ -189,6 +296,10 @@ def build_put_body(
     out["forward_scheme"] = forward_scheme
     out["forward_host"] = forward_host
     out["forward_port"] = forward_port
+    out["certificate_id"] = certificate_id
+    out["ssl_forced"] = ssl_forced
+    out["hsts_enabled"] = hsts_enabled
+    out["hsts_subdomains"] = hsts_subdomains
     out["advanced_config"] = advanced_config
     out["enabled"] = True
     if out.get("meta") is None:
@@ -205,12 +316,24 @@ def upstream_matches(
     forward_host: str,
     forward_port: int,
     advanced_config: str,
+    certificate_id: int,
+    ssl_forced: bool,
+    hsts_enabled: bool,
+    hsts_subdomains: bool,
 ) -> bool:
     if (row.get("forward_scheme") or "").lower() != forward_scheme.lower():
         return False
     if (row.get("forward_host") or "") != forward_host:
         return False
     if norm_port(row.get("forward_port")) != forward_port:
+        return False
+    if norm_int(row.get("certificate_id")) != certificate_id:
+        return False
+    if norm_bool(row.get("ssl_forced")) != ssl_forced:
+        return False
+    if norm_bool(row.get("hsts_enabled")) != hsts_enabled:
+        return False
+    if norm_bool(row.get("hsts_subdomains")) != hsts_subdomains:
         return False
     cur_adv = (row.get("advanced_config") or "").strip()
     if cur_adv != advanced_config.strip():
@@ -226,6 +349,10 @@ def ensure_proxy_host(
     forward_host: str,
     forward_port: int,
     advanced_config: str,
+    certificate_id: int = 0,
+    ssl_forced: bool = False,
+    hsts_enabled: bool = False,
+    hsts_subdomains: bool = False,
 ) -> None:
     forward_scheme = "http"
     hosts = request_json("GET", f"{base}/api/nginx/proxy-hosts", token=token)
@@ -241,6 +368,10 @@ def ensure_proxy_host(
             forward_host=forward_host,
             forward_port=forward_port,
             advanced_config=advanced_config,
+            certificate_id=certificate_id,
+            ssl_forced=ssl_forced,
+            hsts_enabled=hsts_enabled,
+            hsts_subdomains=hsts_subdomains,
         ):
             print(f"[npm-bootstrap] Proxy host for {domain!r} already correct — skip")
             return
@@ -259,6 +390,10 @@ def ensure_proxy_host(
             forward_host=forward_host,
             forward_port=forward_port,
             advanced_config=advanced_config,
+            certificate_id=certificate_id,
+            ssl_forced=ssl_forced,
+            hsts_enabled=hsts_enabled,
+            hsts_subdomains=hsts_subdomains,
         )
         request_json(
             "PUT",
@@ -274,10 +409,10 @@ def ensure_proxy_host(
         "forward_scheme": forward_scheme,
         "forward_host": forward_host,
         "forward_port": forward_port,
-        "certificate_id": 0,
-        "ssl_forced": False,
-        "hsts_enabled": False,
-        "hsts_subdomains": False,
+        "certificate_id": certificate_id,
+        "ssl_forced": ssl_forced,
+        "hsts_enabled": hsts_enabled,
+        "hsts_subdomains": hsts_subdomains,
         "http2_support": True,
         "block_exploits": True,
         "caching_enabled": False,
@@ -357,10 +492,44 @@ def main() -> None:
 
     store_domain = env("NPM_STOREFRONT_DOMAIN", "ecommerce.harshildex.com")
     api_domain = env("NPM_API_DOMAIN", "backend.ecommerce.harshildex.com")
+    portainer_domain = env("NPM_PORTAINER_DOMAIN", "portainer.harshildex.com")
     fh_s = env("NPM_FORWARD_STOREFRONT", "frontend")
     fp_s = int(env("NPM_FORWARD_STOREFRONT_PORT", "80") or "80")
     fh_a = env("NPM_FORWARD_API", "backend")
     fp_a = int(env("NPM_FORWARD_API_PORT", "5000") or "5000")
+    fh_p = env("NPM_FORWARD_PORTAINER", "portainer")
+    fp_p = int(env("NPM_FORWARD_PORTAINER_PORT", "9000") or "9000")
+    tls_email = env("NPM_LETSENCRYPT_EMAIL")
+    if tls_email is None and email and email.lower() != "admin@example.com":
+        tls_email = email
+    want_tls = env_bool("NPM_AUTO_TLS", tls_email is not None)
+    force_ssl = env_bool("NPM_FORCE_SSL", True)
+    hsts_enabled = env_bool("NPM_HSTS_ENABLED", False)
+    hsts_subdomains = env_bool("NPM_HSTS_SUBDOMAINS", False)
+    certificate_id = 0
+
+    cert_domains = [store_domain, api_domain]
+    if portainer_domain:
+        cert_domains.append(portainer_domain)
+
+    if want_tls:
+        if not tls_email:
+            print(
+                "[npm-bootstrap] TLS requested but no real email is configured. "
+                "Set NPM_LETSENCRYPT_EMAIL or a non-placeholder NPM_ADMIN_EMAIL.",
+                file=sys.stderr,
+            )
+        else:
+            certificate_id = ensure_certificate(
+                base,
+                token,
+                domains=cert_domains,
+                letsencrypt_email=tls_email,
+            )
+
+    host_ssl_forced = bool(certificate_id and force_ssl)
+    host_hsts_enabled = bool(certificate_id and hsts_enabled)
+    host_hsts_subdomains = bool(certificate_id and hsts_subdomains)
 
     ensure_proxy_host(
         base,
@@ -369,6 +538,10 @@ def main() -> None:
         forward_host=fh_s,
         forward_port=fp_s,
         advanced_config=storefront_advanced_config(fh_a, fp_a),
+        certificate_id=certificate_id,
+        ssl_forced=host_ssl_forced,
+        hsts_enabled=host_hsts_enabled,
+        hsts_subdomains=host_hsts_subdomains,
     )
     ensure_proxy_host(
         base,
@@ -377,7 +550,24 @@ def main() -> None:
         forward_host=fh_a,
         forward_port=fp_a,
         advanced_config=ADVANCED_API,
+        certificate_id=certificate_id,
+        ssl_forced=host_ssl_forced,
+        hsts_enabled=host_hsts_enabled,
+        hsts_subdomains=host_hsts_subdomains,
     )
+    if portainer_domain:
+        ensure_proxy_host(
+            base,
+            token,
+            domain=portainer_domain,
+            forward_host=fh_p,
+            forward_port=fp_p,
+            advanced_config="",
+            certificate_id=certificate_id,
+            ssl_forced=host_ssl_forced,
+            hsts_enabled=host_hsts_enabled,
+            hsts_subdomains=host_hsts_subdomains,
+        )
     print("[npm-bootstrap] Done")
 
 

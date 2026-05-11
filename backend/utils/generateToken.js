@@ -5,6 +5,7 @@ const generateToken = (id) => {
   //the second argument is the secret which will libe in our .env
   //the third argument is options
   return jwt.sign({ id }, process.env.JWT_SECRET, {
+    algorithm: "HS256",
     expiresIn: "30d",
   });
 };
