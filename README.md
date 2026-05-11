@@ -1,111 +1,524 @@
-# Docker Setup
+# E-Commerce App
 
-This repository runs with separate Docker containers for:
+Full-stack e-commerce application — product browsing with search/filter/pagination, shopping cart, multi-step checkout with PayPal, and an admin panel for products, users, and orders. Images are stored locally or in a private S3 bucket (proxied through the backend).
 
-- `postgres`: PostgreSQL 16 (port **5432** on loopback by default — see repo-root **`.env`**)
-- `frontend`: Nginx serving the Vite build and proxying `/api` and `/uploads`
-- `backend`: Node/Express API using **`DATABASE_URL`** (Compose sets it to the internal `postgres` service). Product images use **S3** via `env/aws/.env` (bucket, keys, optional `/api/media/s3` proxy).
+## Table of Contents
 
-## Start
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Demo videos](#demo-videos)
+- [Docker Setup](#docker-setup)
+- [Local Development](#local-development)
+- [Backend on Your Machine (PostgreSQL)](#backend-on-your-machine-postgresql)
+- [Environment Variables](#environment-variables)
+- [Database Schema](#database-schema)
+- [API Reference](#api-reference)
+- [Docker MCP (Cursor)](#docker-mcp-cursor)
+- [Deployment (Lightsail)](#deployment-lightsail)
+- [Data Seeding](#data-seeding)
+- [Process guides (chat walkthroughs)](docs/process/README.md)
+
+---
+
+## Tech Stack
+
+**Backend**
+- Node.js 22.5+ (ES modules), Express 4
+- PostgreSQL 16 (`pg` driver)
+- JWT (`HS256`) + bcrypt (authentication)
+- AWS SDK v3 (S3 image storage)
+- Helmet, CORS, express-rate-limit (security)
+- Multer (file uploads)
+
+**Frontend**
+- React 18, Vite 8, React Router 6
+- Redux 4 + Redux Thunk
+- React Bootstrap 1.6
+- Axios 1.14
+- PayPal React SDK
+- Playwright (E2E tests)
+
+**Infrastructure**
+- Docker Compose (Postgres, Node/Express, Nginx, Portainer, Nginx Proxy Manager)
+- AWS Lightsail (production)
+- Let's Encrypt / Nginx Proxy Manager (TLS)
+
+---
+
+## Project Structure
+
+```
+/
+├── backend/
+│   ├── server.js           Express app entry point
+│   ├── routes/             6 route files (products, users, orders, upload, media, paypal)
+│   ├── controllers/        Business logic (products, users, orders)
+│   ├── models/             DB queries (users, products, orders, seedManifest)
+│   ├── middleware/         Auth (JWT), error handler, security (Helmet/CORS/rate-limit)
+│   ├── config/             DB connection, env loader
+│   ├── utils/              JWT helpers, S3 URL rewriting, PayPal verify, debug logger
+│   ├── db/schema.js        PostgreSQL DDL (auto-runs on start)
+│   ├── data/               Seed data & S3 manifest
+│   └── scripts/            Dev utilities (env init, image sync, S3 upload)
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx         Router (22 routes, lazy-loaded screens)
+│   │   ├── screens/        13 page components (inc. 5 admin screens)
+│   │   ├── components/     Reusable UI components
+│   │   ├── actions/        Redux async action creators
+│   │   ├── reducers/       Redux state reducers
+│   │   ├── constants/      Redux action type constants
+│   │   └── store.jsx       Redux store
+│   └── vite.config.js      Dev proxy, code splitting config
+├── env/                    .env.example templates (backend, frontend, docker, aws, database)
+├── secrets/                Docker secrets (git-ignored)
+├── scripts/                Deployment & build scripts
+├── deploy/                 Lightsail-specific deploy scripts
+├── docker-compose.yml      Full stack (Postgres + Node + Nginx + Portainer + NPM)
+├── docker-compose.lightsail.yml
+└── docker-compose.nginx-proxy-manager.yml
+```
+
+---
+
+## Demo videos
+
+Playwright screen recordings (WebM) live in [`docs/demo-videos/`](docs/demo-videos/). To regenerate them locally or against a deployed URL, follow [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt).
+
+<details>
+<summary><strong>01 — Storefront tour</strong> (home, browse, product detail, add to cart)</summary>
+
+<video src="./docs/demo-videos/01-storefront-tour.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
+
+</details>
+
+<details>
+<summary><strong>02 — Register session</strong> (shopper registration)</summary>
+
+<video src="./docs/demo-videos/02-register-session.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
+
+</details>
+
+<details>
+<summary><strong>03 — Checkout flow</strong> (sign in, shipping, payment step, place order, order confirmation)</summary>
+
+<video src="./docs/demo-videos/03-checkout-flow.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
+
+</details>
+
+<details>
+<summary><strong>04 — Search catalog</strong> (header search, filtered list, open a product)</summary>
+
+<video src="./docs/demo-videos/04-search-catalog.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
+
+</details>
+
+<details>
+<summary><strong>05 — Sign in session</strong> (API-seeded user, sign-in UI)</summary>
+
+<video src="./docs/demo-videos/05-sign-in-session.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
+
+</details>
+
+<details>
+<summary><strong>06 — Profile &amp; orders</strong> (checkout, payment confirmation, profile and My Orders listing)</summary>
+
+<video src="./docs/demo-videos/06-profile-orders.webm" controls muted playsinline style="max-width:720px;width:100%"></video>
+
+</details>
+
+If a clip is missing in your clone, run the demo-video Playwright project (see `REGENERATE.txt`) so `sync-demo-webm` copies the stable filenames above.
+
+---
+
+## Docker Setup
+
+The default `docker-compose.yml` runs:
+
+| Service | Image | Host Port | Purpose |
+|---------|-------|-----------|---------|
+| `postgres` | postgres:16-alpine | 127.0.0.1:5432 | Database |
+| `backend` | ./backend/Dockerfile | 127.0.0.1:${BACKEND_PORT:-5004} | Express API |
+| `frontend` | ./frontend/Dockerfile | ${FRONTEND_PORT:-3000} | Nginx + Vite build |
+| `portainer` | portainer/portainer-ce | 127.0.0.1:9000 | Container management UI |
+| `nginx-proxy-manager` | jc21/nginx-proxy-manager:2 | 80, 443, 81 (admin) | Reverse proxy + TLS |
+| `npm-bootstrap` | python:3.12-alpine | — | One-shot NPM proxy config |
+
+### Start
 
 ```bash
 docker compose up --build
 ```
 
-For **product images** from a **private** S3 bucket, the backend must call S3 with credentials. Create **`env/aws/.env`** from **`env/aws/.env.example`** with **`AWS_ACCESS_KEY_ID`** and **`AWS_SECRET_ACCESS_KEY`** (same as local `npm start`); Compose loads it into the **`backend`** service. Without it, APIs may return `/api/media/s3` URLs that respond **403/500**.
+App: `http://localhost:3000` — API: `http://127.0.0.1:5004`
 
-The app is available at `http://localhost:3000` by default.
-The API is published on the host at **`http://127.0.0.1:<BACKEND_PORT>`** (Compose default **5004**; copy **`env/docker/.env.example`** to repo-root **`.env`** for compose variables).
+### Secrets
 
-## Secrets
+Create `secrets/jwt_secret.txt` with a strong random string before starting. This file is git-ignored.
 
-Docker Compose reads secrets from:
+```bash
+openssl rand -hex 32 > secrets/jwt_secret.txt
+```
 
-- `secrets/jwt_secret.txt`
+The backend supports `*_FILE` env vars, so `PAYPAL_CLIENT_ID_FILE`, `AWS_ACCESS_KEY_ID_FILE`, `DATABASE_URL_FILE`, and `AWS_SECRET_ACCESS_KEY_FILE` can be wired as additional Docker secrets.
 
-Optional non-secret configuration for Compose lives in repo-root **`.env`**. The template is **`env/docker/.env.example`** (copy to **`.env`** at the repo root).
+### Compose configuration (`.env`)
 
-The backend also supports Docker's standard `*_FILE` pattern, so additional values such as `PAYPAL_CLIENT_ID_FILE`, `AWS_ACCESS_KEY_ID_FILE`, **`DATABASE_URL_FILE`**, or `AWS_SECRET_ACCESS_KEY_FILE` can be wired in the same way if needed.
+Copy `env/docker/.env.example` to repo-root `.env` to override Compose defaults:
 
-## Local dev (API + Vite, no Docker for Node)
+```bash
+cp env/docker/.env.example .env
+```
 
-From the **repo root**, **`npm start`** runs **`npm run dev` in `backend/`**, which starts the **Express API** (default port **5002**) and **Vite** (**5173**) together. Use **`npm run start:frontend`** if you only need the Vite dev server (you must run the API separately with **`cd backend && npm start`**).
+### Private S3 images
 
-Sanity-check the API you are talking to: **`curl -s http://127.0.0.1:5002/api/health`** should return JSON with **`"ok":true`**, **`"s3ImageProxy":true`**, and usually **`"awsAccessKeyEnvSet":true`** when using keys in **`env/aws/.env`** (legacy **`aws/.env`** still works) (otherwise `/api/media/s3` cannot read private objects). **`awsAccessKeyEnvSet":false`** can still be OK on AWS if the SDK uses an instance role.
+To serve product images from a **private** S3 bucket, create `env/aws/.env` from the example and add your AWS credentials. Without it, `/api/media/s3` requests return 403/500.
 
-## Backend on your machine (PostgreSQL)
+```bash
+cp env/aws/.env.example env/aws/.env
+# fill in AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+```
 
-The API uses the **`pg`** driver against **PostgreSQL**. Run Postgres locally, in Docker (`docker compose up postgres` only), or point **`DATABASE_URL`** at a hosted instance (RDS, Neon, etc.).
+---
 
-1. Run **`cd backend && npm run env:init`** (or copy **`backend/db/.env.example`** to **`backend/db/.env`**).
-2. Set **`DATABASE_URL`** in **`backend/db/.env`** (or **`PGHOST`**, **`PGUSER`**, **`PGPASSWORD`**, **`PGDATABASE`** — see the example file).
-3. **`cd backend && npm start`**
+## Local Development
 
-On macOS, **AirPlay Receiver** commonly listens on **5000** and answers HTTP with **403**, so local **`npm start`** defaults to **5002** (see **`env/backend/.env.example`**) and Vite’s dev proxy targets **`http://localhost:5002`** unless you set **`DEV_PROXY_TARGET`** in **`env/frontend/.env`**. If you run the API on another port, set **`PORT`** in **`env/backend/.env`** and the same URL in **`DEV_PROXY_TARGET`**.
+From the **repo root** — starts the Express API (port 5002) and Vite dev server (port 5173) concurrently:
 
-### Port already in use (`EADDRINUSE`)
+```bash
+npm start
+# or
+npm run dev:all
+```
 
-If **`npm start`** fails because the port is taken, another process is still bound there (often a previous **`node server.js`** or **`docker compose`** publishing the API). Inspect listeners with `lsof -iTCP:5002 -sTCP:LISTEN` (replace **`5002`** with your **`PORT`**), stop that process, or pick a free **`PORT`** and set matching **`DEV_PROXY_TARGET`** in **`env/frontend/.env`**. Compose defaults **`BACKEND_PORT`** to **5004** so host **`npm start`** on **5002** can run alongside **`docker compose up`** for the full stack—avoid setting **`BACKEND_PORT=5002`** in root `.env` unless you intentionally use only one API listener on that port.
+Vite proxies `/api`, `/uploads`, and `/upload` to `http://localhost:5002` by default.
+
+To run **only** the Vite dev server (API already running separately):
+
+```bash
+npm run start:frontend
+```
+
+### Verify the API
+
+```bash
+curl -s http://127.0.0.1:5002/api/health
+```
+
+Expected response:
+
+```json
+{ "ok": true, "s3ImageProxy": true, "awsAccessKeyEnvSet": true, "listenPort": 5002, "nodeEnv": "development" }
+```
+
+`"awsAccessKeyEnvSet": false` is acceptable on AWS EC2/ECS if the SDK uses an instance role.
+
+---
+
+## Backend on Your Machine (PostgreSQL)
+
+The API requires PostgreSQL. Options: local install, `docker compose up postgres`, or a hosted instance (RDS, Neon, etc.).
+
+1. Initialise environment files:
+
+   ```bash
+   cd backend && npm run env:init
+   ```
+
+   Or manually copy `backend/db/.env.example` → `backend/db/.env`.
+
+2. Set `DATABASE_URL` in `backend/db/.env`:
+
+   ```
+   DATABASE_URL=postgresql://ecommerce:ecommerce@localhost:5432/ecommerce
+   ```
+
+   Individual `PGHOST` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` vars also work.
+
+3. Start the API:
+
+   ```bash
+   cd backend && npm start
+   ```
+
+### Port conflicts (`EADDRINUSE`)
+
+macOS **AirPlay Receiver** uses port 5000 and returns 403, so the API defaults to **5002**. If 5002 is taken:
+
+```bash
+lsof -iTCP:5002 -sTCP:LISTEN
+```
+
+Stop the process, or set a free `PORT` in `env/backend/.env` and the matching `DEV_PROXY_TARGET` in `env/frontend/.env`.
+
+Compose publishes the backend on **5004** by default so `docker compose up` and a local `npm start` (5002) can coexist.
+
+---
+
+## Environment Variables
+
+All `.env.example` files live under `env/`. Copy each one to its target location and fill in real values.
+
+### Backend (`env/backend/.env`)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `NODE_ENV` | `production` | `development` enables verbose errors and relaxed rate limits |
+| `PORT` | `5002` | API listen port (Docker container uses `5000`) |
+| `SERVE_FRONTEND` | `false` | Serve `frontend/dist` from Express (production only) |
+| `JWT_SECRET` | **required** | HS256 signing key for JWT tokens |
+| `PAYPAL_CLIENT_ID` | optional | PayPal SDK client ID (safe to expose to browser) |
+| `PAYPAL_CLIENT_SECRET` | optional | Server-side PayPal secret |
+| `PAYPAL_WEBHOOK_ID` | optional | PayPal webhook ID for signature verification |
+| `PAYPAL_SKIP_VERIFY` | `false` | Skip webhook signature check — **never set in production** |
+| `CORS_ORIGIN` | optional | Comma-separated allowed origins (e.g. `https://shop.example.com`) |
+| `TRUST_PROXY` | optional | Trust `X-Forwarded-*` headers (set when behind nginx/ALB) |
+| `TRUST_PROXY_HOPS` | `1` | Number of trusted proxy hops |
+| `RATE_LIMIT_WINDOW_MS` | `900000` | Rate limit window in ms (15 min) |
+| `RATE_LIMIT_MAX` | `400` prod / `2000` dev | Max API requests per window (S3 image traffic exempt) |
+| `AUTH_RATE_LIMIT_MAX` | `40` | Max failed login attempts per window |
+| `REGISTER_RATE_LIMIT_MAX` | `25` | Max registration attempts per window |
+
+### Database (`backend/db/.env`)
+
+| Variable | Example | Purpose |
+|----------|---------|---------|
+| `DATABASE_URL` | `postgresql://user:pass@host:5432/db` | Full Postgres connection URI |
+| `PGHOST` | `localhost` | Alternative to DATABASE_URL |
+| `PGPORT` | `5432` | |
+| `PGUSER` | `ecommerce` | |
+| `PGPASSWORD` | `ecommerce` | |
+| `PGDATABASE` | `ecommerce` | |
+
+### Frontend (`env/frontend/.env`)
+
+| Variable | Purpose |
+|----------|---------|
+| `DEV_PROXY_TARGET` | Vite dev proxy for `/api` (default: `http://localhost:5002`) |
+| `VITE_API_ORIGIN` | Production API origin for split-domain deploy (e.g. `https://backend.ecommerce.harshildex.com`). Leave empty for same-origin. |
+
+### AWS / S3 (`env/aws/.env`)
+
+| Variable | Purpose |
+|----------|---------|
+| `AWS_ACCESS_KEY_ID` | IAM credentials for private S3 GetObject |
+| `AWS_SECRET_ACCESS_KEY` | IAM credentials |
+| `AWS_REGION` | S3 region (default: `us-east-1`) |
+| `AWS_S3_BUCKET_NAME` | S3 bucket name |
+| `AWS_S3_PUBLIC_BASE_URL` | CDN or public S3 base URL |
+| `AWS_S3_PREFIX` | Key prefix within bucket (default: `products`) |
+| `AWS_S3_IMAGE_PROXY` | `true` to route images through `/api/media/s3` (private buckets) |
+
+### Docker Compose (`.env` at repo root)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `FRONTEND_PORT` | `3000` | Published frontend port |
+| `BACKEND_PORT` | `5004` | Published backend port |
+| `PUBLIC_URL` | `/` | Frontend base path |
+| `POSTGRES_DB` | `ecommerce` | |
+| `POSTGRES_USER` | `ecommerce` | |
+| `POSTGRES_PASSWORD` | `ecommerce` | |
+| `PAYPAL_CLIENT_ID` | — | Injected into backend container |
+| `AWS_REGION` | `us-east-1` | |
+| `AWS_S3_BUCKET_NAME` | — | |
+| `AWS_S3_PUBLIC_BASE_URL` | — | |
+| `AWS_S3_PREFIX` | `products` | |
+
+---
+
+## Database Schema
+
+Tables are created automatically on first API start (`backend/db/schema.js`).
+
+### `users`
+| Column | Type | Notes |
+|--------|------|-------|
+| `_id` | TEXT PK | UUID |
+| `name` | TEXT NOT NULL | |
+| `email` | TEXT NOT NULL UNIQUE | |
+| `password` | TEXT NOT NULL | bcrypt hash (10 rounds) |
+| `is_admin` | BOOLEAN | default `false` |
+| `created_at` / `updated_at` | TIMESTAMPTZ | |
+
+### `products`
+| Column | Type | Notes |
+|--------|------|-------|
+| `_id` | TEXT PK | UUID |
+| `user_id` | TEXT FK→users | Product creator |
+| `name`, `description` | TEXT NOT NULL | |
+| `category`, `sub_category` | TEXT | |
+| `sex`, `size`, `color`, `sub_color`, `brand` | TEXT | |
+| `nwt` | BOOLEAN | New with tags |
+| `price` | DOUBLE PRECISION | |
+| `count_in_stock` | INTEGER ≥0 | default `1` |
+| `images` | TEXT | JSON array of URLs |
+| `local_images` | TEXT | JSON array (local upload snapshots) |
+| `bucket_name`, `bucket_region`, `bucket_public_base_url`, `bucket_prefix` | TEXT | S3 metadata |
+| `seed_source` | TEXT | Seeding origin |
+| `created_at` / `updated_at` | TIMESTAMPTZ | |
+
+Indexes on `user_id`, `name`, `category`, `sex`.
+
+### `orders`
+| Column | Type | Notes |
+|--------|------|-------|
+| `_id` | TEXT PK | UUID |
+| `user_id` | TEXT FK→users (SET NULL on delete) | |
+| `shipping_address` | TEXT | JSON object |
+| `payment_method` | TEXT NOT NULL | e.g. `"PayPal"` |
+| `payment_result` | TEXT | JSON (capture ID, status, timestamp) |
+| `items_price`, `tax_price`, `shipping_price`, `total_price` | DOUBLE PRECISION | |
+| `is_paid` | BOOLEAN | default `false` |
+| `paid_at` | TIMESTAMPTZ | |
+| `is_shipped` | BOOLEAN | default `false` |
+| `shipped_at` | TIMESTAMPTZ | |
+| `created_at` / `updated_at` | TIMESTAMPTZ | |
+
+### `order_items`
+| Column | Type | Notes |
+|--------|------|-------|
+| `_id` | TEXT PK | UUID |
+| `order_id` | TEXT FK→orders (CASCADE delete) | |
+| `name`, `images`, `price`, `qty`, `product_id` | — | Snapshot at order time |
+
+### `seed_manifest`
+Tracks product seeding history. `source` is the primary key (e.g. `"products-s3-manifest"`). Stores bucket metadata and the raw manifest JSON.
+
+---
+
+## API Reference
+
+All routes are prefixed with `/api`. Protected routes require `Authorization: Bearer <token>`. Admin routes additionally require `is_admin = true`.
+
+### Auth
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/users/login` | — | Authenticate; returns user + JWT |
+| `POST` | `/users` | — | Register new account |
+
+Rate-limited: 40 failed login attempts / 15 min, 25 registrations / 15 min.
+
+### Users (admin)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/users` | Admin | List all users |
+| `GET` | `/users/:id` | Admin | Get user by ID |
+| `PUT` | `/users/:id` | Admin | Update user (name, email, isAdmin) |
+| `DELETE` | `/users/:id` | Admin | Delete user |
+| `GET` | `/users/profile` | Protected | Get own profile |
+| `PUT` | `/users/profile` | Protected | Update own profile (name, email, password) |
+
+### Products
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/products` | — | Paginated product list (supports `keyword`, `filter`, `pageNumber`, `pageSize`) |
+| `GET` | `/products/featured` | — | Top 10 products by price |
+| `GET` | `/products/:id` | — | Single product |
+| `POST` | `/products` | Admin | Create product |
+| `PUT` | `/products/:id` | Admin | Update product |
+| `PATCH` | `/products/:id` | Admin | Set stock to 0 (soft remove from inventory) |
+| `DELETE` | `/products/:id` | Admin | Delete product |
+
+`GET /products` query params:
+- `keyword` — search term
+- `filter` — column to search: `name` (default), `brand`, `category`, `color`, `description`, `sex`, `size`, `subCategory`, `subColor`
+- `pageNumber` — 1-based (default `1`)
+- `pageSize` — default `50`, max `100`
+
+### Orders
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/orders` | Protected | Create order from cart (server validates prices + stock in a transaction) |
+| `GET` | `/orders/myorders` | Protected | Current user's orders |
+| `GET` | `/orders/:id` | Protected | Order detail (owner or admin) |
+| `PUT` | `/orders/:id/pay` | Protected | Mark as paid (PayPal verification) |
+| `GET` | `/orders` | Admin | All orders |
+| `PUT` | `/orders/:id/ship` | Admin | Mark as shipped |
+
+### Media & Upload
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/upload` | Admin | Upload product images (max 16, 5 MB each; JPEG/PNG) |
+| `GET` | `/media/s3?key=<s3-key>` | — | Proxy private S3 object (1-day cache) |
+
+### Config & Health
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/config/paypal` | Returns `PAYPAL_CLIENT_ID` for browser SDK |
+| `GET` | `/health` | API status: ok, S3 proxy state, port, NODE_ENV |
+
+### PayPal Webhook
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/webhooks/paypal` | Receives `PAYMENT.CAPTURE.COMPLETED`; verifies HMAC-SHA256 signature, validates amount ±$0.02, marks order paid |
+
+---
 
 ## Docker MCP (Cursor)
 
-The repo includes [`.cursor/mcp.json`](.cursor/mcp.json), which starts the [Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/toolkit/) gateway (`docker mcp gateway run`) so Cursor can use MCP servers you enable in Docker Desktop (**MCP Toolkit** → catalog, e.g. Playwright). Requires **Docker Desktop** 4.62+ with the toolkit available.
-
-To (re)attach Cursor from the CLI (writes/updates project MCP config):
+The repo includes [`.cursor/mcp.json`](.cursor/mcp.json), which starts the [Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/toolkit/) gateway so Cursor can use MCP servers enabled in Docker Desktop. Requires Docker Desktop 4.62+.
 
 ```bash
 docker mcp client connect cursor
+# restart Cursor after changes
 ```
 
-Restart Cursor after MCP changes. If **Cursor Settings → MCP** shows a broken Docker-related server alongside **`MCP_DOCKER`**, remove the duplicate so Cursor only runs one gateway, and ensure **`docker`** is on the `PATH` for GUI-launched Cursor.
+If Cursor Settings → MCP shows a broken Docker server alongside `MCP_DOCKER`, remove the duplicate and ensure `docker` is on the PATH for GUI-launched Cursor.
 
-## Backend On Existing Server
+---
 
-1. From the repo root, run **`cd backend && npm run env:init`** (or copy each **`env/<system>/.env.example`** and **`backend/db/.env.example`** to the matching **`.env`** files).
-2. Set the real values for:
-   - **`DATABASE_URL`** (or **`PG*`** / **`POSTGRES_*`**) in **`backend/db/.env`** for your Postgres host
-   - `JWT_SECRET` and PayPal IDs in **`env/backend/.env`**
-   - AWS keys and bucket settings in **`env/aws/.env`** for S3-backed catalog images
-3. Install backend dependencies and start the API from the `backend/` directory:
+## Deployment (Lightsail)
+
+`docker-compose.lightsail.yml` omits the `postgres` service — point `DATABASE_URL` at a managed Postgres instance.
+
+1. Copy env files and fill in production values (JWT secret, PayPal, AWS).
+2. Create `secrets/jwt_secret.txt`.
+3. Deploy:
 
 ```bash
-npm install
-npm start
+./scripts/deploy-lightsail.sh
 ```
 
-**Lightsail / Docker** — set **`DATABASE_URL`** in **`env/backend/.env`** to your managed Postgres; **`docker-compose.lightsail.yml`** does not run a database container.
+4. For TLS, use `docker-compose.nginx-proxy-manager.yml` and set `NPM_LETSENCRYPT_EMAIL` in `env/npm-bootstrap/.env`. The `npm-bootstrap` service auto-configures proxy hosts for `ecommerce.harshildex.com` and `backend.ecommerce.harshildex.com`.
 
-If you want to recreate the seeded database contents from code:
+---
+
+## Data Seeding
+
+Run from `backend/`:
 
 ```bash
-# plain sample seed
+# Local sample data
 npm run data:import
 
-# S3-backed product seed with bucket metadata + seed_manifest
+# S3-backed products with bucket metadata
 npm run data:import:s3
 
-# From products-s3-manifest.json (images already in S3) — used for production-style catalogs
+# From products-s3-manifest.json (production-style)
 npm run data:import:s3:manifest
+
+# Wipe database
+npm run data:destroy
 ```
 
-**Lightsail / Docker** (run on the server from the repo root; wipes seeded users/products first):
+On Lightsail (wipes and re-seeds; run from repo root):
 
 ```bash
 ./scripts/lightsail-seed-from-manifest.sh
-# equivalent:
-# docker compose -f docker-compose.lightsail.yml exec backend npm run data:import:s3:manifest
 ```
 
-If [the live shop](http://ecommerce.harshildex.com/) shows no items but `/api/health` is OK, the database is usually empty — run the seed step above (SSH with your own key file, e.g. `ssh -i /path/to/LightsailDefaultKey-*.pem …`; never commit `.pem` files).
+If the live shop shows no items but `/api/health` returns `ok: true`, the database is empty — run the seed above via SSH (`ssh -i /path/to/LightsailDefaultKey-*.pem …`; never commit `.pem` files).
 
-The S3 seeder stores:
-
-- product image URLs in `products.images`
-- original local file references in `products.local_images`
-- bucket metadata in the product row and in `seed_manifest`
-
-The backend schema (PostgreSQL):
-
-- `users._id`, `products._id` (UUID strings)
-- `products.images` stored as JSON text
-- `orders`, `order_items`, and `seed_manifest` created on first API start if missing
+The S3 seeder records:
+- `products.images` — final image URLs (S3 or proxy)
+- `products.local_images` — original local file paths
+- `products.bucket_*` — S3 metadata per row
+- `seed_manifest` — manifest + stats per seeding run
