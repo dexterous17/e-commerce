@@ -4,20 +4,27 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Table of Contents
 
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Demo videos](#demo-videos)
-  - [Demo GIFs](#demo-gifs)
-- [Docker Setup](#docker-setup)
-- [Local Development](#local-development)
-- [Backend on Your Machine (PostgreSQL)](#backend-on-your-machine-postgresql)
-- [Environment Variables](#environment-variables)
-- [Database Schema](#database-schema)
-- [API Reference](#api-reference)
-- [Docker MCP (Cursor)](#docker-mcp-cursor)
-- [Deployment (Lightsail)](#deployment-lightsail)
-- [Data Seeding](#data-seeding)
-- [Process guides (chat walkthroughs)](docs/process/README.md)
+<details>
+<summary><strong>Show the section index</strong> (table)</summary>
+
+| What this covers | Section |
+|:-----------------|:--------|
+| Libraries, services, and how the app is hosted | [Tech Stack](#tech-stack) |
+| Repository layout and main folders | [Project Structure](#project-structure) |
+| Walkthrough-style demo videos | [Demo videos](#demo-videos) |
+| Short looping GIF previews | [Demo GIFs](#demo-gifs) |
+| Running the stack with Docker Compose | [Docker Setup](#docker-setup) |
+| Vite, local API, and day-to-day dev | [Local Development](#local-development) |
+| Installing and wiring PostgreSQL on your machine | [Backend on Your Machine (PostgreSQL)](#backend-on-your-machine-postgresql) |
+| Env files and configuration reference | [Environment Variables](#environment-variables) |
+| Tables and relationships | [Database Schema](#database-schema) |
+| HTTP routes and payloads | [API Reference](#api-reference) |
+| Docker MCP in Cursor | [Docker MCP (Cursor)](#docker-mcp-cursor) |
+| Lightsail and production-style deploy | [Deployment (Lightsail)](#deployment-lightsail) |
+| Loading sample products and users | [Data Seeding](#data-seeding) |
+| Step-by-step process notes (separate doc) | [Process guides (chat walkthroughs)](docs/process/README.md) |
+
+</details>
 
 ---
 
