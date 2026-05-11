@@ -53,10 +53,16 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 </details>
 
-**Infrastructure**
-- Docker Compose (Postgres, Node/Express, Nginx, Portainer, Nginx Proxy Manager)
-- AWS Lightsail (production)
-- Let's Encrypt / Nginx Proxy Manager (TLS)
+<details>
+<summary><strong>Infrastructure</strong> (compose, hosting, TLS)</summary>
+
+| Area | What it is | In this project |
+|:-----|:------------|:----------------|
+| **Local / full stack** | Reproducible multi-service environment for development and demos | **Docker Compose**: **Postgres**; **Node/Express** API; **Nginx** (built SPA + `/api` proxy); **Portainer** (container UI); **Nginx Proxy Manager** (reverse proxy and TLS) |
+| **Production hosting** | Cloud VM where the deployed app runs | **AWS Lightsail** |
+| **HTTPS & certificates** | Public TLS for the site and proxy routing | **Let's Encrypt** with **Nginx Proxy Manager** |
+
+</details>
 
 ---
 
