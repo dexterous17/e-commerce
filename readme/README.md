@@ -23,28 +23,35 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Tech Stack
 
-### Backend
+<details>
+<summary><strong>Backend</strong> (API, data, auth, uploads)</summary>
 
-| Concern | Technology |
-|--------|--------------|
-| Runtime & HTTP API | Node.js 22.5+ (ES modules), Express 4 |
-| Database | PostgreSQL 16 (`pg` driver) |
-| Authentication | JWT (`HS256`), bcrypt |
-| Image storage | AWS SDK v3 (S3) |
-| Security middleware | Helmet, CORS, express-rate-limit |
-| Multipart uploads | Multer |
+| Area | What it is | In this project |
+|:-----|:------------|:----------------|
+| **Runtime & HTTP** | JavaScript server and REST layer | Node.js **22.5+** (ES modules), **Express 4** |
+| **Database** | Relational store and driver | **PostgreSQL 16** via **`pg`** |
+| **Authentication** | Tokens and password hashing | **JWT** (`HS256`) + **bcrypt** |
+| **Object storage** | Product images in the cloud | **AWS SDK v3** (private **S3**, URLs proxied by the API) |
+| **HTTP hardening** | Headers, cross-origin rules, abuse limits | **Helmet**, **CORS**, **express-rate-limit** |
+| **Multipart uploads** | Accepting image files from clients | **Multer** |
 
-### Frontend
+</details>
 
-| Concern | Technology |
-|--------|--------------|
-| UI & client routing | React 18, React Router 6 |
-| Build & dev server | Vite 8 |
-| App state & async work | Redux 4, Redux Thunk |
-| UI components & layout | React Bootstrap 1.6 |
-| HTTP to the API | Axios 1.14 |
-| Checkout | PayPal React SDK |
-| End-to-end tests | Playwright |
+<details>
+<summary><strong>Frontend</strong> (UI, state, payments, tests)</summary>
+
+| Area | What it is | In this project |
+|:-----|:------------|:----------------|
+| **UI library** | Components and rendering | **React 18** |
+| **Dev server & build** | Local dev and production bundles | **Vite 8** |
+| **Routing** | URLs and navigation in the SPA | **React Router 6** |
+| **State & async** | Global store and side effects | **Redux 4** + **Redux Thunk** |
+| **Layout & widgets** | Prebuilt accessible UI primitives | **React Bootstrap 1.6** |
+| **API calls** | Browser HTTP to the backend | **Axios 1.14** |
+| **Checkout** | PayPal buttons and payment flow | **PayPal React SDK** |
+| **Quality** | End-to-end browser tests | **Playwright** |
+
+</details>
 
 **Infrastructure**
 - Docker Compose (Postgres, Node/Express, Nginx, Portainer, Nginx Proxy Manager)
