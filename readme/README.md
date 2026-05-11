@@ -23,7 +23,9 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Tech Stack
 
-**Backend**
+<details>
+<summary><strong>Backend</strong></summary>
+
 - Node.js 22.5+ (ES modules), Express 4
 - PostgreSQL 16 (`pg` driver)
 - JWT (`HS256`) + bcrypt (authentication)
@@ -31,13 +33,19 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 - Helmet, CORS, express-rate-limit (security)
 - Multer (file uploads)
 
-**Frontend**
+</details>
+
+<details>
+<summary><strong>Frontend</strong></summary>
+
 - React 18, Vite 8, React Router 6
 - Redux 4 + Redux Thunk
 - React Bootstrap 1.6
 - Axios 1.14
 - PayPal React SDK
 - Playwright (E2E tests)
+
+</details>
 
 **Infrastructure**
 - Docker Compose (Postgres, Node/Express, Nginx, Portainer, Nginx Proxy Manager)
