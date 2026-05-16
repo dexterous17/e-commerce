@@ -11,8 +11,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 |:--------|:-----------------|
 | [**Tech Stack**](#tech-stack) | Backend, frontend, and infrastructure at a glance |
 | [**Project Structure**](#project-structure) | Repo layout and what each folder is for |
-| [**Demo videos**](#demo-videos) | Longer walkthrough recordings |
-| [**Demo GIFs**](#demo-gifs) | Short looping UI previews (under Demo videos) |
+| [**Demo videos**](#demo-videos) | Playwright walkthrough recordings (embedded below) |
 | [**Docker Setup**](#docker-setup) | Compose stack, ports, and how to run in containers |
 | [**Local Development**](#local-development) | Vite, API proxy, and day-to-day dev on the host |
 | [**Backend on Your Machine (PostgreSQL)**](#backend-on-your-machine-postgresql) | Installing and wiring Postgres for the API |
@@ -111,18 +110,56 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Demo videos
 
-Playwright screen recordings are exported as palette-optimized GIFs in [`docs/gif/`](docs/gif/) for inline README previews (quality is reduced for size). To regenerate recordings and GIFs, see [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt) and run `./scripts/render-demo-gifs.sh` (optional: `DEMO_GIF_FPS=6 DEMO_GIF_WIDTH=480`).
+Playwright screen recordings are committed as MP4 under [`docs/demo-videos/`](docs/demo-videos/). Regenerate with [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt) (`cd frontend && npm run test:e2e:demo-videos`; requires **ffmpeg**).
 
-| # | What it shows | Preview |
-|---|---------------|---------|
-| 01 | Storefront tour — home, browse, product, add to cart | ![01 — Storefront tour](docs/gif/01-storefront-tour.gif) |
-| 02 | Register session | ![02 — Register session](docs/gif/02-register-session.gif) |
-| 03 | Checkout — sign in, shipping, payment step, place order, confirmation | ![03 — Checkout flow](docs/gif/03-checkout-flow.gif) |
-| 04 | Search catalog | ![04 — Search catalog](docs/gif/04-search-catalog.gif) |
-| 05 | Sign in session | ![05 — Sign in session](docs/gif/05-sign-in-session.gif) |
-| 06 | Profile & orders — checkout, pay, My Orders listing | ![06 — Profile & orders](docs/gif/06-profile-orders.gif) |
+On github.com, each clip below is an inline player (bare `raw` URL on its own line). Locally, open the linked file in the repo.
 
-If a preview is missing, regenerate the GIFs (see `REGENERATE.txt` above).
+| # | What it shows |
+|---|---------------|
+| 01 | Storefront tour — home, browse, product, add to cart |
+| 02 | Register session |
+| 03 | Checkout — sign in, shipping, payment step, place order, confirmation |
+| 04 | Search catalog |
+| 05 | Sign in session |
+| 06 | Profile & orders — checkout, pay, My Orders listing |
+
+### 01 — Storefront tour
+
+https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/01-storefront-tour.mp4
+
+[01-storefront-tour.mp4](docs/demo-videos/01-storefront-tour.mp4)
+
+### 02 — Register session
+
+https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/02-register-session.mp4
+
+[02-register-session.mp4](docs/demo-videos/02-register-session.mp4)
+
+### 03 — Checkout flow
+
+https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/03-checkout-flow.mp4
+
+[03-checkout-flow.mp4](docs/demo-videos/03-checkout-flow.mp4)
+
+### 04 — Search catalog
+
+https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/04-search-catalog.mp4
+
+[04-search-catalog.mp4](docs/demo-videos/04-search-catalog.mp4)
+
+### 05 — Sign in session
+
+https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/05-sign-in-session.mp4
+
+[05-sign-in-session.mp4](docs/demo-videos/05-sign-in-session.mp4)
+
+### 06 — Profile & orders
+
+https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/06-profile-orders.mp4
+
+[06-profile-orders.mp4](docs/demo-videos/06-profile-orders.mp4)
+
+If a player is missing after you re-record, run `cd frontend && npm run test:e2e:demo-videos` and push the updated MP4s (see `REGENERATE.txt`).
 
 ---
 

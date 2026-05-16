@@ -1,6 +1,6 @@
 /**
  * Recording: login, add to cart, shipping, payment placeholders, place order, order confirmation.
- * Output: docs/demo-videos/03-checkout-flow.webm
+ * Output: docs/demo-videos/03-checkout-flow.mp4
  */
 const { test, expect } = require('@playwright/test');
 const {

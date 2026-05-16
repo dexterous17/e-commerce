@@ -26,9 +26,9 @@
     "test": "node -e \"console.log('No tests configured')\"",
     "lint": "eslint src",
     "test:e2e": "playwright test",
-    "sync-demo-webm": "node scripts/sync-demo-webm-from-results.mjs",
-    "test:e2e:demo-videos": "env -u PLAYWRIGHT_BROWSERS_PATH playwright test --project=demo-videos && npm run sync-demo-webm --silent",
-    "test:e2e:demo-videos:prod": "env -u PLAYWRIGHT_BROWSERS_PATH PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=https://ecommerce.harshildex.com E2E_API_ORIGIN=https://ecommerce.harshildex.com playwright test --project=demo-videos && npm run sync-demo-webm --silent",
+    "sync-demo-mp4": "python3 scripts/sync_demo_mp4_from_results.py",
+    "test:e2e:demo-videos": "env -u PLAYWRIGHT_BROWSERS_PATH playwright test --project=demo-videos && npm run sync-demo-mp4 --silent",
+    "test:e2e:demo-videos:prod": "env -u PLAYWRIGHT_BROWSERS_PATH PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=https://ecommerce.harshildex.com E2E_API_ORIGIN=https://ecommerce.harshildex.com playwright test --project=demo-videos && npm run sync-demo-mp4 --silent",
     "test:e2e:install": "playwright install",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"

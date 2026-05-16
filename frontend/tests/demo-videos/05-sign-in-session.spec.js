@@ -1,6 +1,6 @@
 /**
  * Recording: login with a disposable account (registered via API first).
- * Output: docs/demo-videos/05-sign-in-session.webm
+ * Output: docs/demo-videos/05-sign-in-session.mp4
  *
  * Writes to production: creates one user row when run against ecommerce.harshildex.com.
  */

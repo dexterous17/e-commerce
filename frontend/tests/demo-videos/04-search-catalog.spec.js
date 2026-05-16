@@ -1,6 +1,6 @@
 /**
  * Recording: homepage search → results list → open first result.
- * Output: docs/demo-videos/04-search-catalog.webm
+ * Output: docs/demo-videos/04-search-catalog.mp4
  */
 const { test, expect } = require('@playwright/test');
 const { ensureApiReady } = require('../e2e-helpers');

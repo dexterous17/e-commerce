@@ -1,14 +1,14 @@
 # Chat: Regenerating demo videos (Playwright)
 
-**You:** Where do the storefront demo WebMs come from?
+**You:** Where do the storefront demo MP4s come from?
 
-**Guide:** They are recorded by Playwright specs under `frontend/tests/demo-videos/`. The npm script `npm run test:e2e:demo-videos` runs the `demo-videos` project; Playwright writes `video.webm` under `frontend/test-results/`, then `frontend/scripts/sync-demo-webm-from-results.mjs` copies stable filenames into `docs/demo-videos/`. See `docs/demo-videos/REGENERATE.txt`.
+**Guide:** They are recorded by Playwright specs under `frontend/tests/demo-videos/`. The npm script `npm run test:e2e:demo-videos` runs the `demo-videos` project; Playwright writes `video.webm` under `frontend/test-results/`, then `frontend/scripts/sync_demo_mp4_from_results.py` transcodes stable filenames into `docs/demo-videos/*.mp4`. See `docs/demo-videos/REGENERATE.txt`.
 
 ---
 
 **You:** What has to be true before I hit record?
 
-**Guide:** The API must be healthy and the catalog needs at least one product with **`countInStock > 0`** so checkout demos can succeed. For the Vite workflow you need Postgres and a valid `DATABASE_URL` for the backend.
+**Guide:** The API must be healthy and the catalog needs at least one product with **`countInStock > 0`** so checkout demos can succeed. For the Vite workflow you need Postgres and a valid `DATABASE_URL` for the backend. **ffmpeg** must be on your PATH.
 
 ---
 
@@ -34,6 +34,6 @@ PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 E2E_API_OR
 
 ---
 
-**You:** How do I embed a WebM on GitHub?
+**You:** How do I embed a demo on GitHub?
 
-**Guide:** Either commit the `.webm` and reference it from Markdown with a raw GitHub URL in a `<video>` tag (see instructions in `docs/demo-videos/REGENERATE.txt`), or link the file so viewers download it. Prefer short, muted demos for autoplay-friendly embeds where policy allows.
+**Guide:** Commit MP4s under `docs/demo-videos/` and push. The root README uses a bare `https://github.com/<org>/<repo>/raw/main/docs/demo-videos/<name>.mp4` URL on its own line per clip (GitHub’s inline player). See `docs/demo-videos/REGENERATE.txt`.

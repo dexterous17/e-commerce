@@ -2,7 +2,7 @@
  * Recording: login → cart → shipping → payment method → place order → confirm payment (API
  * simulate when backend allows PAYPAL_SKIP_VERIFY) → reload order page → Profile / My Orders table.
  *
- * Output: docs/demo-videos/06-profile-orders.webm
+ * Output: docs/demo-videos/06-profile-orders.mp4
  *
  * Paid step: completes via `payOrderViaApiForDemo` (no PayPal iframe). Backend must skip PayPal
  * verification: NODE_ENV≠production, PAYPAL_SKIP_VERIFY=true, no PAYPAL_CLIENT_SECRET (see env/backend/.env.example).

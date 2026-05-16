@@ -1,6 +1,6 @@
 /**
  * Recording: browse home, catalog, product detail, add to cart.
- * Output: docs/demo-videos/01-storefront-tour.webm
+ * Output: docs/demo-videos/01-storefront-tour.mp4
  */
 const { test, expect } = require('@playwright/test');
 const { ensureApiReady, fetchFirstInStockProduct } = require('../e2e-helpers');

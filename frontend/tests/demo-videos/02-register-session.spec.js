@@ -1,6 +1,6 @@
 /**
  * Recording: shopper registration and session in header.
- * Output: docs/demo-videos/02-register-session.webm
+ * Output: docs/demo-videos/02-register-session.mp4
  */
 const { test, expect } = require('@playwright/test');
 const { ensureApiReady } = require('../e2e-helpers');

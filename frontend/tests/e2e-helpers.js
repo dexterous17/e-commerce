@@ -143,7 +143,7 @@ async function payOrderViaApiForDemo(request, orderId, bearerToken) {
       Authorization: `Bearer ${bearerToken}`,
     },
     data: {
-      id: `demo-webm-pay-${orderId}`,
+      id: `demo-mp4-pay-${orderId}`,
       status: 'COMPLETED',
       update_time: new Date().toISOString(),
       payer: { email_address: 'demo-video@example.com' },
