@@ -53,5 +53,7 @@ Outputs (MP4 in this folder):
 
 README / GitHub:
 
-  Thumbnail links (README lives in readme/ — use ../assets/):
-    [![Watch the demo](../assets/01-storefront-tour-thumbnail.png)](../assets/01-storefront-tour.mp4)
+  On-demand players (HTML video + controls), e.g.:
+    <video src="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/01-storefront-tour.mp4" poster="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/01-storefront-tour-thumbnail.png" controls width="600"></video>
+
+  If GitHub strips <video> tags, drag-drop each MP4 into the README editor on github.com and use the user-images.githubusercontent.com URL GitHub inserts instead.
