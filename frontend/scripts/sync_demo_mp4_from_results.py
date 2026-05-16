@@ -15,8 +15,9 @@ from pathlib import Path
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent
 RESULTS_DIR = FRONTEND_DIR / "test-results"
-OUT_DIR = FRONTEND_DIR.parent / "docs" / "demo-videos"
-POSTER_DIR = OUT_DIR / "posters"
+REPO_ROOT = FRONTEND_DIR.parent
+OUT_DIR = REPO_ROOT / "docs" / "demo-videos"
+ASSETS_DIR = REPO_ROOT / "assets"
 
 # [folder substring match (case insensitive), output filename]
 MAP: list[tuple[str, str]] = [
@@ -42,9 +43,13 @@ def find_run_videos() -> list[tuple[str, Path]]:
     return out
 
 
-def write_poster_jpg(mp4: Path) -> Path:
-    POSTER_DIR.mkdir(parents=True, exist_ok=True)
-    poster = POSTER_DIR / f"{mp4.stem}.jpg"
+def write_readme_assets(mp4: Path) -> tuple[Path, Path]:
+    """Copy MP4 + PNG thumbnail into assets/ for README [![Watch the demo]](thumb)](video)."""
+    ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+    stem = mp4.stem
+    asset_mp4 = ASSETS_DIR / f"{stem}.mp4"
+    thumbnail = ASSETS_DIR / f"{stem}-thumbnail.png"
+    shutil.copy2(mp4, asset_mp4)
     subprocess.run(
         [
             "ffmpeg",
@@ -60,13 +65,11 @@ def write_poster_jpg(mp4: Path) -> Path:
             "1",
             "-update",
             "1",
-            "-q:v",
-            "2",
-            str(poster),
+            str(thumbnail),
         ],
         check=True,
     )
-    return poster
+    return asset_mp4, thumbnail
 
 
 def transcode_webm_to_mp4(src: Path, dest: Path) -> None:
@@ -129,10 +132,10 @@ def main() -> int:
         rel_src = video_path.relative_to(FRONTEND_DIR)
         print(f"sync-demo-mp4: {rel_src} -> ../docs/demo-videos/{out_name}")
         transcode_webm_to_mp4(video_path, dest)
-        poster = write_poster_jpg(dest)
-        print(f"sync-demo-mp4: poster -> ../docs/demo-videos/posters/{poster.name}")
+        asset_mp4, thumbnail = write_readme_assets(dest)
+        print(f"sync-demo-mp4: assets/{asset_mp4.name}, assets/{thumbnail.name}")
 
-    print(f"sync-demo-mp4: wrote {len(best)} file(s) to docs/demo-videos/")
+    print(f"sync-demo-mp4: wrote {len(best)} file(s) to docs/demo-videos/ and assets/")
     return 0
 
 

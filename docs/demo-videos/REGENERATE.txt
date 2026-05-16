@@ -53,5 +53,5 @@ Outputs (MP4 in this folder):
 
 README / GitHub:
 
-  Inline player — blank line, then raw MP4 URL on its own line:
-    https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/01-storefront-tour.mp4
+  Thumbnail links under assets/ (sync script copies MP4 + PNG there):
+    [![Watch the demo](./assets/01-storefront-tour-thumbnail.png)](./assets/01-storefront-tour.mp4)
