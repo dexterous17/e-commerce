@@ -114,38 +114,100 @@ Playwright screen recordings are in [`assets/`](../assets/) (source) and publish
 
 Regenerate: [`docs/demo-videos/REGENERATE.txt`](../docs/demo-videos/REGENERATE.txt) — `cd frontend && npm run test:e2e:demo-videos`, then `npm run publish-demo-videos` (needs **ffmpeg** + **gh**).
 
-| # | What it shows |
-|---|---------------|
-| 01 | Storefront tour — home, browse, product, add to cart |
-| 02 | Register session |
-| 03 | Checkout — sign in, shipping, payment step, place order, confirmation |
-| 04 | Search catalog |
-| 05 | Sign in session |
-| 06 | Profile & orders — checkout, pay, My Orders listing |
-
-### 01 — Storefront tour
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Demo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>01</td>
+      <td>
+        <table>
+          <tr><td><strong>01 — Storefront tour</strong></td></tr>
+          <tr><td>Storefront tour — home, browse, product, add to cart</td></tr>
+          <tr><td>
 
 https://github.com/user-attachments/assets/0f27a881-bb3c-4fd5-b7f0-2f6841e78d7b
 
-### 02 — Register session
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>02</td>
+      <td>
+        <table>
+          <tr><td><strong>02 — Register session</strong></td></tr>
+          <tr><td>Register session</td></tr>
+          <tr><td>
 
 https://github.com/user-attachments/assets/fecbf889-c83e-4d2c-937e-0431fb42fd1c
 
-### 03 — Checkout flow
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>03</td>
+      <td>
+        <table>
+          <tr><td><strong>03 — Checkout flow</strong></td></tr>
+          <tr><td>Checkout — sign in, shipping, payment step, place order, confirmation</td></tr>
+          <tr><td>
 
 https://github.com/user-attachments/assets/fcaeb85e-6098-40d9-b8d9-3b1f1a692779
 
-### 04 — Search catalog
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>04</td>
+      <td>
+        <table>
+          <tr><td><strong>04 — Search catalog</strong></td></tr>
+          <tr><td>Search catalog</td></tr>
+          <tr><td>
 
 https://github.com/user-attachments/assets/6eb20522-a5e3-466d-a44e-7d4faffecef8
 
-### 05 — Sign in session
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>05</td>
+      <td>
+        <table>
+          <tr><td><strong>05 — Sign in session</strong></td></tr>
+          <tr><td>Sign in session</td></tr>
+          <tr><td>
 
 https://github.com/user-attachments/assets/a5e8fa11-f901-49b4-a723-3f4351023cf9
 
-### 06 — Profile & orders
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td>06</td>
+      <td>
+        <table>
+          <tr><td><strong>06 — Profile &amp; orders</strong></td></tr>
+          <tr><td>Profile &amp; orders — checkout, pay, My Orders listing</td></tr>
+          <tr><td>
 
 https://github.com/user-attachments/assets/faa7c06b-246b-4fe8-8d96-8aa640231f00
+
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 
