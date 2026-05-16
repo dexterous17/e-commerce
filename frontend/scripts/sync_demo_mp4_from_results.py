@@ -16,6 +16,7 @@ from pathlib import Path
 FRONTEND_DIR = Path(__file__).resolve().parent.parent
 RESULTS_DIR = FRONTEND_DIR / "test-results"
 OUT_DIR = FRONTEND_DIR.parent / "docs" / "demo-videos"
+POSTER_DIR = OUT_DIR / "posters"
 
 # [folder substring match (case insensitive), output filename]
 MAP: list[tuple[str, str]] = [
@@ -39,6 +40,31 @@ def find_run_videos() -> list[tuple[str, Path]]:
         if video.is_file():
             out.append((entry.name, video))
     return out
+
+
+def write_poster_jpg(mp4: Path) -> Path:
+    POSTER_DIR.mkdir(parents=True, exist_ok=True)
+    poster = POSTER_DIR / f"{mp4.stem}.jpg"
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "warning",
+            "-y",
+            "-ss",
+            "1",
+            "-i",
+            str(mp4),
+            "-vframes",
+            "1",
+            "-q:v",
+            "2",
+            str(poster),
+        ],
+        check=True,
+    )
+    return poster
 
 
 def transcode_webm_to_mp4(src: Path, dest: Path) -> None:
@@ -101,6 +127,8 @@ def main() -> int:
         rel_src = video_path.relative_to(FRONTEND_DIR)
         print(f"sync-demo-mp4: {rel_src} -> ../docs/demo-videos/{out_name}")
         transcode_webm_to_mp4(video_path, dest)
+        poster = write_poster_jpg(dest)
+        print(f"sync-demo-mp4: poster -> ../docs/demo-videos/posters/{poster.name}")
 
     print(f"sync-demo-mp4: wrote {len(best)} file(s) to docs/demo-videos/")
     return 0
