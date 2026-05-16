@@ -36,4 +36,4 @@ PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 E2E_API_OR
 
 **You:** How do I embed a demo on GitHub?
 
-**Guide:** Commit MP4s under `docs/demo-videos/` and push. The root README uses a bare `https://github.com/<org>/<repo>/raw/main/docs/demo-videos/<name>.mp4` URL on its own line per clip (GitHub’s inline player). See `docs/demo-videos/REGENERATE.txt`.
+**Guide:** Commit MP4s under `docs/demo-videos/` and push. The root README embeds each clip with a bare raw MP4 URL on its own line (GitHub inline player, same pattern as `user-images.githubusercontent.com` README videos). See `docs/demo-videos/REGENERATE.txt`.
