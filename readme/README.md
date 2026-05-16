@@ -111,55 +111,18 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Demo videos
 
-Playwright screen recordings (WebM) live in [`docs/demo-videos/`](docs/demo-videos/). To regenerate them locally or against a deployed URL, follow [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt).
+Playwright screen recordings are exported as palette-optimized GIFs in [`docs/gif/`](docs/gif/) for inline README previews (quality is reduced for size). To regenerate recordings and GIFs, see [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt) and run `./scripts/render-demo-gifs.sh` (optional: `DEMO_GIF_FPS=6 DEMO_GIF_WIDTH=480`).
 
-**Why there is no inline player here:** GitHub’s README sanitizes Markdown and **drops embedded `<video>` tags**, so clips cannot play inside this page. Use **Open on GitHub** below: it opens each `.webm` on GitHub’s file page, which includes a built-in player (and download). Links are **repo-relative** so they keep working on forks.
+| # | What it shows | Preview |
+|---|---------------|---------|
+| 01 | Storefront tour — home, browse, product, add to cart | ![01 — Storefront tour](docs/gif/01-storefront-tour.gif) |
+| 02 | Register session | ![02 — Register session](docs/gif/02-register-session.gif) |
+| 03 | Checkout — sign in, shipping, payment step, place order, confirmation | ![03 — Checkout flow](docs/gif/03-checkout-flow.gif) |
+| 04 | Search catalog | ![04 — Search catalog](docs/gif/04-search-catalog.gif) |
+| 05 | Sign in session | ![05 — Sign in session](docs/gif/05-sign-in-session.gif) |
+| 06 | Profile & orders — checkout, pay, My Orders listing | ![06 — Profile & orders](docs/gif/06-profile-orders.gif) |
 
-| # | What it shows | Open on GitHub (plays in browser) |
-|---|----------------|-----------------------------------|
-| 01 | Storefront tour — home, browse, product, add to cart | [Open `01-storefront-tour.webm`](docs/demo-videos/01-storefront-tour.webm) |
-| 02 | Register session | [Open `02-register-session.webm`](docs/demo-videos/02-register-session.webm) |
-| 03 | Checkout — sign in, shipping, payment step, place order, confirmation | [Open `03-checkout-flow.webm`](docs/demo-videos/03-checkout-flow.webm) |
-| 04 | Search catalog | [Open `04-search-catalog.webm`](docs/demo-videos/04-search-catalog.webm) |
-| 05 | Sign in session | [Open `05-sign-in-session.webm`](docs/demo-videos/05-sign-in-session.webm) |
-| 06 | Profile & orders — checkout, pay, My Orders listing | [Open `06-profile-orders.webm`](docs/demo-videos/06-profile-orders.webm) |
-
-If a link 404s, run the demo-video Playwright project (see `REGENERATE.txt`) so `sync-demo-webm` copies the files into `docs/demo-videos/`.
-
-**Browser note:** WebM support varies; Chrome and Firefox reliably play these on GitHub’s file page. Safari may fall back to download only—use another browser if the player doesn’t appear.
-
-### Demo GIFs
-
-**Inline previews** for the GitHub README: palette-optimized GIF exports of the same clips in [`docs/gif/`](docs/gif/) (WebM does not embed in README). Quality is reduced for size. Regenerate after you refresh the WebMs:
-
-```bash
-./scripts/render-demo-gifs.sh
-# Optional: DEMO_GIF_FPS=6 DEMO_GIF_WIDTH=480 ./scripts/render-demo-gifs.sh
-```
-
-#### 01 — Storefront tour
-
-![01 — Storefront tour (animated GIF)](docs/gif/01-storefront-tour.gif)
-
-#### 02 — Register session
-
-![02 — Register session (animated GIF)](docs/gif/02-register-session.gif)
-
-#### 03 — Checkout flow
-
-![03 — Checkout flow (animated GIF)](docs/gif/03-checkout-flow.gif)
-
-#### 04 — Search catalog
-
-![04 — Search catalog (animated GIF)](docs/gif/04-search-catalog.gif)
-
-#### 05 — Sign in session
-
-![05 — Sign in session (animated GIF)](docs/gif/05-sign-in-session.gif)
-
-#### 06 — Profile & orders
-
-![06 — Profile & orders (animated GIF)](docs/gif/06-profile-orders.gif)
+If a preview is missing, regenerate the GIFs (see `REGENERATE.txt` above).
 
 ---
 
