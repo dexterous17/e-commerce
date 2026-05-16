@@ -4,9 +4,6 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Table of Contents
 
-<details>
-<summary><strong>Browse sections</strong> (click to expand)</summary>
-
 | Section | What you'll find |
 |:--------|:-----------------|
 | [**Tech Stack**](#tech-stack) | Backend, frontend, and infrastructure at a glance |
@@ -23,13 +20,10 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 | [**Data Seeding**](#data-seeding) | Loading sample products and users |
 | [**Process guides (chat walkthroughs)**](docs/process/README.md) | Step-by-step process docs outside this file |
 
-</details>
-
 ---
 
 ## Tech Stack
 
-<details>
 <summary><strong>Backend</strong> (API, data, auth, uploads)</summary>
 
 | Area | What it is | In this project |
@@ -41,9 +35,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 | **HTTP hardening** | Headers, cross-origin rules, abuse limits | **Helmet**, **CORS**, **express-rate-limit** |
 | **Multipart uploads** | Accepting image files from clients | **Multer** |
 
-</details>
 
-<details>
 <summary><strong>Frontend</strong> (UI, state, payments, tests)</summary>
 
 | Area | What it is | In this project |
@@ -57,9 +49,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 | **Checkout** | PayPal buttons and payment flow | **PayPal React SDK** |
 | **Quality** | End-to-end browser tests | **Playwright** |
 
-</details>
 
-<details>
 <summary><strong>Infrastructure</strong> (compose, hosting, TLS)</summary>
 
 | Area | What it is | In this project |
@@ -68,7 +58,6 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 | **Production hosting** | Cloud VM where the deployed app runs | **AWS Lightsail** |
 | **HTTPS & certificates** | Public TLS for the site and proxy routing | **Let's Encrypt** with **Nginx Proxy Manager** |
 
-</details>
 
 ---
 
