@@ -112,7 +112,10 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 Playwright screen recordings live in [`assets/`](../assets/) and [`docs/demo-videos/`](../docs/demo-videos/). Regenerate with [`docs/demo-videos/REGENERATE.txt`](../docs/demo-videos/REGENERATE.txt) (`cd frontend && npm run test:e2e:demo-videos`; requires **ffmpeg**).
 
-Use the **play** control on each clip below (on-demand playback in the README on github.com).
+GitHub **does not render** `<video>` tags in README files. Each clip below uses:
+
+1. A **clickable thumbnail** (opens the MP4 on GitHub).
+2. A **bare video URL** on its own line (GitHub’s built-in inline player when supported).
 
 | # | What it shows |
 |---|---------------|
@@ -125,29 +128,41 @@ Use the **play** control on each clip below (on-demand playback in the README on
 
 ### 01 — Storefront tour
 
-<video src="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/01-storefront-tour.mp4" poster="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/01-storefront-tour-thumbnail.png" controls width="600"></video>
+[![Watch the demo](../assets/01-storefront-tour-thumbnail.png)](../assets/01-storefront-tour.mp4)
+
+https://github.com/dexterous17/e-commerce/raw/main/assets/01-storefront-tour.mp4
 
 ### 02 — Register session
 
-<video src="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/02-register-session.mp4" poster="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/02-register-session-thumbnail.png" controls width="600"></video>
+[![Watch the demo](../assets/02-register-session-thumbnail.png)](../assets/02-register-session.mp4)
+
+https://github.com/dexterous17/e-commerce/raw/main/assets/02-register-session.mp4
 
 ### 03 — Checkout flow
 
-<video src="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/03-checkout-flow.mp4" poster="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/03-checkout-flow-thumbnail.png" controls width="600"></video>
+[![Watch the demo](../assets/03-checkout-flow-thumbnail.png)](../assets/03-checkout-flow.mp4)
+
+https://github.com/dexterous17/e-commerce/raw/main/assets/03-checkout-flow.mp4
 
 ### 04 — Search catalog
 
-<video src="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/04-search-catalog.mp4" poster="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/04-search-catalog-thumbnail.png" controls width="600"></video>
+[![Watch the demo](../assets/04-search-catalog-thumbnail.png)](../assets/04-search-catalog.mp4)
+
+https://github.com/dexterous17/e-commerce/raw/main/assets/04-search-catalog.mp4
 
 ### 05 — Sign in session
 
-<video src="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/05-sign-in-session.mp4" poster="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/05-sign-in-session-thumbnail.png" controls width="600"></video>
+[![Watch the demo](../assets/05-sign-in-session-thumbnail.png)](../assets/05-sign-in-session.mp4)
+
+https://github.com/dexterous17/e-commerce/raw/main/assets/05-sign-in-session.mp4
 
 ### 06 — Profile & orders
 
-<video src="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/06-profile-orders.mp4" poster="https://raw.githubusercontent.com/dexterous17/e-commerce/main/assets/06-profile-orders-thumbnail.png" controls width="600"></video>
+[![Watch the demo](../assets/06-profile-orders-thumbnail.png)](../assets/06-profile-orders.mp4)
 
-If a player is missing after you re-record, run `cd frontend && npm run test:e2e:demo-videos` and push the updated files under `assets/` (see `REGENERATE.txt`).
+https://github.com/dexterous17/e-commerce/raw/main/assets/06-profile-orders.mp4
+
+If a thumbnail or player is missing after you re-record, run `cd frontend && npm run test:e2e:demo-videos` and push the updated files under `assets/` (see `REGENERATE.txt`).
 
 ---
 
