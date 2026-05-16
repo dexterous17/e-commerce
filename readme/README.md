@@ -112,11 +112,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 Playwright screen recordings are committed as MP4 under [`docs/demo-videos/`](docs/demo-videos/). Regenerate with [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt) (`cd frontend && npm run test:e2e:demo-videos`; requires **ffmpeg**).
 
-On GitHub, each clip is an **inline player** — put the MP4 URL on its own line (same pattern as `user-images.githubusercontent.com` README embeds):
-
-```text
-https://user-images.githubusercontent.com/23558090/115278602-ee6f0280-a145-11eb-94ae-6edaa846ab7f.mp4
-```
+On GitHub, each clip is an inline player: put the **raw MP4 URL on its own line** (blank line above the URL).
 
 | # | What it shows |
 |---|---------------|
@@ -129,27 +125,27 @@ https://user-images.githubusercontent.com/23558090/115278602-ee6f0280-a145-11eb-
 
 ### 01 — Storefront tour
 
-https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/01-storefront-tour.mp4
+https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/01-storefront-tour.mp4
 
 ### 02 — Register session
 
-https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/02-register-session.mp4
+https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/02-register-session.mp4
 
 ### 03 — Checkout flow
 
-https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/03-checkout-flow.mp4
+https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/03-checkout-flow.mp4
 
 ### 04 — Search catalog
 
-https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/04-search-catalog.mp4
+https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/04-search-catalog.mp4
 
 ### 05 — Sign in session
 
-https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/05-sign-in-session.mp4
+https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/05-sign-in-session.mp4
 
 ### 06 — Profile & orders
 
-https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/06-profile-orders.mp4
+https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/06-profile-orders.mp4
 
 If a player is missing after you re-record, run `cd frontend && npm run test:e2e:demo-videos` and push the updated MP4s (see `REGENERATE.txt`).
 

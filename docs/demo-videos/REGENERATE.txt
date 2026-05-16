@@ -53,8 +53,5 @@ Outputs (MP4 in this folder):
 
 README / GitHub:
 
-  Inline player: bare MP4 URL on its own line (same as user-images README embeds), e.g.:
-    https://github.com/dexterous17/e-commerce/raw/main/docs/demo-videos/01-storefront-tour.mp4
-
-  Optional CDN (not in git): drag-drop an MP4 into the README editor on github.com;
-  GitHub inserts a user-images.githubusercontent.com URL — replace the raw URL above.
+  Inline player — blank line, then raw MP4 URL on its own line:
+    https://raw.githubusercontent.com/dexterous17/e-commerce/main/docs/demo-videos/01-storefront-tour.mp4
