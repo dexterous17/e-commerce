@@ -17,6 +17,7 @@
     "postgres:up": "docker compose up -d postgres",
     "minio:up": "docker compose up -d minio minio-init",
     "minio:mirror-to-s3": "bash scripts/sync-minio-to-s3.sh",
+    "publish-demo-videos": "bash scripts/publish_demo_videos_release.sh",
     "db:validate-schema": "npm run db:validate-schema --prefix backend",
     "db:validate-schema:strict": "npm run db:validate-schema:strict --prefix backend"
   }

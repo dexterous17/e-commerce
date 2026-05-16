@@ -3,6 +3,7 @@ Regenerate demo MP4 files (Playwright captures real browser automation).
 Requirements:
   - API healthy and at least one product with countInStock > 0
   - ffmpeg on PATH (e.g. brew install ffmpeg)
+  - gh CLI authenticated (gh auth login) for README inline players
   - For local Vite stack: Postgres + DATABASE_URL for the backend; from frontend/, `npm run test:e2e:demo-videos`
 
 Pacing (optional):
@@ -15,9 +16,12 @@ Cursor / tooling note:
 
 How files get here:
   Playwright saves each clip as frontend/test-results/<run>/video.webm (WebM only).
-  Successful `npm run test:e2e:demo-videos*` runs transcode into this folder via
-  `frontend/scripts/sync_demo_mp4_from_results.py`. To sync manually after a run:
+  Successful `npm run test:e2e:demo-videos*` runs transcode into docs/demo-videos/ and assets/ via
+  `frontend/scripts/sync_demo_mp4_from_results.py`. Manual sync:
     cd frontend && npm run sync-demo-mp4
+
+Publish for README inline players (GitHub release "demo-videos"):
+  npm run publish-demo-videos
 
 Local recordings:
 
@@ -29,12 +33,6 @@ Against production https://ecommerce.harshildex.com (creates real disposable use
 
     cd frontend && npm run test:e2e:demo-videos:prod
 
-  Equivalent manual env:
-
-    env -u PLAYWRIGHT_BROWSERS_PATH DEMO_RECORD_RUN_ID=$(date +%s) \\
-      PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=https://ecommerce.harshildex.com \\
-      E2E_API_ORIGIN=https://ecommerce.harshildex.com npm run test:e2e:demo-videos
-
 Against an already-running dev server on 5173:
 
   PW_REUSE_SERVER=1 PLAYWRIGHT_SKIP_WEBSERVER=1 env -u PLAYWRIGHT_BROWSERS_PATH npm run test:e2e:demo-videos
@@ -43,7 +41,7 @@ Against Docker Compose static frontend on 3000:
 
   PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 E2E_API_ORIGIN=http://127.0.0.1:5004 env -u PLAYWRIGHT_BROWSERS_PATH npm run test:e2e:demo-videos
 
-Outputs (MP4 in this folder):
+Outputs (MP4 in docs/demo-videos/ and assets/):
   01-storefront-tour.mp4 — home, browse, product detail, add to cart
   02-register-session.mp4 — shopper registration UI
   03-checkout-flow.mp4 — sign in, checkout through order confirmation
@@ -51,14 +49,12 @@ Outputs (MP4 in this folder):
   05-sign-in-session.mp4 — API seed user then sign-in UI
   06-profile-orders.mp4 — sign in, profile and My Orders
 
-README / GitHub:
+README / GitHub (inline player):
 
-  GitHub strips <video> tags. Use (paths are ../assets/ because README is under readme/):
+  GitHub strips <video> tags. Use a bare release URL on its own line (blank line above), e.g.:
 
-  1) Thumbnail link:
-    [![Watch the demo](../assets/01-storefront-tour-thumbnail.png)](../assets/01-storefront-tour.mp4)
+    https://github.com/dexterous17/e-commerce/releases/download/demo-videos/01-storefront-tour.mp4
 
-  2) Inline player — blank line, then bare URL on its own line:
-    https://github.com/dexterous17/e-commerce/raw/main/assets/01-storefront-tour.mp4
+  After re-recording: npm run publish-demo-videos, then commit readme/README.md if URLs change.
 
-  Optional (hosted on GitHub CDN, not in git): drag-drop MP4 in the README editor → user-images.githubusercontent.com URL.
+  Fallback (drag-drop in github.com README editor): upload MP4 → paste user-images.githubusercontent.com URL on its own line.

@@ -36,4 +36,4 @@ PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 E2E_API_OR
 
 **You:** How do I embed a demo on GitHub?
 
-**Guide:** Commit MP4s and thumbnails under `assets/` and push. The root README uses a clickable thumbnail plus a bare `github.com/.../raw/main/assets/*.mp4` URL per clip (GitHub strips `<video>` tags). See `docs/demo-videos/REGENERATE.txt`.
+**Guide:** Run `npm run test:e2e:demo-videos` then `npm run publish-demo-videos` (`gh` uploads to the **demo-videos** release). The README embeds each clip with a bare release MP4 URL on its own line (inline player on github.com). See `docs/demo-videos/REGENERATE.txt`.
