@@ -3,9 +3,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import colors from "colors";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import "../config/loadEnv.js";
+import { createS3Client } from "../utils/createS3Client.js";
 import products, { localImageStats } from "../data/productsWithLocalImages.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -147,7 +148,7 @@ async function main() {
     throw new Error("--concurrency must be a positive integer");
   }
 
-  const s3Client = new S3Client({ region });
+  const s3Client = createS3Client({ region });
   const uploadJobs = products.flatMap((product) =>
     product.images.map((imagePath) => {
       const absoluteFilePath = path.resolve(repoRoot, imagePath);

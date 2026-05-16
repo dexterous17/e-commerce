@@ -17,6 +17,8 @@ pnpm-debug.log*
 !/env/**/.env.example
 !/env/**/.env.sample
 !/env/**/.env.production.example
+!/env/**/.env.development.example
+!/env/**/.env.test.example
 
 # Deploy bundle from scripts/build-for-live.mjs (merged .env — do not commit)
 /build/
@@ -94,3 +96,6 @@ coverage/
 # Playwright (local HTML report and run artifacts)
 /frontend/playwright-report/
 /frontend/test-results/
+
+# Local PostgreSQL dumps (clone-from-production; never commit)
+/db-backups/

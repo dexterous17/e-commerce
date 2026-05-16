@@ -1,7 +1,8 @@
 import express from "express";
 import asyncHandler from "express-async-handler";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 
+import { createS3Client } from "../utils/createS3Client.js";
 import { isValidObjectKey } from "../utils/mediaImageUrls.js";
 
 const router = express.Router();
@@ -17,7 +18,7 @@ function getS3Client() {
     return null;
   }
 
-  return new S3Client({ region });
+  return createS3Client();
 }
 
 router.get(

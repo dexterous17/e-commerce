@@ -11,8 +11,9 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
+const { getPlaywrightStorefrontBaseUrl } = require('./e2e-constants');
 
-const BASE_URL = 'http://localhost:5173';
+const BASE_URL = getPlaywrightStorefrontBaseUrl();
 
 const VIEWPORTS = [
   { name: 'mobile-375',  width: 375,  height: 812  },

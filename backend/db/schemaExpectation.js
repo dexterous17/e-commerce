@@ -1,0 +1,126 @@
+/**
+ * Expected public schema for `scripts/validate-db-schema.mjs`.
+ * Keep column definitions aligned with `schema.js` DDL (types as reported by
+ * information_schema.columns.data_type in PostgreSQL 16).
+ */
+export const schemaExpectation = {
+  tables: {
+    users: {
+      primaryKey: ["_id"],
+      columns: {
+        _id: { dataType: "text", nullable: false },
+        name: { dataType: "text", nullable: false },
+        email: { dataType: "text", nullable: false },
+        password: { dataType: "text", nullable: false },
+        is_admin: { dataType: "boolean", nullable: false },
+        created_at: { dataType: "timestamp with time zone", nullable: false },
+        updated_at: { dataType: "timestamp with time zone", nullable: false },
+      },
+    },
+    products: {
+      primaryKey: ["_id"],
+      columns: {
+        _id: { dataType: "text", nullable: false },
+        user_id: { dataType: "text", nullable: false },
+        name: { dataType: "text", nullable: false },
+        description: { dataType: "text", nullable: false },
+        sex: { dataType: "text", nullable: true },
+        category: { dataType: "text", nullable: false },
+        sub_category: { dataType: "text", nullable: true },
+        size: { dataType: "text", nullable: true },
+        nwt: { dataType: "boolean", nullable: false },
+        brand: { dataType: "text", nullable: true },
+        color: { dataType: "text", nullable: false },
+        sub_color: { dataType: "text", nullable: true },
+        price: { dataType: "double precision", nullable: false },
+        count_in_stock: { dataType: "integer", nullable: false },
+        images: { dataType: "text", nullable: false },
+        local_images: { dataType: "text", nullable: true },
+        bucket_name: { dataType: "text", nullable: true },
+        bucket_region: { dataType: "text", nullable: true },
+        bucket_public_base_url: { dataType: "text", nullable: true },
+        bucket_prefix: { dataType: "text", nullable: true },
+        seed_source: { dataType: "text", nullable: false },
+        created_at: { dataType: "timestamp with time zone", nullable: false },
+        updated_at: { dataType: "timestamp with time zone", nullable: false },
+      },
+    },
+    orders: {
+      primaryKey: ["_id"],
+      columns: {
+        _id: { dataType: "text", nullable: false },
+        user_id: { dataType: "text", nullable: true },
+        shipping_address: { dataType: "text", nullable: false },
+        payment_method: { dataType: "text", nullable: false },
+        payment_result: { dataType: "text", nullable: true },
+        items_price: { dataType: "double precision", nullable: false },
+        tax_price: { dataType: "double precision", nullable: false },
+        shipping_price: { dataType: "double precision", nullable: false },
+        total_price: { dataType: "double precision", nullable: false },
+        is_paid: { dataType: "boolean", nullable: false },
+        paid_at: { dataType: "timestamp with time zone", nullable: true },
+        is_shipped: { dataType: "boolean", nullable: false },
+        shipped_at: { dataType: "timestamp with time zone", nullable: true },
+        created_at: { dataType: "timestamp with time zone", nullable: false },
+        updated_at: { dataType: "timestamp with time zone", nullable: false },
+      },
+    },
+    order_items: {
+      primaryKey: ["_id"],
+      columns: {
+        _id: { dataType: "text", nullable: false },
+        order_id: { dataType: "text", nullable: false },
+        name: { dataType: "text", nullable: false },
+        qty: { dataType: "integer", nullable: false },
+        images: { dataType: "text", nullable: false },
+        price: { dataType: "double precision", nullable: false },
+        product_id: { dataType: "text", nullable: false },
+        created_at: { dataType: "timestamp with time zone", nullable: false },
+        updated_at: { dataType: "timestamp with time zone", nullable: false },
+      },
+    },
+    seed_manifest: {
+      primaryKey: ["source"],
+      columns: {
+        source: { dataType: "text", nullable: false },
+        generated_at: { dataType: "timestamp with time zone", nullable: true },
+        bucket_name: { dataType: "text", nullable: true },
+        bucket_region: { dataType: "text", nullable: true },
+        bucket_public_base_url: { dataType: "text", nullable: true },
+        bucket_prefix: { dataType: "text", nullable: true },
+        stats: { dataType: "text", nullable: false },
+        raw_manifest: { dataType: "text", nullable: false },
+        updated_at: { dataType: "timestamp with time zone", nullable: false },
+      },
+    },
+  },
+  /** Secondary indexes created in schema.js (not including primary key indexes). */
+  indexes: [
+    { name: "idx_products_user_id", table: "products" },
+    { name: "idx_products_name", table: "products" },
+    { name: "idx_products_category", table: "products" },
+    { name: "idx_products_sex", table: "products" },
+    { name: "idx_orders_user_id", table: "orders" },
+    { name: "idx_order_items_order_id", table: "order_items" },
+  ],
+  foreignKeys: [
+    {
+      fromTable: "products",
+      fromColumns: ["user_id"],
+      toTable: "users",
+      toColumns: ["_id"],
+    },
+    {
+      fromTable: "orders",
+      fromColumns: ["user_id"],
+      toTable: "users",
+      toColumns: ["_id"],
+    },
+    {
+      fromTable: "order_items",
+      fromColumns: ["order_id"],
+      toTable: "orders",
+      toColumns: ["_id"],
+    },
+  ],
+};

@@ -1,4 +1,5 @@
 /** PostgreSQL DDL — users, products, orders, order_items, seed_manifest (S3 bucket columns on products). */
+/** Structural expectations for CI/local checks: `db/schemaExpectation.js` + `npm run db:validate-schema`. */
 const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS users (
   _id TEXT PRIMARY KEY,

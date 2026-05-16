@@ -2,7 +2,9 @@ import fs from "fs/promises";
 import colors from "colors";
 import path from "path";
 import { fileURLToPath } from "url";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+
+import { createS3Client } from "./utils/createS3Client.js";
 
 import { syncAwsS3EnvFromBackendFile } from "./config/loadEnv.js";
 import connectDB, {
@@ -195,7 +197,7 @@ const importData = async () => {
 
     await connectDB();
 
-    const s3Client = new S3Client({ region });
+    const s3Client = createS3Client();
     const publicBaseUrl = buildPublicBaseUrl(bucketName, region);
 
     console.log(

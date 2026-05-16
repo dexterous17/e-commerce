@@ -24,6 +24,42 @@ services:
       retries: 12
       start_period: 10s
 
+  # S3-compatible object store (local dev / staging). Console: http://127.0.0.1:${MINIO_CONSOLE_PORT:-9011}
+  # Sync to AWS: ./scripts/sync-minio-to-s3.sh (see script header). Default API port 9010 avoids clashing with Portainer on 9000.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9010}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9011}:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-bucket-7i9ax7}
+      MINIO_HOST: http://minio:9000
+    volumes:
+      - ./scripts/minio-init-bucket.sh:/init.sh:ro
+    entrypoint: ["/bin/sh", "/init.sh"]
+
   backend:
     networks:
       - default
@@ -34,6 +70,8 @@ services:
     restart: unless-stopped
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     # Same credential file as host loadEnv; avoids empty AWS_* from `environment:` wiping keys.
     env_file:
@@ -53,6 +91,9 @@ services:
       AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-bucket-7i9ax7}
       AWS_S3_PUBLIC_BASE_URL: ${AWS_S3_PUBLIC_BASE_URL:-https://bucket-7i9ax7.s3.us-east-1.amazonaws.com}
       AWS_S3_PREFIX: ${AWS_S3_PREFIX:-products}
+      # Host `npm start` uses env/aws/.env (127.0.0.1:MINIO_API_PORT). In-container SDK must use the MinIO service.
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_S3_FORCE_PATH_STYLE: "true"
       # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: use env/aws/.env (env_file above) or export
       # before `docker compose up` so the SDK can GetObject for /api/media/s3 (do not use VAR:- here).
     secrets:
@@ -156,6 +197,7 @@ services:
 
 volumes:
   postgres_data:
+  minio_data:
   backend_uploads:
   backend_upload:
   portainer_data:

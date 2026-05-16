@@ -46,16 +46,17 @@ export const productListReducer = (state = { products: [] }, action) => {
   }
 };
 
-export const productDetailsReducer = (state = { product: {} }, action) => {
+export const productDetailsReducer = (
+  state = { loading: true, product: {} },
+  action
+) => {
   switch (action.type) {
     case PRODUCT_DETAILS_REQUEST:
-      //make a loading state object since the async call will take some time to complete
-      // return { loading: true, ...state };
-      return { loading: true };
+      return { loading: true, product: {}, error: undefined };
     case PRODUCT_DETAILS_SUCCESS:
-      return { loading: false, product: action.payload };
+      return { loading: false, product: action.payload, error: undefined };
     case PRODUCT_DETAILS_FAIL:
-      return { loading: false, error: action.payload };
+      return { loading: false, error: action.payload, product: {} };
     default:
       return state;
   }

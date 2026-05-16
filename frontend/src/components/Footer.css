@@ -2,20 +2,50 @@
   container-type: inline-size;
   container-name: footer;
   background-color: var(--primary);
-  color: white; /* children inherit */
+  /* Dark foreground on light mint primary (#78c2ad): avoids low-contrast cyan links */
+  --footer-fg: #0a1f1b;
+  --footer-fg-muted: rgba(10, 31, 27, 0.82);
+  --footer-link: #063d35;
+  --footer-link-hover: #052a24;
+  color: var(--footer-fg);
 }
 
 .footer__inner {
   max-width: 100%;
 }
 
-/* Anchors inherit white; .text-info (Bootstrap !important) keeps cyan */
-.footer a:not(.text-info) {
+.footer__attribution {
+  color: var(--footer-fg-muted);
+  font-size: 0.875rem;
+}
+
+.footer__attribution .footer__heart {
+  color: #9a1e2e;
+}
+
+.footer__author-link strong {
+  color: rgba(255, 255, 255, 1) !important;
+}
+
+.footer__author-link {
+  color: var(--footer-link) !important;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.15em;
+}
+
+.footer__author-link:hover {
+  color: var(--footer-link-hover) !important;
+  text-decoration-thickness: 0.12em;
+}
+
+.footer a:not(.footer__author-link) {
   color: inherit;
   text-decoration: none;
 }
 
-.footer a:not(.text-info):hover {
+.footer a:not(.footer__author-link):hover {
   opacity: 0.75;
   color: inherit;
 }

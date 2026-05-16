@@ -36,6 +36,10 @@ const ProductScreen = () => {
   //deconstruct the whole state object
   const { loading, error, product } = productDetails;
 
+  const metaTitle = product?._id
+    ? `${product.name} | ${product.brand || "Tailored by Boutique"}`
+    : "Product details";
+
   //use effect cannot be async. Define function that is async and then immediatly call it
   //useEffect takes a list of dependencies, it will fire off whenever any of those dependencies changes
   useEffect(() => {
@@ -57,11 +61,17 @@ const ProductScreen = () => {
       </Link>
       {/* check to see if the item is still loading, check for error, if not, render the product */}
       {loading ? (
-        <BunnyLoader />
+        <>
+          <Meta title="Loading product…" />
+          <BunnyLoader />
+        </>
       ) : error ? (
-        <Message variant="danger">
-          <h3>{error}</h3>
-        </Message>
+        <>
+          <Meta title="Product unavailable" />
+          <Message variant="danger">
+            <h3>{error}</h3>
+          </Message>
+        </>
       ) : (
         <Row>
           {/* left col is picture, half of the row */}
@@ -206,7 +216,7 @@ const ProductScreen = () => {
               </ListGroup>
             </Card>
           </Col>
-          <Meta title={`${product.brand} size ${product.size}`} />
+          <Meta title={metaTitle} />
         </Row>
       )}
     </>

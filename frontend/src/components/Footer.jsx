@@ -24,16 +24,16 @@ const Footer = () => {
         </a>
       </div>
 
-      <div className="footer__inner text-center py-2">
-        <small>
-          created with ❤️ by
+      <div className="footer__inner footer__attribution text-center py-2">
+        <span>
+          created with <span className="footer__heart" aria-hidden="true">❤️</span> by{" "}
           <a
             href="https://www.linkedin.com/in/harshil-prajapati-008b101ba/"
-            className="text-info"
+            className="footer__author-link"
           >
-            <strong> Harshil Prajapati</strong>
+            <strong>Harshil Prajapati</strong>
           </a>
-        </small>
+        </span>
       </div>
     </footer>
   );

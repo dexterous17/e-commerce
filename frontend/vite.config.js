@@ -18,21 +18,31 @@ export default defineConfig(({ mode }) => {
     "http://localhost:5002";
 
   /**
-   * Empty = same-origin `/api` (host nginx routes to the API container). Use this in production
-   * when TLS terminates on the storefront hostname only (avoids blocked/mixed requests to a
-   * separate API host). Set VITE_API_ORIGIN=https://backend.ecommerce.harshildex.com only when
-   * that host is reachable with HTTPS and CORS allows the storefront origin.
+   * API base URL baked into the client bundle (axios + image URLs). Empty = same-origin `/api`
+   * (Vite dev proxy, or production nginx on the storefront host).
+   *
+   * Development: only values from env files under env/frontend/ apply (see loadEnv). A stray
+   * `export VITE_API_ORIGIN=https://prod...` in the shell is ignored so local dev cannot
+   * accidentally call production. To point dev at a remote API, set VITE_API_ORIGIN in
+   * env/frontend/.env.development.local (not exported globally).
+   *
+   * Production build: if VITE_API_ORIGIN is absent from those files, Docker/CI can set
+   * process.env.VITE_API_ORIGIN (see frontend/Dockerfile / docker-compose build args).
    */
   const hasExplicitApiOrigin = Object.prototype.hasOwnProperty.call(
     env,
     "VITE_API_ORIGIN"
   );
-  // Fall back to process.env.VITE_API_ORIGIN so Docker ARG/ENV build args are honoured
-  // when env/frontend/ is not present in the build context (e.g. CI or plain docker build).
+  const fromEnvFiles = hasExplicitApiOrigin
+    ? String(env.VITE_API_ORIGIN ?? "").trim()
+    : "";
+  const fromProcess = String(process.env.VITE_API_ORIGIN ?? "").trim();
   const mergedApiOrigin = (
-    hasExplicitApiOrigin
-      ? String(env.VITE_API_ORIGIN ?? "").trim()
-      : String(process.env.VITE_API_ORIGIN ?? "").trim()
+    mode === "development"
+      ? fromEnvFiles
+      : hasExplicitApiOrigin
+        ? fromEnvFiles
+        : fromProcess
   ).replace(/\/$/, "");
 
   return {

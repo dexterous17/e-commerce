@@ -2,7 +2,9 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import colors from "colors";
-import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { HeadObjectCommand } from "@aws-sdk/client-s3";
+
+import { createS3Client } from "./utils/createS3Client.js";
 
 import "./config/loadEnv.js";
 import users from "./data/users.js";
@@ -126,7 +128,7 @@ const importData = async () => {
 
     await connectDB();
 
-    const s3Client = new S3Client({ region: bucketRegion });
+    const s3Client = createS3Client({ region: bucketRegion });
     let verified = 0;
 
     if (!skipVerify) {

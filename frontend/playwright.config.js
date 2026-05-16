@@ -1,9 +1,10 @@
 const { defineConfig } = require('@playwright/test');
+const {
+  DEFAULT_PLAYWRIGHT_BASE_URL,
+  getPlaywrightStorefrontBaseUrl,
+} = require('./tests/e2e-constants');
 
-const baseURL =
-  process.env.PLAYWRIGHT_BASE_URL ||
-  process.env.PW_BASE_URL ||
-  'http://localhost:5173';
+const baseURL = getPlaywrightStorefrontBaseUrl();
 
 const skipWebServer =
   process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1' ||
@@ -13,7 +14,8 @@ const webServer = skipWebServer
   ? undefined
   : {
       command: 'npm run dev',
-      url: 'http://localhost:5173',
+      // Must match Vite `server.port` (local dev); not necessarily PLAYWRIGHT_BASE_URL.
+      url: DEFAULT_PLAYWRIGHT_BASE_URL,
       reuseExistingServer: process.env.PW_REUSE_SERVER !== '0',
       timeout: 240000,
     };

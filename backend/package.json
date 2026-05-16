@@ -25,7 +25,9 @@
     "data:import:s3:manifest": "node seederS3FromManifest.js",
     "data:import:local-upload-manifest": "node seederLocalUploadFromManifest.js",
     "data:destroy": "node seeder.js -d",
-    "data:destroy:s3": "node seederS3.js -d"
+    "data:destroy:s3": "node seederS3.js -d",
+    "db:validate-schema": "node scripts/validate-db-schema.mjs",
+    "db:validate-schema:strict": "node scripts/validate-db-schema.mjs --strict"
   },
   "keywords": [],
   "author": "",

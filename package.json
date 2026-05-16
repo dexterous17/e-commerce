@@ -14,6 +14,11 @@
     "build:frontend": "npm run build --prefix frontend",
     "build:backend": "npm run build --prefix backend",
     "build:all": "npm run build",
-    "render-demo-gifs": "bash scripts/render-demo-gifs.sh"
+    "render-demo-gifs": "bash scripts/render-demo-gifs.sh",
+    "postgres:up": "docker compose up -d postgres",
+    "minio:up": "docker compose up -d minio minio-init",
+    "minio:mirror-to-s3": "bash scripts/sync-minio-to-s3.sh",
+    "db:validate-schema": "npm run db:validate-schema --prefix backend",
+    "db:validate-schema:strict": "npm run db:validate-schema:strict --prefix backend"
   }
 }

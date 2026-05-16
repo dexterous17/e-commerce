@@ -1,6 +1,6 @@
 # E-Commerce App
 
-Full-stack e-commerce application — product browsing with search/filter/pagination, shopping cart, multi-step checkout with PayPal, and an admin panel for products, users, and orders. Images are stored locally or in a private S3 bucket (proxied through the backend).
+Full-stack e-commerce application — product browsing with search/filter/pagination, shopping cart, multi-step checkout with PayPal, and an admin panel for products, users, and orders. Images are stored locally, in a private **AWS S3** bucket, or in **local MinIO** (S3-compatible object storage in Docker Compose); the API can proxy private objects through `/api/media/s3`.
 
 ## Table of Contents
 
@@ -38,7 +38,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 | **Runtime & HTTP** | JavaScript server and REST layer | Node.js **22.5+** (ES modules), **Express 4** |
 | **Database** | Relational store and driver | **PostgreSQL 16** via **`pg`** |
 | **Authentication** | Tokens and password hashing | **JWT** (`HS256`) + **bcrypt** |
-| **Object storage** | Product images in the cloud | **AWS SDK v3** (private **S3**, URLs proxied by the API) |
+| **Object storage** | Product images in the cloud or locally | **AWS SDK v3** — **AWS S3** in production; **MinIO** locally via `AWS_S3_ENDPOINT_URL` (same SDK client; URLs proxied by the API when `AWS_S3_IMAGE_PROXY=true`) |
 | **HTTP hardening** | Headers, cross-origin rules, abuse limits | **Helmet**, **CORS**, **express-rate-limit** |
 | **Multipart uploads** | Accepting image files from clients | **Multer** |
 
@@ -65,7 +65,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 | Area | What it is | In this project |
 |:-----|:------------|:----------------|
-| **Local / full stack** | Reproducible multi-service environment for development and demos | **Docker Compose**: **Postgres**; **Node/Express** API; **Nginx** (built SPA + `/api` proxy); **Portainer** (container UI); **Nginx Proxy Manager** (reverse proxy and TLS) |
+| **Local / full stack** | Reproducible multi-service environment for development and demos | **Docker Compose**: **Postgres**; **MinIO** (S3-compatible local object store + one-shot bucket init); **Node/Express** API; **Nginx** (built SPA + `/api` proxy); **Portainer** (container UI); **Nginx Proxy Manager** (reverse proxy and TLS) |
 | **Production hosting** | Cloud VM where the deployed app runs | **AWS Lightsail** |
 | **HTTPS & certificates** | Public TLS for the site and proxy routing | **Let's Encrypt** with **Nginx Proxy Manager** |
 
@@ -84,7 +84,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 │   ├── models/             DB queries (users, products, orders, seedManifest)
 │   ├── middleware/         Auth (JWT), error handler, security (Helmet/CORS/rate-limit)
 │   ├── config/             DB connection, env loader
-│   ├── utils/              JWT helpers, S3 URL rewriting, PayPal verify, debug logger
+│   ├── utils/              JWT helpers, S3/MinIO client (`createS3Client`), URL rewriting, PayPal verify
 │   ├── db/schema.js        PostgreSQL DDL (auto-runs on start)
 │   ├── data/               Seed data & S3 manifest
 │   └── scripts/            Dev utilities (env init, image sync, S3 upload)
@@ -100,9 +100,9 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 │   └── vite.config.js      Dev proxy, code splitting config
 ├── env/                    .env.example templates (backend, frontend, docker, aws, database)
 ├── secrets/                Docker secrets (git-ignored)
-├── scripts/                Deployment & build scripts
+├── scripts/                Deployment, MinIO init/sync (`minio-init-bucket.sh`, `sync-minio-to-s3.sh`), build
 ├── deploy/                 Lightsail-specific deploy scripts
-├── docker-compose.yml      Full stack (Postgres + Node + Nginx + Portainer + NPM)
+├── docker-compose.yml      Full stack (Postgres + MinIO + Node + Nginx + Portainer + NPM)
 ├── docker-compose.lightsail.yml
 └── docker-compose.nginx-proxy-manager.yml
 ```
@@ -170,7 +170,9 @@ The default `docker-compose.yml` runs:
 | Service | Image | Host Port | Purpose |
 |---------|-------|-----------|---------|
 | `postgres` | postgres:16-alpine | 127.0.0.1:5432 | Database |
-| `backend` | ./backend/Dockerfile | 127.0.0.1:${BACKEND_PORT:-5004} | Express API |
+| `minio` | minio/minio | 127.0.0.1:${MINIO_API_PORT:-9010} (API), ${MINIO_CONSOLE_PORT:-9011} (console) | Local S3-compatible object storage |
+| `minio-init` | minio/mc | — | One-shot: creates bucket on MinIO (same name/prefix as AWS config) |
+| `backend` | ./backend/Dockerfile | 127.0.0.1:${BACKEND_PORT:-5004} | Express API (points at `http://minio:9000` in Compose) |
 | `frontend` | ./frontend/Dockerfile | ${FRONTEND_PORT:-3000} | Nginx + Vite build |
 | `portainer` | portainer/portainer-ce | 127.0.0.1:9000 | Container management UI |
 | `nginx-proxy-manager` | jc21/nginx-proxy-manager:2 | 80, 443, 81 (admin) | Reverse proxy + TLS |
@@ -202,14 +204,45 @@ Copy `env/docker/.env.example` to repo-root `.env` to override Compose defaults:
 cp env/docker/.env.example .env
 ```
 
-### Private S3 images
+### Object storage: AWS S3 and local MinIO
 
-To serve product images from a **private** S3 bucket, create `env/aws/.env` from the example and add your AWS credentials. Without it, `/api/media/s3` requests return 403/500.
+Production images live in a **private AWS S3 bucket** you create yourself. Local development can use the same bucket name and key prefix on **MinIO** (included in Compose) so paths stay aligned when you sync to AWS.
+
+| Target | Who creates the bucket | Backend config |
+|--------|------------------------|----------------|
+| **AWS** | You (console / IaC) | `env/aws/.env` with IAM keys, region, `AWS_S3_BUCKET_NAME`, `AWS_S3_PUBLIC_BASE_URL` |
+| **MinIO (local)** | `minio-init` on first `docker compose up` | Same bucket/prefix vars; add `AWS_S3_ENDPOINT_URL`, `AWS_S3_FORCE_PATH_STYLE=true`, and MinIO root user as `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` |
+
+**Private S3 (or MinIO) via the API proxy** — create `env/aws/.env` from the example. Without credentials, `/api/media/s3` returns 403/500.
 
 ```bash
 cp env/aws/.env.example env/aws/.env
-# fill in AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+# AWS: fill in AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+# Local MinIO (host `npm start`): see commented block in env/aws/.env.example
+#   AWS_S3_ENDPOINT_URL=http://127.0.0.1:9010
+#   AWS_S3_FORCE_PATH_STYLE=true
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY = MINIO_ROOT_USER / MINIO_ROOT_PASSWORD (default minioadmin)
 ```
+
+In Compose, the **backend container** already sets `AWS_S3_ENDPOINT_URL=http://minio:9000` and path-style access; put matching keys in `env/aws/.env` (loaded via `env_file`).
+
+**MinIO only (without full stack):**
+
+```bash
+npm run minio:up          # docker compose up -d minio minio-init
+```
+
+- API: `http://127.0.0.1:9010` (default; override with `MINIO_API_PORT` in repo-root `.env`)
+- Console: `http://127.0.0.1:9011` (defaults avoid clashing with Portainer on **9000**)
+
+**Push local objects to your real AWS bucket** (bucket must already exist in AWS):
+
+```bash
+npm run minio:mirror-to-s3
+# or: ./scripts/sync-minio-to-s3.sh --dry-run
+```
+
+See [`docs/process/docker-compose-stack.md`](docs/process/docker-compose-stack.md) for a chat-style walkthrough of MinIO vs AWS.
 
 ---
 
@@ -224,6 +257,13 @@ npm run dev:all
 ```
 
 Vite proxies `/api`, `/uploads`, and `/upload` to `http://localhost:5002` by default.
+
+For **S3-backed product images** on the host (not full Compose), start Postgres and MinIO, then point `env/aws/.env` at `http://127.0.0.1:9010` (see `env/aws/.env.example`):
+
+```bash
+npm run postgres:up
+npm run minio:up
+```
 
 To run **only** the Vite dev server (API already running separately):
 
@@ -329,17 +369,19 @@ All `.env.example` files live under `env/`. Copy each one to its target location
 | `DEV_PROXY_TARGET` | Vite dev proxy for `/api` (default: `http://localhost:5002`) |
 | `VITE_API_ORIGIN` | Production API origin for split-domain deploy (e.g. `https://backend.ecommerce.harshildex.com`). Leave empty for same-origin. |
 
-### AWS / S3 (`env/aws/.env`)
+### AWS / S3 / MinIO (`env/aws/.env`)
 
 | Variable | Purpose |
 |----------|---------|
-| `AWS_ACCESS_KEY_ID` | IAM credentials for private S3 GetObject |
-| `AWS_SECRET_ACCESS_KEY` | IAM credentials |
+| `AWS_ACCESS_KEY_ID` | IAM credentials (AWS) or MinIO root user (local) |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret (AWS) or MinIO root password (local) |
 | `AWS_REGION` | S3 region (default: `us-east-1`) |
-| `AWS_S3_BUCKET_NAME` | S3 bucket name |
-| `AWS_S3_PUBLIC_BASE_URL` | CDN or public S3 base URL |
+| `AWS_S3_BUCKET_NAME` | Bucket name (same name on MinIO and AWS keeps keys aligned) |
+| `AWS_S3_PUBLIC_BASE_URL` | CDN, public S3 base URL, or MinIO path-style base (see `env/aws/.env.example`) |
 | `AWS_S3_PREFIX` | Key prefix within bucket (default: `products`) |
 | `AWS_S3_IMAGE_PROXY` | `true` to route images through `/api/media/s3` (private buckets) |
+| `AWS_S3_ENDPOINT_URL` | Optional. Set to MinIO API URL (e.g. `http://127.0.0.1:9010` on host, `http://minio:9000` in Compose) to use MinIO instead of AWS |
+| `AWS_S3_FORCE_PATH_STYLE` | `true` for MinIO (required for path-style URLs); Compose sets this on the backend service |
 
 ### Docker Compose (`.env` at repo root)
 
@@ -356,6 +398,10 @@ All `.env.example` files live under `env/`. Copy each one to its target location
 | `AWS_S3_BUCKET_NAME` | — | |
 | `AWS_S3_PUBLIC_BASE_URL` | — | |
 | `AWS_S3_PREFIX` | `products` | |
+| `MINIO_API_PORT` | `9010` | Published MinIO S3 API (host → container 9000) |
+| `MINIO_CONSOLE_PORT` | `9011` | MinIO web console |
+| `MINIO_ROOT_USER` | `minioadmin` | MinIO admin user (use as `AWS_ACCESS_KEY_ID` locally) |
+| `MINIO_ROOT_PASSWORD` | `minioadmin` | MinIO admin password (change in non-dev environments) |
 
 ---
 
@@ -477,7 +523,7 @@ Rate-limited: 40 failed login attempts / 15 min, 25 registrations / 15 min.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `POST` | `/upload` | Admin | Upload product images (max 16, 5 MB each; JPEG/PNG) |
-| `GET` | `/media/s3?key=<s3-key>` | — | Proxy private S3 object (1-day cache) |
+| `GET` | `/media/s3?key=<s3-key>` | — | Proxy private S3 or MinIO object (1-day cache) |
 
 ### Config & Health
 
@@ -509,7 +555,7 @@ If Cursor Settings → MCP shows a broken Docker server alongside `MCP_DOCKER`, 
 
 ## Deployment (Lightsail)
 
-`docker-compose.lightsail.yml` omits the `postgres` service — point `DATABASE_URL` at a managed Postgres instance.
+`docker-compose.lightsail.yml` omits `postgres` and **MinIO** — use a managed Postgres instance and a real **AWS S3** bucket (`env/aws/.env` without `AWS_S3_ENDPOINT_URL`).
 
 1. Copy env files and fill in production values (JWT secret, PayPal, AWS).
 2. Create `secrets/jwt_secret.txt`.
@@ -531,7 +577,7 @@ Run from `backend/`:
 # Local sample data
 npm run data:import
 
-# S3-backed products with bucket metadata
+# S3- or MinIO-backed products with bucket metadata (requires env/aws/.env + reachable bucket)
 npm run data:import:s3
 
 # From products-s3-manifest.json (production-style)

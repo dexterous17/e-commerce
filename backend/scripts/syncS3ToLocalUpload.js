@@ -22,13 +22,10 @@ import { pipeline } from "stream/promises";
 import { fileURLToPath } from "url";
 
 import colors from "colors";
-import {
-  GetObjectCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
 import "../config/loadEnv.js";
+import { createS3Client } from "../utils/createS3Client.js";
 import connectDB, { query } from "../config/db.js";
 import { extractS3KeyFromUrl } from "../utils/mediaImageUrls.js";
 
@@ -161,7 +158,7 @@ async function runDownload() {
     throw new Error("--concurrency must be a positive number");
   }
 
-  const client = new S3Client({ region });
+  const client = createS3Client({ region });
   console.log(
     `Listing s3://${bucket}/${prefix ? `${prefix}/` : ""} …`.cyan
   );
