@@ -110,7 +110,7 @@ Full-stack e-commerce application — product browsing with search/filter/pagina
 
 ## Demo videos
 
-Playwright screen recordings live in [`assets/`](assets/) (MP4 + thumbnail PNG) and [`docs/demo-videos/`](docs/demo-videos/). Regenerate with [`docs/demo-videos/REGENERATE.txt`](docs/demo-videos/REGENERATE.txt) (`cd frontend && npm run test:e2e:demo-videos`; requires **ffmpeg**).
+Playwright screen recordings live in [`assets/`](../assets/) (MP4 + thumbnail PNG) and [`docs/demo-videos/`](../docs/demo-videos/). Regenerate with [`docs/demo-videos/REGENERATE.txt`](../docs/demo-videos/REGENERATE.txt) (`cd frontend && npm run test:e2e:demo-videos`; requires **ffmpeg**).
 
 Click a thumbnail to open the recording:
 
@@ -125,29 +125,29 @@ Click a thumbnail to open the recording:
 
 ### 01 — Storefront tour
 
-[![Watch the demo](./assets/01-storefront-tour-thumbnail.png)](./assets/01-storefront-tour.mp4)
+[![Watch the demo](../assets/01-storefront-tour-thumbnail.png)](../assets/01-storefront-tour.mp4)
 
 ### 02 — Register session
 
-[![Watch the demo](./assets/02-register-session-thumbnail.png)](./assets/02-register-session.mp4)
+[![Watch the demo](../assets/02-register-session-thumbnail.png)](../assets/02-register-session.mp4)
 
 ### 03 — Checkout flow
 
-[![Watch the demo](./assets/03-checkout-flow-thumbnail.png)](./assets/03-checkout-flow.mp4)
+[![Watch the demo](../assets/03-checkout-flow-thumbnail.png)](../assets/03-checkout-flow.mp4)
 
 ### 04 — Search catalog
 
-[![Watch the demo](./assets/04-search-catalog-thumbnail.png)](./assets/04-search-catalog.mp4)
+[![Watch the demo](../assets/04-search-catalog-thumbnail.png)](../assets/04-search-catalog.mp4)
 
 ### 05 — Sign in session
 
-[![Watch the demo](./assets/05-sign-in-session-thumbnail.png)](./assets/05-sign-in-session.mp4)
+[![Watch the demo](../assets/05-sign-in-session-thumbnail.png)](../assets/05-sign-in-session.mp4)
 
 ### 06 — Profile & orders
 
-[![Watch the demo](./assets/06-profile-orders-thumbnail.png)](./assets/06-profile-orders.mp4)
+[![Watch the demo](../assets/06-profile-orders-thumbnail.png)](../assets/06-profile-orders.mp4)
 
-If a thumbnail or recording is missing after you re-record, run `cd frontend && npm run test:e2e:demo-videos` and push the updated files under `assets/` (see `REGENERATE.txt`).
+If a thumbnail or recording is missing after you re-record, run `cd frontend && npm run test:e2e:demo-videos` and push the updated files under `assets/` at the repo root (see `REGENERATE.txt`).
 
 ---
 
