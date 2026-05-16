@@ -125,27 +125,27 @@ Regenerate: [`docs/demo-videos/REGENERATE.txt`](../docs/demo-videos/REGENERATE.t
 
 ### 01 — Storefront tour
 
-https://github.com/dexterous17/e-commerce/releases/download/demo-videos/01-storefront-tour.mp4
+https://github.com/user-attachments/assets/0f27a881-bb3c-4fd5-b7f0-2f6841e78d7b
 
 ### 02 — Register session
 
-https://github.com/dexterous17/e-commerce/releases/download/demo-videos/02-register-session.mp4
+https://github.com/user-attachments/assets/fecbf889-c83e-4d2c-937e-0431fb42fd1c
 
 ### 03 — Checkout flow
 
-https://github.com/dexterous17/e-commerce/releases/download/demo-videos/03-checkout-flow.mp4
+https://github.com/user-attachments/assets/fcaeb85e-6098-40d9-b8d9-3b1f1a692779
 
 ### 04 — Search catalog
 
-https://github.com/dexterous17/e-commerce/releases/download/demo-videos/04-search-catalog.mp4
+https://github.com/user-attachments/assets/6eb20522-a5e3-466d-a44e-7d4faffecef8
 
 ### 05 — Sign in session
 
-https://github.com/dexterous17/e-commerce/releases/download/demo-videos/05-sign-in-session.mp4
+https://github.com/user-attachments/assets/a5e8fa11-f901-49b4-a723-3f4351023cf9
 
 ### 06 — Profile & orders
 
-https://github.com/dexterous17/e-commerce/releases/download/demo-videos/06-profile-orders.mp4
+https://github.com/user-attachments/assets/faa7c06b-246b-4fe8-8d96-8aa640231f00
 
 ---
 
