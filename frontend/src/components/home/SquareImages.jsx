@@ -111,10 +111,10 @@ const SquareImages = () => {
               />
             </figure>
           ))}
-      </div>
-      <div className="welcome-box">
-        <h2>Welcome to my shop!</h2>
-        <h1>Tailored by Boutique</h1>
+        <div className="welcome-box">
+          <h2>Welcome to my shop!</h2>
+          <h1>Tailored by Boutique</h1>
+        </div>
       </div>
     </section>
   );
