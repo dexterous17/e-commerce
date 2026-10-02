@@ -1,0 +1,762 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lightsail Architecture Diagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: one 1080px column; summary strip, then three drawn diagrams, each with a caption, then a status table and the deploy checklist */
+  :root {
+    --bg: #f3f5f8;
+    --surface: #ffffff;
+    --ink: #16202a;
+    --muted: #5a6776;
+    --line: #d3dae2;
+    --edge: #3c4a59;
+    --accent: #1f5fbf;
+    --accent-soft: #e4ecf8;
+    --ok: #1d8049;
+    --ok-soft: #e3f3e9;
+    --warn: #a95f00;
+    --warn-soft: #fbefdb;
+    --off: #8794a2;
+    --off-soft: #f1f3f6;
+    --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e141a;
+      --surface: #161f28;
+      --ink: #e2e8ee;
+      --muted: #94a2b0;
+      --line: #2c3845;
+      --edge: #a9b6c3;
+      --accent: #74a6f2;
+      --accent-soft: #1a2a40;
+      --ok: #52c585;
+      --ok-soft: #15301f;
+      --warn: #e8a542;
+      --warn-soft: #36270f;
+      --off: #75828f;
+      --off-soft: #1b242d;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0e141a;
+    --surface: #161f28;
+    --ink: #e2e8ee;
+    --muted: #94a2b0;
+    --line: #2c3845;
+    --edge: #a9b6c3;
+    --accent: #74a6f2;
+    --accent-soft: #1a2a40;
+    --ok: #52c585;
+    --ok-soft: #15301f;
+    --warn: #e8a542;
+    --warn-soft: #36270f;
+    --off: #75828f;
+    --off-soft: #1b242d;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    padding-inline: 20px;
+    padding-block: 40px 64px;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: grid;
+    gap: 40px;
+  }
+
+  code, .mono { font-family: var(--font-mono); font-size: 0.9em; }
+
+  /* Header */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(26px, 4vw, 36px);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 10px 0 0;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .lede code { color: var(--ink); }
+
+  /* Summary strip */
+  .summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(0, 1fr));
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .summary > div {
+    padding: 16px 18px;
+    border-left: 1px solid var(--line);
+    min-width: 0;
+  }
+
+  .summary > div:first-child { border-left: 0; }
+
+  .summary dt {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .summary dd {
+    margin: 4px 0 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pill::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .pill.warn { color: var(--warn); background: var(--warn-soft); }
+  .pill.ok { color: var(--ok); background: var(--ok-soft); }
+  .pill.off { color: var(--muted); background: var(--off-soft); }
+  .pill.off::before { background: transparent; border: 1.5px dashed var(--off); }
+  .pill.ext { color: var(--accent); background: var(--accent-soft); }
+
+  .summary .next {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  /* Sections */
+  section { display: grid; gap: 14px; }
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .section-note {
+    margin: -6px 0 0;
+    color: var(--muted);
+    max-width: 70ch;
+  }
+
+  figure {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .scroll {
+    overflow-x: auto;
+    padding: 20px;
+  }
+
+  .scroll svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-width: 820px;
+  }
+
+  figcaption {
+    border-top: 1px solid var(--line);
+    padding: 12px 20px;
+    font-size: 13.5px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    align-items: center;
+  }
+
+  figcaption .claim { flex: 1 1 320px; min-width: 0; }
+
+  .key { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* SVG drawing classes (driven by the theme tokens above) */
+  svg text { font-family: var(--font-sans); fill: var(--ink); }
+  svg .t { font-size: 13.5px; font-weight: 600; }
+  svg .s { font-family: var(--font-mono); font-size: 11.5px; fill: var(--muted); }
+  svg .zl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; fill: var(--muted); }
+  svg .zl.warn { fill: var(--warn); }
+  svg .el {
+    font-size: 12px;
+    font-weight: 500;
+    fill: var(--edge);
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 5px;
+    stroke-linejoin: round;
+  }
+
+  svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.25; }
+  svg .box.ok { stroke: var(--ok); stroke-width: 1.5; }
+  svg .box.off { fill: var(--off-soft); stroke: var(--off); stroke-dasharray: 5 4; }
+  svg .box.ext { fill: var(--accent-soft); stroke: var(--accent); }
+  svg .dot.ok { fill: var(--ok); }
+  svg .dot.off { fill: none; stroke: var(--off); stroke-width: 1.5; }
+
+  svg .zone { fill: none; stroke: var(--line); stroke-width: 1.25; }
+  svg .zone.instance { stroke: var(--accent); stroke-width: 1.5; }
+  svg .zone.docker { fill: var(--off-soft); stroke: var(--warn); stroke-dasharray: 6 5; }
+  svg .zone.aws { stroke: var(--accent); stroke-dasharray: 6 5; }
+  svg .fw { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.25; }
+
+  svg .e { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+  svg .e.dash { stroke-dasharray: 5 4; }
+  svg .ah { fill: var(--edge); }
+
+  svg .life { stroke: var(--line); stroke-width: 1.25; stroke-dasharray: 3 4; }
+  svg .frame { fill: none; stroke: var(--line); stroke-width: 1.25; }
+  svg .tab { fill: var(--accent-soft); stroke: var(--line); stroke-width: 1.25; }
+  svg .tabt { font-family: var(--font-mono); font-size: 11.5px; fill: var(--accent); font-weight: 500; }
+
+  /* Status table */
+  .table-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 560px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  th {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  td.port { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+  td .sub { display: block; color: var(--muted); font-size: 12.5px; }
+  tr.group td {
+    background: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-block: 7px;
+  }
+
+  /* Checklist */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    counter-reset: step;
+  }
+
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .steps li:last-child { border-bottom: 0; }
+
+  .steps li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .steps strong { display: block; font-weight: 600; }
+  .steps p { margin: 2px 0 0; color: var(--muted); }
+  .steps code {
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0 5px;
+  }
+
+  @media (max-width: 860px) {
+    .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .summary > div { border-left: 0; border-top: 1px solid var(--line); }
+    .summary > div:first-child { grid-column: 1 / -1; border-top: 0; }
+    .summary > div:nth-child(odd):not(:first-child) { border-left: 1px solid var(--line); }
+  }
+
+  @media (max-width: 520px) {
+    body { padding-inline: 16px; padding-block: 28px 48px; }
+    .page { gap: 32px; }
+    .scroll { padding: 14px; }
+    th, td { padding: 10px 14px; }
+  }
+</style>
+
+<div class="page">
+
+  <header>
+    <p class="eyebrow">AWS Lightsail · us-east-1a · Ubuntu 24.04</p>
+    <h1>E-Commerce Lightsail Architecture</h1>
+    <p class="lede">How traffic reaches <code>ecommerce.harshildex.com</code>, what runs on the instance today, and what the Docker deployment adds.</p>
+  </header>
+
+  <dl class="summary" aria-label="Instance summary">
+    <div>
+      <dt>Current state</dt>
+      <dd><span class="pill warn">Partially set up</span></dd>
+      <dd class="next">Nginx and PostgreSQL are running. Docker is not installed yet, so the app containers are not deployed.</dd>
+    </div>
+    <div>
+      <dt>Region</dt>
+      <dd>us-east-1a</dd>
+    </div>
+    <div>
+      <dt>OS</dt>
+      <dd>Ubuntu 24.04.1</dd>
+    </div>
+    <div>
+      <dt>Memory in use</dt>
+      <dd>~60 MB</dd>
+    </div>
+    <div>
+      <dt>Uptime</dt>
+      <dd>19+ hours</dd>
+    </div>
+  </dl>
+
+  <!-- 1. System architecture -->
+  <section>
+    <h2>System architecture</h2>
+    <p class="section-note">Everything except DNS and S3 lives on one Lightsail instance. Only ports 22, 80 and 443 are open; PostgreSQL listens on localhost only.</p>
+    <figure>
+      <div class="scroll">
+        <svg viewBox="0 0 1000 632" role="img" aria-label="Users reach Nginx on the Lightsail instance through the firewall on ports 80 and 443. Nginx routes static requests to the frontend container and /api requests to the backend container. The backend reads and writes PostgreSQL on localhost, writes uploads to a Docker volume, and fetches images from S3. Docker and its containers are not installed yet.">
+          <defs>
+            <marker id="arch-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="ah" d="M0 0 L10 5 L0 10 z"/>
+            </marker>
+          </defs>
+
+          <!-- Outside the instance: top row -->
+          <rect class="box" x="60" y="20" width="150" height="52" rx="8"/>
+          <text class="t" x="135" y="42" text-anchor="middle">Admin</text>
+          <text class="s" x="135" y="60" text-anchor="middle">SSH key</text>
+
+          <rect class="box" x="380" y="20" width="160" height="52" rx="8"/>
+          <text class="t" x="460" y="42" text-anchor="middle">Users</text>
+          <text class="s" x="460" y="60" text-anchor="middle">browsers &amp; clients</text>
+
+          <rect class="box ext" x="640" y="20" width="210" height="52" rx="8"/>
+          <text class="t" x="745" y="42" text-anchor="middle">DNS</text>
+          <text class="s" x="745" y="60" text-anchor="middle">ecommerce.harshildex.com</text>
+
+          <path class="e" d="M540 46 H636" marker-end="url(#arch-ah)"/>
+          <text class="el" x="588" y="39" text-anchor="middle">resolve</text>
+
+          <!-- Lightsail instance -->
+          <rect class="zone instance" x="30" y="100" width="740" height="514" rx="12"/>
+          <text class="zl" x="160" y="122">LIGHTSAIL INSTANCE</text>
+          <text class="s" x="752" y="122" text-anchor="end">Ubuntu 24.04</text>
+
+          <!-- Firewall -->
+          <rect class="fw" x="46" y="134" width="708" height="32" rx="6"/>
+          <text class="t" x="62" y="155">Firewall</text>
+          <text class="s" x="740" y="155" text-anchor="end">allow 22 · 80 · 443</text>
+
+          <path class="e" d="M135 72 V130" marker-end="url(#arch-ah)"/>
+          <text class="el" x="145" y="91">:22</text>
+          <path class="e" d="M460 72 V130" marker-end="url(#arch-ah)"/>
+          <text class="el" x="470" y="91">HTTP / HTTPS</text>
+
+          <!-- Host OS -->
+          <rect class="zone" x="46" y="182" width="708" height="118" rx="10"/>
+          <text class="zl" x="740" y="202" text-anchor="end">HOST OS · SYSTEMD SERVICES</text>
+
+          <path class="e" d="M135 166 V208" marker-end="url(#arch-ah)"/>
+          <path class="e" d="M360 166 V208" marker-end="url(#arch-ah)"/>
+          <text class="el" x="370" y="191">:80 · :443</text>
+
+          <rect class="box ok" x="60" y="212" width="150" height="72" rx="8"/>
+          <circle class="dot ok" cx="198" cy="224" r="4"/>
+          <text class="t" x="76" y="240">OpenSSH</text>
+          <text class="s" x="76" y="260">port 22</text>
+
+          <rect class="box ok" x="260" y="212" width="200" height="72" rx="8"/>
+          <circle class="dot ok" cx="448" cy="224" r="4"/>
+          <text class="t" x="276" y="240">Nginx</text>
+          <text class="s" x="276" y="260">reverse proxy</text>
+          <text class="s" x="276" y="276">ports 80, 443</text>
+
+          <rect class="box ok" x="500" y="212" width="116" height="72" rx="8"/>
+          <circle class="dot ok" cx="604" cy="224" r="4"/>
+          <text class="t" x="516" y="240">Cron</text>
+          <text class="s" x="516" y="260">scheduled jobs</text>
+
+          <rect class="box ok" x="628" y="212" width="116" height="72" rx="8"/>
+          <circle class="dot ok" cx="732" cy="224" r="4"/>
+          <text class="t" x="644" y="240">Journal</text>
+          <text class="s" x="644" y="260">system logs</text>
+
+          <!-- Nginx routes into Docker -->
+          <path class="e" d="M300 284 V318 H140 V362" marker-end="url(#arch-ah)"/>
+          <text class="el" x="220" y="314" text-anchor="middle">static files</text>
+          <path class="e" d="M410 284 V318 H314 V362" marker-end="url(#arch-ah)"/>
+          <text class="el" x="362" y="314" text-anchor="middle">/api</text>
+
+          <!-- Docker engine (not installed) -->
+          <rect class="zone docker" x="46" y="336" width="708" height="128" rx="10"/>
+          <text class="zl" x="62" y="356">DOCKER ENGINE</text>
+          <text class="zl warn" x="740" y="356" text-anchor="end">NOT INSTALLED</text>
+
+          <rect class="box off" x="62" y="366" width="156" height="84" rx="8"/>
+          <circle class="dot off" cx="206" cy="378" r="4"/>
+          <text class="t" x="78" y="392">Frontend</text>
+          <text class="s" x="78" y="412">React / Vite</text>
+          <text class="s" x="78" y="430">port 8080</text>
+
+          <rect class="box off" x="236" y="366" width="156" height="84" rx="8"/>
+          <circle class="dot off" cx="380" cy="378" r="4"/>
+          <text class="t" x="252" y="392">Backend</text>
+          <text class="s" x="252" y="412">Node.js API</text>
+          <text class="s" x="252" y="430">port 5004</text>
+
+          <rect class="box off" x="410" y="366" width="156" height="84" rx="8"/>
+          <circle class="dot off" cx="554" cy="378" r="4"/>
+          <text class="t" x="426" y="392">Portainer</text>
+          <text class="s" x="426" y="412">manages Docker</text>
+          <text class="s" x="426" y="430">port 9000</text>
+
+          <rect class="box off" x="584" y="366" width="156" height="84" rx="8"/>
+          <circle class="dot off" cx="728" cy="378" r="4"/>
+          <text class="t" x="600" y="392">Adminer</text>
+          <text class="s" x="600" y="412">database UI</text>
+          <text class="s" x="600" y="430">port 8888</text>
+
+          <!-- Data -->
+          <text class="zl" x="48" y="500">DATA</text>
+
+          <rect class="box off" x="62" y="514" width="156" height="80" rx="8"/>
+          <circle class="dot off" cx="206" cy="526" r="4"/>
+          <text class="t" x="78" y="540">Uploads</text>
+          <text class="s" x="78" y="560">Docker volume</text>
+
+          <rect class="box ok" x="236" y="514" width="214" height="80" rx="8"/>
+          <circle class="dot ok" cx="438" cy="526" r="4"/>
+          <text class="t" x="252" y="540">PostgreSQL 16</text>
+          <text class="s" x="252" y="560">localhost:5432 only</text>
+          <text class="s" x="252" y="578">32.2 MB in use</text>
+
+          <!-- S3 outside the instance -->
+          <rect class="zone aws" x="796" y="472" width="184" height="142" rx="10"/>
+          <text class="zl" x="812" y="494">AWS · REMOTE</text>
+          <rect class="box ext" x="812" y="514" width="152" height="80" rx="8"/>
+          <text class="t" x="828" y="540">S3 bucket</text>
+          <text class="s" x="828" y="560">product images</text>
+
+          <!-- Backend data edges -->
+          <path class="e" d="M268 450 V482 H140 V510" marker-end="url(#arch-ah)"/>
+          <text class="el" x="204" y="478" text-anchor="middle">writes files</text>
+          <path class="e" d="M314 450 V510" marker-end="url(#arch-ah)"/>
+          <text class="el" x="322" y="486">SQL</text>
+          <path class="e" d="M360 450 V482 H888 V510" marker-end="url(#arch-ah)"/>
+          <text class="el" x="600" y="478" text-anchor="middle">fetch images</text>
+
+          <!-- Adminer to Postgres -->
+          <path class="e dash" d="M662 450 V554 H454" marker-end="url(#arch-ah)"/>
+          <text class="el" x="560" y="548" text-anchor="middle">browse DB</text>
+        </svg>
+      </div>
+      <figcaption>
+        <span class="claim">Public traffic enters only through Nginx. Nginx sends <code>/api</code> to the backend and everything else to the frontend.</span>
+        <span class="key">
+          <span class="pill ok">Running</span>
+          <span class="pill off">Not running yet</span>
+          <span class="pill ext">Outside the instance</span>
+        </span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- 2. Request path -->
+  <section>
+    <h2>Request path</h2>
+    <p class="section-note">Nginx picks the route from the URL path. Pages and assets come from the frontend; <code>/api</code> calls go to the backend, which is the only part that talks to the database.</p>
+    <figure>
+      <div class="scroll">
+        <svg viewBox="0 0 1000 452" role="img" aria-label="Sequence: the browser resolves the domain through DNS, then sends an HTTPS request to Nginx. For the root path, Nginx proxies to the frontend on port 8080, which returns HTML, CSS and JS. For /api paths, Nginx proxies to the backend on port 5004, which queries PostgreSQL and returns JSON.">
+          <defs>
+            <marker id="seq-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="ah" d="M0 0 L10 5 L0 10 z"/>
+            </marker>
+          </defs>
+
+          <!-- Lifelines -->
+          <line class="life" x1="80" y1="64" x2="80" y2="444"/>
+          <line class="life" x1="240" y1="64" x2="240" y2="444"/>
+          <line class="life" x1="410" y1="64" x2="410" y2="444"/>
+          <line class="life" x1="580" y1="64" x2="580" y2="444"/>
+          <line class="life" x1="750" y1="64" x2="750" y2="444"/>
+          <line class="life" x1="920" y1="64" x2="920" y2="444"/>
+
+          <!-- Participants -->
+          <rect class="box" x="20" y="14" width="120" height="50" rx="8"/>
+          <text class="t" x="80" y="36" text-anchor="middle">Browser</text>
+          <text class="s" x="80" y="53" text-anchor="middle">client</text>
+
+          <rect class="box ext" x="180" y="14" width="120" height="50" rx="8"/>
+          <text class="t" x="240" y="36" text-anchor="middle">DNS</text>
+          <text class="s" x="240" y="53" text-anchor="middle">lookup</text>
+
+          <rect class="box ok" x="350" y="14" width="120" height="50" rx="8"/>
+          <text class="t" x="410" y="36" text-anchor="middle">Nginx</text>
+          <text class="s" x="410" y="53" text-anchor="middle">:80 · :443</text>
+
+          <rect class="box off" x="520" y="14" width="120" height="50" rx="8"/>
+          <text class="t" x="580" y="36" text-anchor="middle">Frontend</text>
+          <text class="s" x="580" y="53" text-anchor="middle">:8080</text>
+
+          <rect class="box off" x="690" y="14" width="120" height="50" rx="8"/>
+          <text class="t" x="750" y="36" text-anchor="middle">Backend</text>
+          <text class="s" x="750" y="53" text-anchor="middle">:5004</text>
+
+          <rect class="box ok" x="860" y="14" width="120" height="50" rx="8"/>
+          <text class="t" x="920" y="36" text-anchor="middle">PostgreSQL</text>
+          <text class="s" x="920" y="53" text-anchor="middle">:5432 local</text>
+
+          <!-- 1. DNS -->
+          <path class="e" d="M80 104 H236" marker-end="url(#seq-ah)"/>
+          <text class="el" x="160" y="97" text-anchor="middle">1 · resolve domain</text>
+          <path class="e dash" d="M240 136 H84" marker-end="url(#seq-ah)"/>
+          <text class="el" x="160" y="129" text-anchor="middle">Lightsail IP</text>
+
+          <!-- 2. Request -->
+          <path class="e" d="M80 176 H406" marker-end="url(#seq-ah)"/>
+          <text class="el" x="245" y="169" text-anchor="middle">2 · HTTPS request</text>
+
+          <!-- Frame: static -->
+          <rect class="frame" x="34" y="198" width="932" height="96" rx="8"/>
+          <rect class="tab" x="34" y="198" width="128" height="22" rx="6"/>
+          <text class="tabt" x="46" y="213">path = /</text>
+          <path class="e" d="M410 238 H576" marker-end="url(#seq-ah)"/>
+          <text class="el" x="495" y="231" text-anchor="middle">3a · proxy :8080</text>
+          <path class="e dash" d="M580 274 H84" marker-end="url(#seq-ah)"/>
+          <text class="el" x="320" y="267" text-anchor="middle">HTML · CSS · JS</text>
+
+          <!-- Frame: api -->
+          <rect class="frame" x="34" y="308" width="932" height="136" rx="8"/>
+          <rect class="tab" x="34" y="308" width="128" height="22" rx="6"/>
+          <text class="tabt" x="46" y="323">path = /api/*</text>
+          <path class="e" d="M410 348 H746" marker-end="url(#seq-ah)"/>
+          <text class="el" x="580" y="341" text-anchor="middle">3b · proxy :5004</text>
+          <path class="e" d="M750 378 H916" marker-end="url(#seq-ah)"/>
+          <text class="el" x="835" y="371" text-anchor="middle">4 · SQL query</text>
+          <path class="e dash" d="M920 404 H754" marker-end="url(#seq-ah)"/>
+          <text class="el" x="835" y="397" text-anchor="middle">rows</text>
+          <path class="e dash" d="M750 430 H84" marker-end="url(#seq-ah)"/>
+          <text class="el" x="320" y="423" text-anchor="middle">JSON response</text>
+        </svg>
+      </div>
+      <figcaption>
+        <span class="claim">Solid arrows are requests, dashed arrows are responses. The database is reached only from the backend, never from the internet.</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- 3. Component status -->
+  <section>
+    <h2>Component status</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Port</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr class="group"><td colspan="3">Host OS</td></tr>
+          <tr><td>Nginx<span class="sub">Web server and reverse proxy</span></td><td class="port">80, 443</td><td><span class="pill ok">Running</span></td></tr>
+          <tr><td>PostgreSQL 16<span class="sub">Database, 32.2 MB in use</span></td><td class="port">5432 (local)</td><td><span class="pill ok">Running</span></td></tr>
+          <tr><td>OpenSSH<span class="sub">Admin access</span></td><td class="port">22</td><td><span class="pill ok">Running</span></td></tr>
+          <tr><td>Cron and systemd journal<span class="sub">Scheduled jobs and logging</span></td><td class="port">–</td><td><span class="pill ok">Running</span></td></tr>
+          <tr><td>Docker Engine<span class="sub">Runs the app containers</span></td><td class="port">–</td><td><span class="pill warn">Not installed</span></td></tr>
+          <tr class="group"><td colspan="3">Docker containers</td></tr>
+          <tr><td>Frontend<span class="sub">React / Vite</span></td><td class="port">8080</td><td><span class="pill off">Stopped</span></td></tr>
+          <tr><td>Backend<span class="sub">Node.js API</span></td><td class="port">5004</td><td><span class="pill off">Stopped</span></td></tr>
+          <tr><td>Portainer<span class="sub">Docker management UI</span></td><td class="port">9000</td><td><span class="pill off">Stopped</span></td></tr>
+          <tr><td>Adminer<span class="sub">Database UI</span></td><td class="port">8888</td><td><span class="pill off">Stopped</span></td></tr>
+          <tr class="group"><td colspan="3">Storage</td></tr>
+          <tr><td>Backend uploads<span class="sub">Docker volume</span></td><td class="port">–</td><td><span class="pill off">Not created</span></td></tr>
+          <tr><td>S3 bucket<span class="sub">Product images</span></td><td class="port">–</td><td><span class="pill ext">AWS remote</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4. Deployment -->
+  <section>
+    <h2>Deployment</h2>
+    <p class="section-note">Once Docker is installed, one script syncs the repository to the instance and brings up all four containers with Docker Compose.</p>
+    <figure>
+      <div class="scroll">
+        <svg viewBox="0 0 1000 232" role="img" aria-label="Deployment flow: the repository on your machine is synced to the instance over SSH with rsync by deploy-lightsail.sh, which runs docker compose with docker-compose.lightsail.yml to build and start the frontend, backend, Portainer and Adminer containers.">
+          <defs>
+            <marker id="dep-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="ah" d="M0 0 L10 5 L0 10 z"/>
+            </marker>
+          </defs>
+
+          <rect class="box" x="20" y="82" width="150" height="68" rx="8"/>
+          <text class="t" x="36" y="108">Your machine</text>
+          <text class="s" x="36" y="128">repository code</text>
+
+          <path class="e" d="M170 116 H256" marker-end="url(#dep-ah)"/>
+          <text class="el" x="213" y="108" text-anchor="middle">SSH + rsync</text>
+
+          <rect class="box" x="260" y="82" width="200" height="68" rx="8"/>
+          <text class="t" x="276" y="108">deploy-lightsail.sh</text>
+          <text class="s" x="276" y="128">syncs repo, then deploys</text>
+
+          <path class="e" d="M460 116 H526" marker-end="url(#dep-ah)"/>
+          <text class="el" x="493" y="108" text-anchor="middle">runs</text>
+
+          <rect class="box" x="530" y="82" width="230" height="68" rx="8"/>
+          <text class="t" x="546" y="108">docker compose up</text>
+          <text class="s" x="546" y="128">docker-compose.lightsail.yml</text>
+
+          <path class="e" d="M760 116 H806" marker-end="url(#dep-ah)"/>
+          <text class="el" x="783" y="108" text-anchor="middle">starts</text>
+
+          <rect class="zone instance" x="810" y="14" width="176" height="204" rx="10"/>
+          <text class="zl" x="824" y="34">ON THE INSTANCE</text>
+          <rect class="box off" x="824" y="46" width="148" height="34" rx="6"/>
+          <text class="t" x="838" y="68">Frontend</text>
+          <text class="s" x="960" y="68" text-anchor="end">8080</text>
+          <rect class="box off" x="824" y="88" width="148" height="34" rx="6"/>
+          <text class="t" x="838" y="110">Backend</text>
+          <text class="s" x="960" y="110" text-anchor="end">5004</text>
+          <rect class="box off" x="824" y="130" width="148" height="34" rx="6"/>
+          <text class="t" x="838" y="152">Portainer</text>
+          <text class="s" x="960" y="152" text-anchor="end">9000</text>
+          <rect class="box off" x="824" y="172" width="148" height="34" rx="6"/>
+          <text class="t" x="838" y="194">Adminer</text>
+          <text class="s" x="960" y="194" text-anchor="end">8888</text>
+        </svg>
+      </div>
+      <figcaption>
+        <span class="claim">After the containers pass their health checks, Nginx (already running on the host) starts routing traffic to them. Data stays in PostgreSQL and the uploads volume across redeploys.</span>
+      </figcaption>
+    </figure>
+
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Install Docker</strong>
+          <p>SSH into the instance and install Docker Engine for Ubuntu.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Add environment files</strong>
+          <p>Create the <code>.env</code> files in <code>env/database/</code>, <code>env/backend/</code> and <code>env/aws/</code>.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Run the deploy script</strong>
+          <p>Run <code>deploy-lightsail.sh</code> to sync the repository and start the containers.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Check the containers</strong>
+          <p>Run <code>docker ps</code> and confirm all four containers are up.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Test the endpoints</strong>
+          <p>Open <code>ecommerce.harshildex.com</code> and <code>backend.ecommerce.harshildex.com</code>.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+</div>
+
+</body></html>

@@ -1,0 +1,320 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure Architecture</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --accent: #0d6efd;
+            --service-bg: #e7f1ff;
+            --aws-bg: #fff3cd;
+            --aws-stroke: #e0a800;
+            --lightsail-bg: #cfe2ff;
+            --lightsail-stroke: #0ea5e9;
+            --header-tint: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                color-scheme: dark;
+                --bg-primary: #1e1e1e;
+                --bg-secondary: #2d2d2d;
+                --border-color: #444;
+                --text-primary: #e8e8e8;
+                --text-secondary: #a0a0a0;
+                --accent: #4a9eff;
+                --service-bg: #1a3a52;
+                --aws-bg: #4a3a1a;
+                --aws-stroke: #ffc107;
+                --lightsail-bg: #1a2a4a;
+                --lightsail-stroke: #38bdf8;
+                --header-tint: rgba(255, 255, 255, 0.06);
+            }
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #2d2d2d;
+            --border-color: #444;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --accent: #4a9eff;
+            --service-bg: #1a3a52;
+            --aws-bg: #4a3a1a;
+            --aws-stroke: #ffc107;
+            --lightsail-bg: #1a2a4a;
+            --lightsail-stroke: #38bdf8;
+            --header-tint: rgba(255, 255, 255, 0.06);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 2rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        h1 { font-size: 1.75rem; margin: 0 0 0.5rem; font-weight: 600; line-height: 1.2; }
+
+        .subtitle { color: var(--text-secondary); margin: 0 0 2rem; font-size: 0.95rem; }
+
+        figure { margin: 2rem 0; }
+
+        .diagram-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        figcaption {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        /* ---------- SVG diagram ---------- */
+        svg.diagram {
+            display: block;
+            width: 100%;
+            min-width: 900px;   /* keeps labels readable; scrolls inside its box on phones */
+            height: auto;
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        .diagram text { fill: currentColor; }
+        .diagram .title { font-size: 18px; font-weight: 600; text-anchor: middle; }
+        .diagram .role { font-size: 11px; text-anchor: middle; opacity: 0.6; }
+        .diagram .name { font-size: 12px; font-weight: 600; text-anchor: middle; }
+        .diagram .desc { font-size: 10px; text-anchor: middle; opacity: 0.7; }
+        .diagram .meta { font-size: 9px; text-anchor: middle; opacity: 0.6; }
+        .diagram .note { font-size: 9px; opacity: 0.7; }
+        .diagram .os-title { font-size: 11px; font-weight: 600; text-anchor: middle; opacity: 0.8; }
+        .diagram .label { font-size: 10px; text-anchor: middle; }
+
+        .diagram .server { fill: none; stroke: currentColor; stroke-width: 2; }
+        .diagram .header { fill: var(--header-tint); stroke: none; }
+        .diagram .svc { fill: var(--service-bg); stroke: currentColor; stroke-width: 1.5; }
+        .diagram .os { fill: none; stroke: currentColor; stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.8; }
+
+        .diagram .aws-frame { fill: none; stroke: var(--aws-stroke); stroke-width: 2.5; }
+        .diagram .aws-header { fill: var(--aws-bg); opacity: 0.4; }
+        .diagram .aws-box { fill: var(--aws-bg); stroke: var(--aws-stroke); stroke-width: 1.5; }
+
+        .diagram .ls-frame { fill: none; stroke: var(--lightsail-stroke); stroke-width: 2.5; }
+        .diagram .ls-header { fill: var(--lightsail-bg); opacity: 0.4; }
+        .diagram .ls-box { fill: var(--lightsail-bg); stroke: var(--lightsail-stroke); stroke-width: 1.5; }
+
+        .diagram .flow { fill: none; stroke: currentColor; stroke-width: 2; }
+        .diagram .flow.aws { stroke: var(--aws-stroke); }
+        .diagram .flow.ls { stroke: var(--lightsail-stroke); }
+        .diagram .flow.dashed { stroke-dasharray: 5 5; }
+        .diagram .users { fill: var(--bg-primary); stroke: currentColor; stroke-width: 2; }
+
+        .diagram .head { fill: currentColor; }
+        .diagram .head.aws { fill: var(--aws-stroke); }
+        .diagram .head.ls { fill: var(--lightsail-stroke); }
+
+        /* ---------- Legend ---------- */
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .legend-item { display: flex; gap: 0.75rem; align-items: center; }
+        .legend-icon { width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0; }
+        .legend-item.service .legend-icon { background: var(--service-bg); border: 2px solid var(--accent); }
+        .legend-item.aws .legend-icon { background: var(--aws-bg); border: 2px solid var(--aws-stroke); }
+        .legend-item.lightsail .legend-icon { background: var(--lightsail-bg); border: 2px solid var(--lightsail-stroke); }
+        .legend-label { font-size: 0.9rem; }
+
+        @media (max-width: 640px) {
+            body { padding: 16px; }
+            h1 { font-size: 1.4rem; }
+            .subtitle { margin-bottom: 1rem; }
+            figure { margin: 1rem 0; }
+            .legend { padding: 1rem; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <h1>Complete Infrastructure Architecture</h1>
+        <p class="subtitle">Ubuntu Servers, AWS Services, and Lightsail with communication flow</p>
+
+        <figure>
+            <div class="diagram-scroll">
+            <svg class="diagram" viewBox="0 -14 1350 450" role="img" aria-labelledby="diagram-title">
+                <title id="diagram-title">Infrastructure: Ubuntu Server 2 (database/worker), Ubuntu Server 1 (web/API), AWS S3 and CloudFront, and a Lightsail staging server</title>
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path class="head" d="M0,0 L10,5 L0,10 z"/>
+                    </marker>
+                    <marker id="arrow-aws" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path class="head aws" d="M0,0 L10,5 L0,10 z"/>
+                    </marker>
+                    <marker id="arrow-ls" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path class="head ls" d="M0,0 L10,5 L0,10 z"/>
+                    </marker>
+                </defs>
+
+                <!-- Ubuntu Server 2 (left) -->
+                <g transform="translate(20,0)">
+                    <rect class="server" x="0" y="30" width="380" height="345" rx="8"/>
+                    <path class="header" d="M8,30 H372 A8,8 0 0 1 380,38 V80 H0 V38 A8,8 0 0 1 8,30 Z"/>
+                    <text class="title" x="190" y="58">Ubuntu Server 2</text>
+                    <text class="role" x="190" y="75">Database/Worker Server</text>
+
+                    <rect class="svc" x="15" y="95" width="165" height="70" rx="6"/>
+                    <text class="name" x="97" y="118">PostgreSQL</text>
+                    <text class="desc" x="97" y="135">Relational DB</text>
+                    <text class="meta" x="97" y="150">:5432</text>
+
+                    <rect class="svc" x="200" y="95" width="165" height="70" rx="6"/>
+                    <text class="name" x="282" y="118">Worker Service</text>
+                    <text class="desc" x="282" y="135">Background Jobs</text>
+                    <text class="meta" x="282" y="150">Node.js</text>
+
+                    <rect class="svc" x="15" y="185" width="350" height="70" rx="6"/>
+                    <text class="name" x="190" y="208">Docker</text>
+                    <text class="desc" x="190" y="225">Container Runtime &amp; Orchestration</text>
+
+                    <rect class="os" x="15" y="275" width="350" height="85" rx="6"/>
+                    <text class="os-title" x="190" y="295">OS Layer</text>
+                    <text class="note" x="25" y="318">• Systemd • Firewall • Logging</text>
+                    <text class="note" x="25" y="340">• Monitoring &amp; Health Checks</text>
+                </g>
+
+                <!-- Ubuntu Server 1 (middle) -->
+                <g transform="translate(450,0)">
+                    <rect class="server" x="0" y="30" width="380" height="345" rx="8"/>
+                    <path class="header" d="M8,30 H372 A8,8 0 0 1 380,38 V80 H0 V38 A8,8 0 0 1 8,30 Z"/>
+                    <text class="title" x="190" y="58">Ubuntu Server 1</text>
+                    <text class="role" x="190" y="75">Web/API Server</text>
+
+                    <rect class="svc" x="15" y="95" width="165" height="70" rx="6"/>
+                    <text class="name" x="97" y="118">Node.js</text>
+                    <text class="desc" x="97" y="135">App Server</text>
+                    <text class="meta" x="97" y="150">:3000</text>
+
+                    <rect class="svc" x="200" y="95" width="165" height="70" rx="6"/>
+                    <text class="name" x="282" y="118">Nginx</text>
+                    <text class="desc" x="282" y="135">Reverse Proxy</text>
+                    <text class="meta" x="282" y="150">:80, :443</text>
+
+                    <rect class="svc" x="15" y="185" width="165" height="70" rx="6"/>
+                    <text class="name" x="97" y="208">MongoDB</text>
+                    <text class="desc" x="97" y="225">Database</text>
+                    <text class="meta" x="97" y="240">:27017</text>
+
+                    <rect class="svc" x="200" y="185" width="165" height="70" rx="6"/>
+                    <text class="name" x="282" y="208">Let's Encrypt</text>
+                    <text class="desc" x="282" y="225">SSL/TLS</text>
+                    <text class="meta" x="282" y="240">Auto-renew</text>
+
+                    <rect class="os" x="15" y="275" width="350" height="85" rx="6"/>
+                    <text class="os-title" x="190" y="295">OS Layer</text>
+                    <text class="note" x="25" y="318">• Systemd • Firewall • Logging</text>
+                    <text class="note" x="25" y="340">• Monitoring &amp; Health Checks</text>
+                </g>
+
+                <!-- AWS Services -->
+                <g transform="translate(880,0)">
+                    <rect class="aws-frame" x="0" y="30" width="360" height="150" rx="8"/>
+                    <path class="aws-header" d="M8,30 H352 A8,8 0 0 1 360,38 V80 H0 V38 A8,8 0 0 1 8,30 Z"/>
+                    <text class="title" x="180" y="62">AWS Services</text>
+
+                    <rect class="aws-box" x="15" y="95" width="155" height="65" rx="6"/>
+                    <text class="name" x="92" y="116">S3 Bucket</text>
+                    <text class="desc" x="92" y="133">Static Assets</text>
+                    <text class="meta" x="92" y="147">Images/Files</text>
+
+                    <rect class="aws-box" x="190" y="95" width="155" height="65" rx="6"/>
+                    <text class="name" x="267" y="116">CloudFront</text>
+                    <text class="desc" x="267" y="133">CDN</text>
+                    <text class="meta" x="267" y="147">Global Cache</text>
+                </g>
+
+                <!-- Lightsail -->
+                <g transform="translate(880,0)">
+                    <rect class="ls-frame" x="87" y="215" width="185" height="135" rx="8"/>
+                    <path class="ls-header" d="M95,215 H264 A8,8 0 0 1 272,223 V265 H87 V223 A8,8 0 0 1 95,215 Z"/>
+                    <text class="title" x="180" y="247">Lightsail</text>
+
+                    <rect class="ls-box" x="102" y="275" width="155" height="65" rx="6"/>
+                    <text class="name" x="180" y="296">Staging Server</text>
+                    <text class="desc" x="180" y="313">Testing Environment</text>
+                    <text class="meta" x="180" y="327">Ubuntu</text>
+                </g>
+
+                <!-- Flows -->
+                <!-- Server 1 → Server 2 -->
+                <line class="flow" x1="450" y1="140" x2="402" y2="140" marker-end="url(#arrow)"/>
+                <text class="label" x="425" y="130">Sync</text>
+
+                <!-- Server 1 → AWS -->
+                <line class="flow aws" x1="830" y1="140" x2="878" y2="140" marker-end="url(#arrow-aws)"/>
+                <text class="label" x="855" y="118">Asset</text>
+                <text class="label" x="855" y="130">Sync</text>
+
+                <!-- AWS → Lightsail -->
+                <line class="flow dashed" x1="1060" y1="180" x2="1060" y2="213" marker-end="url(#arrow)"/>
+                <text class="label" x="1092" y="201">Failover</text>
+
+                <!-- Server 2 → Lightsail (routed below the servers) -->
+                <polyline class="flow ls" points="210,375 210,420 1060,420 1060,352" marker-end="url(#arrow-ls)"/>
+                <text class="label" x="635" y="412">Replication</text>
+
+                <!-- Users -->
+                <circle class="users" cx="1300" cy="60" r="28"/>
+                <text class="name" x="1300" y="64">Users</text>
+
+                <!-- Users → Nginx (routed above the AWS box) -->
+                <polyline class="flow" points="1300,32 1300,6 732,6 732,93" marker-end="url(#arrow)"/>
+                <text class="label" x="1015" y="0">HTTP/HTTPS Requests</text>
+
+                <!-- Users → CloudFront -->
+                <polyline class="flow aws" points="1300,88 1300,127 1227,127" marker-end="url(#arrow-aws)"/>
+                <text class="label" x="1318" y="112" style="text-anchor:start">CDN</text>
+            </svg>
+            </div>
+            <figcaption>Complete infrastructure: Two Ubuntu servers handling API/database workloads, AWS for static assets and CDN, and Lightsail for staging.</figcaption>
+        </figure>
+
+        <div class="legend">
+            <div class="legend-item service">
+                <div class="legend-icon" aria-hidden="true"></div>
+                <div class="legend-label"><strong>On-Premises</strong>: Ubuntu servers with primary services</div>
+            </div>
+            <div class="legend-item aws">
+                <div class="legend-icon" aria-hidden="true"></div>
+                <div class="legend-label"><strong>AWS Services</strong>: Cloud storage and CDN</div>
+            </div>
+            <div class="legend-item lightsail">
+                <div class="legend-icon" aria-hidden="true"></div>
+                <div class="legend-label"><strong>Lightsail</strong>: Staging environment</div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+
+</body></html>
